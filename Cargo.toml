@@ -1,0 +1,9 @@
+[package]
+name = "visdom"
+version = "0.0.1"
+authors = ["ganmin <jxz_211@163.com>"]
+edition = "2018"
+
+[dependencies]
+ntree = { path = "../ntree" }
+rphtml = { path = "../rphtml" }
