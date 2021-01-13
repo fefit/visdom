@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         <div id="haha"><span class="hello other" id="inner">implement this</span></div>
     "##;
 	let root = Vis::load(html)?;
-	let dom_hello = root.find(".hello.other");
-	println!("result:{:?}", dom_hello?.attr("id"));
+	let dom_hello = root.find("span:nth-child(2n+1)");
+	println!("result:{:?}", dom_hello?.text());
 	Ok(())
 }
