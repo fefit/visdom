@@ -59,15 +59,12 @@ impl INodeTrait for Dom {
 		Ok(None)
 	}
 	/// impl `children`
-	fn children<'b>(&self) -> Result<'b> {
+	fn child_nodes<'b>(&self) -> Result<'b> {
 		if let Some(childs) = &self.node.borrow().childs {
-			let mut result = NodeList::with_capacity(childs.len());
+      let mut result = NodeList::with_capacity(childs.len());
+      let mut nodes = result.get_mut_ref();
 			for cur in childs {
-				if cur.borrow().node_type == NodeType::Tag {
-					result
-						.get_mut_ref()
-						.push(Box::new(Dom { node: cur.clone() }));
-				}
+				nodes.push(Box::new(Dom { node: cur.clone() }));
 			}
 			return Ok(result);
 		}
