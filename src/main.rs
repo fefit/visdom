@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         </p>
     "##;
 	let root = Vis::load(html)?;
-	let dom_hello = root.find("span:nth-child(even)");
+	let dom_hello = root.find("span:last-of-type");
 	println!("result:{:?}", dom_hello?.text());
 	Ok(())
 }

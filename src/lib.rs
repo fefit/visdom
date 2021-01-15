@@ -62,7 +62,7 @@ impl INodeTrait for Dom {
 	fn child_nodes<'b>(&self) -> Result<'b> {
 		if let Some(childs) = &self.node.borrow().childs {
       let mut result = NodeList::with_capacity(childs.len());
-      let mut nodes = result.get_mut_ref();
+      let nodes = result.get_mut_ref();
 			for cur in childs {
 				nodes.push(Box::new(Dom { node: cur.clone() }));
 			}
