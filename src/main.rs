@@ -1002,28 +1002,32 @@ _loader.use("jquery",function(){function eRecommend(dom,str){if($(dom).attr("e_h
 </html>
 
   "##;
+	println!("开始执行代码：");
 	let start_time = SystemTime::now();
 	const TIMES: u32 = 2000;
-	for _ in 0..TIMES {
-		let root = Vis::load(html)?;
-		let filter_area = root.find(".mh-filter-salary")?;
-		println!("result:{:?}", filter_area.text());
-		let filter_items = filter_area.find(".mh-item")?;
-		println!("items:{:?}", filter_items.length());
-		println!(
-			"filter:{:?}",
-			filter_items.filter(":nth-child(odd)")?.text()
-		);
-		println!("not:{:?}", filter_items.not(":nth-child(odd)")?.text());
-		println!("is:{:?}", filter_items.is("ul > li")?);
-		let rightbox = root.find("#page")?;
-		println!("page:{}", rightbox.length());
-		let onlytype = rightbox.find(":only-of-type")?;
-		println!("onlytype: {:}", onlytype.text());
-	}
+	// for _ in 0..TIMES {
+	let root = Vis::load(html)?;
+	let filter_area = root.find(".mh-filter-salary")?;
+	filter_area.text();
+	let filter_items = filter_area.find(".mh-item")?;
+	println!("length:{}", filter_items.length());
+	filter_items.filter(":nth-child(odd)")?.text();
+	filter_items.not(":nth-child(odd)")?.remove();
+	let filter_items = filter_area.find(".mh-item")?;
+	println!("length:{}", filter_items.length());
+	filter_items.is("ul > li")?;
+	let rightbox = root.find("#page")?;
+	rightbox.length();
+	let onlytype = rightbox.find(":only-of-type")?;
+	onlytype.text();
+	// }
+	let used_time = SystemTime::now().duration_since(start_time)?;
 	println!(
-		"消耗时间：{:?}",
-		SystemTime::now().duration_since(start_time)? / TIMES
+		"执行： {} 次，总耗时： {:?} ，平均消耗时间： {:?}",
+		TIMES,
+		used_time,
+		used_time / TIMES
 	);
+
 	Ok(())
 }

@@ -162,6 +162,7 @@ impl INodeTrait for Dom {
 		}
 		None
 	}
+
 	/// impl `owner_document`
 	fn owner_document(&self) -> MaybeDocResult {
 		if let Some(root) = &self.node.borrow().root {
@@ -189,6 +190,49 @@ impl INodeTrait for Dom {
 	/// impl `outer_html`
 	fn outer_html(&self) -> &str {
 		to_static_str(self.node.borrow().build(&Default::default(), false))
+	}
+	/// impl `remov_child`
+	fn remove_child(&mut self, node: BoxDynNode) {
+		if let Some(parent) = &node.parent().unwrap_or(None) {
+			if self.is(parent) {
+				// is a child
+				if let Some(childs) = self.node.borrow_mut().childs.as_mut() {
+					let mut find_index: Option<usize> = None;
+					for (index, child) in childs.iter().enumerate() {
+						let dom = Box::new(Dom {
+							node: Rc::clone(child),
+						}) as BoxDynNode;
+						if node.is(&dom) {
+							find_index = Some(index);
+						}
+					}
+					if let Some(index) = find_index {
+						childs.remove(index);
+					}
+				}
+			}
+		}
+	}
+	//
+	fn append_child(&mut self, node: BoxDynNode) {
+		// test if the node is self's parent node
+		let mut cur = self.cloned();
+		if cur.is(&node) {
+			panic!("Can't append child of self.");
+		}
+		loop {
+			if let Some(parent) = &cur.parent().unwrap_or(None) {
+				if parent.is(&node) {
+					panic!("Can't append a parent node as child");
+				}
+				cur = parent.cloned();
+			} else {
+				break;
+			}
+		}
+		match node.node_type() {
+			INodeType::Document => {}
+		}
 	}
 }
 
