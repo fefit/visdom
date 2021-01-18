@@ -29,11 +29,16 @@ impl INodeTrait for Dom {
 	}
 	/// impl `tag_name`
 	fn tag_name(&self) -> &str {
-		if let Some(meta) = &self.node.borrow().meta {
-			let name = meta.borrow().get_name(false);
-			return to_static_str(name);
+		match self.node_type() {
+			INodeType::Element => {
+				if let Some(meta) = &self.node.borrow().meta {
+					let name = meta.borrow().get_name(false);
+					return to_static_str(name);
+				}
+				panic!("Html syntax error: not found a tag name.");
+			}
+			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
 		}
-		panic!("Wrong `tag_name`")
 	}
 	/// impl `node_type`
 	fn node_type(&self) -> INodeType {
@@ -61,8 +66,8 @@ impl INodeTrait for Dom {
 	/// impl `children`
 	fn child_nodes<'b>(&self) -> Result<'b> {
 		if let Some(childs) = &self.node.borrow().childs {
-      let mut result = NodeList::with_capacity(childs.len());
-      let nodes = result.get_mut_ref();
+			let mut result = NodeList::with_capacity(childs.len());
+			let nodes = result.get_mut_ref();
 			for cur in childs {
 				nodes.push(Box::new(Dom { node: cur.clone() }));
 			}
