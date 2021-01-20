@@ -102,7 +102,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// let children = lazy.find("span")?;
 	// println!("span.length: {}", children.length());
 	// println!("span: {}", children.text());
-	let not = test.filter(":not(#test)")?;
-	println!("not:{}", not.length());
+	let not = test.filter(":not(:not(.a))")?;
+	println!("length:{}", not.length());
+	println!("text:{}", not.text());
 	Ok(())
 }

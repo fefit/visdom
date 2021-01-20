@@ -1,36 +1,42 @@
-use ntree::selector::interface::{BoxDynNode, IAttrValue, IDocumentTrait, INodeTrait, INodeType, InsertPosition, MaybeDocResult, MaybeResult, NodeList, Result};
+use ntree::selector::interface::{
+	BoxDynNode, IAttrValue, IDocumentTrait, INodeTrait, INodeType, InsertPosition, MaybeDocResult,
+	MaybeResult, NodeList, Result,
+};
 use ntree::{self, utils::retain_by_index};
-use rphtml::{config::RenderOptions, parser::{Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode, allow_insert}};
-use std::{any::Any, cell::RefCell};
+use rphtml::{
+	config::RenderOptions,
+	parser::{allow_insert, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode},
+};
 use std::rc::Rc;
+use std::{any::Any, cell::RefCell};
 /// type implement INodeTrait with Node
 struct Dom {
 	node: Rc<RefCell<Node>>,
 }
-impl Dom{
-  fn validate_dom_change(&self, node: &BoxDynNode, method: &str){
-    // test if current node is element node
-    let my_node_type = self.node.borrow().node_type;
-    if my_node_type != NodeType::Tag{
-      panic!("Can't {} for a {:?} type", method, my_node_type);
-    }
-    // document
-    if let INodeType::Document = node.node_type()  {
-      panic!("Can't {} of a document type", method);
-    }
-    // test if same node
+impl Dom {
+	fn validate_dom_change(&self, node: &BoxDynNode, method: &str) {
+		// test if current node is element node
+		let my_node_type = self.node.borrow().node_type;
+		if my_node_type != NodeType::Tag {
+			panic!("Can't {} for a {:?} type", method, my_node_type);
+		}
+		// document
+		if let INodeType::Document = node.node_type() {
+			panic!("Can't {} of a document type", method);
+		}
+		// test if same node
 		if self.is(&node) {
 			panic!("Can't {} of self.", method);
-    }
-    // test if the node is self's parent node
-    let mut cur = self.cloned();
+		}
+		// test if the node is self's parent node
+		let mut cur = self.cloned();
 		while let Some(parent) = &cur.parent().unwrap_or(None) {
-      if parent.is(&node) {
-        panic!("Can't {} of self's parent", method);
-      }
-      cur = parent.cloned();
-    }
-  }
+			if parent.is(&node) {
+				panic!("Can't {} of self's parent", method);
+			}
+			cur = parent.cloned();
+		}
+	}
 }
 
 fn to_static_str(orig: String) -> &'static str {
@@ -38,9 +44,9 @@ fn to_static_str(orig: String) -> &'static str {
 }
 
 impl INodeTrait for Dom {
-  fn to_node(self: Box<Self>)->Box<dyn Any>{
-    self
-  }
+	fn to_node(self: Box<Self>) -> Box<dyn Any> {
+		self
+	}
 	/// impl `cloned`
 	fn cloned<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(Dom {
@@ -62,22 +68,22 @@ impl INodeTrait for Dom {
 	}
 	/// impl `node_type`
 	fn node_type(&self) -> INodeType {
-    let node = self.node.borrow();
+		let node = self.node.borrow();
 		match node.node_type {
 			NodeType::AbstractRoot => {
-        let (is_document, _) = node.is_document();
-        if is_document{
-          INodeType::Document
-        } else {
-          INodeType::AbstractRoot
-        }
-      },
+				let (is_document, _) = node.is_document();
+				if is_document {
+					INodeType::Document
+				} else {
+					INodeType::AbstractRoot
+				}
+			}
 			NodeType::Comment => INodeType::Comment,
 			NodeType::Text | NodeType::SpacesBetweenTag => INodeType::Text,
-      NodeType::Tag => INodeType::Element,
-      NodeType::XMLCDATA => INodeType::XMLCDATA,
-      NodeType::HTMLDOCTYPE => INodeType::HTMLDOCTYPE,
-      _ => INodeType::Other
+			NodeType::Tag => INodeType::Element,
+			NodeType::XMLCDATA => INodeType::XMLCDATA,
+			NodeType::HTMLDOCTYPE => INodeType::HTMLDOCTYPE,
+			_ => INodeType::Other,
 		}
 	}
 	/// impl `parent`
@@ -126,7 +132,7 @@ impl INodeTrait for Dom {
 	fn set_attribute(&mut self, name: &str, value: Option<&str>) {
 		let mut need_quote = false;
 		let mut quote: char = '"';
-    let pos = CodePosAt::default();
+		let pos = CodePosAt::default();
 		if let Some(meta) = &self.node.borrow().meta {
 			let value = value.map(|v| {
 				let mut find_quote: bool = false;
@@ -242,88 +248,91 @@ impl INodeTrait for Dom {
 	}
 	// append child
 	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynNode) {
-    // base validate
-    let action = position.action();
-    self.validate_dom_change(&node, action);
-    let orig_node = node.cloned();
-    let node_type = node.node_type();
-    let specified: Box<dyn Any> = node.cloned().to_node();
-    if let Ok(dom) = specified.downcast::<Dom>(){
-      // remove current node from parent's childs
-      if let Ok(Some(parent)) = &mut orig_node.parent(){
-        parent.remove_child(orig_node);
-      }
-      // get the nodes
-      let mut nodes= match node_type {
-        INodeType::AbstractRoot => {
-          if let Some(childs) = &dom.node.borrow().childs{
-            childs.iter().map(|v|Rc::clone(&v)).collect::<Vec<RefNode>>()
-          }else{
-            vec![]
-          }
-        }
-        _ => {
-          vec![dom.node]
-        }
-      };
-      // filter the node allowed
-      let tag_name = self.tag_name();
-      let mut not_allowed_indexs: Vec<usize> = Vec::with_capacity(nodes.len());
-      for (index, node) in nodes.iter().enumerate(){
-        if !allow_insert(tag_name, node.borrow().node_type){
-          not_allowed_indexs.push(index);
-        }
-      }
-      let not_allowed_num = not_allowed_indexs.len();
-      if not_allowed_num == nodes.len(){
-        return;
-      }
-      if not_allowed_num > 0{
-        retain_by_index(&mut nodes, &not_allowed_indexs);
-      }
-      // insert
-      use InsertPosition::*;
-      match position{
-        BeforeBegin | AfterEnd => {
-          // insertBefore,insertAfter
-          if let Some(parent) = &self.node.borrow_mut().parent{
-            if let Some(parent) = parent.upgrade(){
-              if let Some(siblings) = &mut parent.borrow_mut().childs{
-                let mut find_index: Option<usize> = None;
-                for (index, sibling) in siblings.iter().enumerate(){
-                  if Node::is_same(&self.node, sibling){
-                    find_index = Some(index);
-                  }
-                }
-                if let Some(mut index) = find_index{
-                  // insert
-                  if *position == AfterEnd{
-                    index += 1;
-                  }
-                  siblings.splice(index..index, nodes);
-                }
-              }
-            }
-          }
-        },
-        AfterBegin | BeforeEnd => {
-          // prepend, append
-          if let Some(childs) = &mut self.node.borrow_mut().childs{
-            if *position == BeforeEnd{
-              childs.extend(nodes);
-            } else {
-              nodes.append(childs);
-              *childs = nodes;
-            }
-          }else{
-            self.node.borrow_mut().childs = Some(nodes);
-          }
-        }
-      }
-    } else {
-      // not the Dom
-      panic!("Can't {} that not implemented 'Dom'", action);
-    }
+		// base validate
+		let action = position.action();
+		self.validate_dom_change(&node, action);
+		let orig_node = node.cloned();
+		let node_type = node.node_type();
+		let specified: Box<dyn Any> = node.cloned().to_node();
+		if let Ok(dom) = specified.downcast::<Dom>() {
+			// remove current node from parent's childs
+			if let Ok(Some(parent)) = &mut orig_node.parent() {
+				parent.remove_child(orig_node);
+			}
+			// get the nodes
+			let mut nodes = match node_type {
+				INodeType::AbstractRoot => {
+					if let Some(childs) = &dom.node.borrow().childs {
+						childs
+							.iter()
+							.map(|v| Rc::clone(&v))
+							.collect::<Vec<RefNode>>()
+					} else {
+						vec![]
+					}
+				}
+				_ => {
+					vec![dom.node]
+				}
+			};
+			// filter the node allowed
+			let tag_name = self.tag_name();
+			let mut not_allowed_indexs: Vec<usize> = Vec::with_capacity(nodes.len());
+			for (index, node) in nodes.iter().enumerate() {
+				if !allow_insert(tag_name, node.borrow().node_type) {
+					not_allowed_indexs.push(index);
+				}
+			}
+			let not_allowed_num = not_allowed_indexs.len();
+			if not_allowed_num == nodes.len() {
+				return;
+			}
+			if not_allowed_num > 0 {
+				retain_by_index(&mut nodes, &not_allowed_indexs);
+			}
+			// insert
+			use InsertPosition::*;
+			match position {
+				BeforeBegin | AfterEnd => {
+					// insertBefore,insertAfter
+					if let Some(parent) = &self.node.borrow_mut().parent {
+						if let Some(parent) = parent.upgrade() {
+							if let Some(siblings) = &mut parent.borrow_mut().childs {
+								let mut find_index: Option<usize> = None;
+								for (index, sibling) in siblings.iter().enumerate() {
+									if Node::is_same(&self.node, sibling) {
+										find_index = Some(index);
+									}
+								}
+								if let Some(mut index) = find_index {
+									// insert
+									if *position == AfterEnd {
+										index += 1;
+									}
+									siblings.splice(index..index, nodes);
+								}
+							}
+						}
+					}
+				}
+				AfterBegin | BeforeEnd => {
+					// prepend, append
+					if let Some(childs) = &mut self.node.borrow_mut().childs {
+						if *position == BeforeEnd {
+							childs.extend(nodes);
+						} else {
+							nodes.append(childs);
+							*childs = nodes;
+						}
+					} else {
+						self.node.borrow_mut().childs = Some(nodes);
+					}
+				}
+			}
+		} else {
+			// not the Dom
+			panic!("Can't {} that not implemented 'Dom'", action);
+		}
 	}
 }
 
@@ -352,12 +361,12 @@ impl From<Rc<RefCell<Node>>> for Dom {
 pub struct Vis;
 
 impl Vis {
-  pub fn init(){
-    ntree::init();
-  }
+	pub fn init() {
+		ntree::init();
+	}
 	pub fn load(html: &str) -> Result {
-    let doc = Doc::parse(html, Default::default()).map_err(|_|"")?;
-    let root: Dom = Rc::clone(&doc.get_root_node()).into();
+		let doc = Doc::parse(html, Default::default()).map_err(|_| "")?;
+		let root: Dom = Rc::clone(&doc.get_root_node()).into();
 		Ok(NodeList::with_nodes(vec![Box::new(root)]))
-  }
+	}
 }
