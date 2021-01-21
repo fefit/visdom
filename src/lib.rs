@@ -4,7 +4,7 @@ use ntree::selector::interface::{
 };
 use ntree::{self, utils::retain_by_index};
 use rphtml::{
-	config::RenderOptions,
+	config::{ParseOptions, RenderOptions},
 	parser::{allow_insert, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode},
 };
 use std::rc::Rc;
@@ -63,6 +63,7 @@ impl INodeTrait for Dom {
 				}
 				panic!("Html syntax error: not found a tag name.");
 			}
+			INodeType::Document | INodeType::AbstractRoot => "",
 			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
 		}
 	}
@@ -188,6 +189,23 @@ impl INodeTrait for Dom {
 			});
 		}
 	}
+	/// impl `remove_attribute`
+	fn remove_attribute(&mut self, name: &str) {
+		if let Some(meta) = &self.node.borrow().meta {
+			let mut find_index: Option<usize> = None;
+			for (index, attr) in meta.borrow().attrs.iter().enumerate() {
+				if let Some(key) = &attr.key {
+					if key.content == name {
+						find_index = Some(index);
+						break;
+					}
+				}
+			}
+			if let Some(index) = find_index {
+				meta.borrow_mut().attrs.remove(index);
+			}
+		}
+	}
 	/// impl `uuid`
 	fn uuid(&self) -> Option<&str> {
 		if let Some(uuid) = &self.node.borrow().uuid {
@@ -208,7 +226,13 @@ impl INodeTrait for Dom {
 	}
 	/// impl `text_content`
 	fn text_content(&self) -> &str {
-		to_static_str(self.node.borrow().build(&Default::default(), true))
+		to_static_str(self.node.borrow().build(
+			&RenderOptions {
+				decode_entity: true,
+				..Default::default()
+			},
+			true,
+		))
 	}
 	/// impl `inner_html`
 	fn inner_html(&self) -> &str {
@@ -361,11 +385,21 @@ impl From<Rc<RefCell<Node>>> for Dom {
 pub struct Vis;
 
 impl Vis {
-	pub fn init() {
+	pub(crate) fn init() {
 		ntree::init();
 	}
 	pub fn load(html: &str) -> Result {
-		let doc = Doc::parse(html, Default::default()).map_err(|_| "")?;
+		// init
+		Vis::init();
+		// nodes
+		let doc = Doc::parse(
+			html,
+			ParseOptions {
+				auto_remove_nostart_endtag: true,
+				..Default::default()
+			},
+		)
+		.map_err(|_| "")?;
 		let root: Dom = Rc::clone(&doc.get_root_node()).into();
 		Ok(NodeList::with_nodes(vec![Box::new(root)]))
 	}
