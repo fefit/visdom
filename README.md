@@ -1,16 +1,18 @@
 # Visdom
 
-一个 Rust 编写的 HTML 文档操作库，与 Nodejs 的 cheerio 类似，它的 API 风格与 jQuery 保持一致。
+一个 Rust 编写的 HTML 文档操作库，与 Nodejs 的 cheerio 类似，它的 API 风格基本与 jQuery 保持一致。
 
-## 如何使用
+## 使用方式
 
-引入 visdom 库
+Cargo.toml
 
 ```toml
 [depedencies]
 visdom = "0.0.1"
 ```
 
+
+main.rs
 
 ```rust
 use visdom::Vis;
@@ -46,7 +48,7 @@ fn main()-> Result<(), &'static str>{
 ### 选择器操作
 
 
-| 选择器方法                  |             说明             | 备注 |
+| 选择器方法及其它                  |             说明             | 备注 |
 | :-------------------- | :-------------------------- | :---: |
 | <b>`find`</b>(selector:&str)   |  查找匹配选择器的子孙元素  |  选择器方法均可参见jQuery文档    |
 | <b>`filter`</b>(selector:&str) |     筛选出匹配选择器的元素     |      |
@@ -61,6 +63,8 @@ fn main()-> Result<(), &'static str>{
 | <b>`prev`</b>(selector:&str)     | 从前一个紧挨兄弟元素开始，查找匹配选择器的元素 |      |
 | <b>`prev_all`</b>(selector:&str)     | 从前面所有兄弟元素开始，查找匹配选择器的元素 |      |
 | <b>`eq`</b>(index:usize)     | 获取元素列表中第index个 |      |
+| <b>`length`</b>()   |  元素集合长度  |      |
+| <b>`is_empty`</b>() | 元素集合是否为空       |      |
 
 
 ### 支持选择器
