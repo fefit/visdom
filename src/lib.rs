@@ -5,6 +5,7 @@ use ntree::selector::interface::{
 use ntree::{self, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
+	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
 	parser::{allow_insert, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode},
 };
 use std::rc::Rc;
@@ -234,6 +235,19 @@ impl INodeTrait for Dom {
 			true,
 		))
 	}
+
+	/// impl `set_text`
+	fn set_text(&mut self, content: &str) {
+		let mut node = self.node.borrow_mut();
+		if content.is_empty() {
+			node.childs = None;
+		} else {
+			let content = encode(content, SpecialChars, NamedOrDecimal);
+			let text_node = Node::create_text_node(&content, None);
+			node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+		}
+	}
+
 	/// impl `inner_html`
 	fn inner_html(&self) -> &str {
 		to_static_str(self.node.borrow().build(
@@ -244,10 +258,31 @@ impl INodeTrait for Dom {
 			false,
 		))
 	}
+
 	/// impl `outer_html`
 	fn outer_html(&self) -> &str {
 		to_static_str(self.node.borrow().build(&Default::default(), false))
 	}
+
+	/// impl `set_html`
+	fn set_html(&mut self, content: &str) {
+		let doc = Doc::parse(
+			content,
+			ParseOptions {
+				auto_remove_nostart_endtag: true,
+				..Default::default()
+			},
+		)
+		.unwrap();
+		if let Some(childs) = &mut doc.get_root_node().borrow_mut().childs {
+			// set childs with new childs
+			self.node.borrow_mut().childs = Some(childs.split_off(0));
+		} else {
+			// remove the childs
+			self.node.borrow_mut().childs = None;
+		}
+	}
+
 	/// impl `remov_child`
 	fn remove_child(&mut self, node: BoxDynNode) {
 		if let Some(parent) = &node.parent().unwrap_or(None) {
