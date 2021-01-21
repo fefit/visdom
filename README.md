@@ -45,18 +45,6 @@ fn main()-> Result<(), &'static str>{
 
 ### 选择器操作
 
-<style>
-table th:first-of-type {
-    width: 40%;
-}
-table th:nth-of-type(2) {
-    width: 40%;
-}
-table th:nth-of-type(3) {
-    width: 20%;
-}
-</style>
-
 
 | 选择器方法                  |             说明             | 备注 |
 | :-------------------- | :-------------------------- | :---: |
@@ -83,8 +71,8 @@ table th:nth-of-type(3) {
 | <b>`#id`</b>   |  id选择器  |      |
 | <b>`.class`</b>   |  类选择器  |      |
 | <b>`p`</b>   |  标签名选择器  |      |
-| <b>`[attr]`</b>   |  含有{attr}的元素  |      |
-| <b>`[attr*=value]`</b>   |  {attr}值为{value}的元素  |      |
+| <b>`[attr]`</b>   |  含有{attr}的元素  |  |
+| <b>`[attr=value]`</b>   |  {attr}值为{value}的元素  |      |
 | <b>`[attr*=value]`</b>   |  {attr}包含{value}值的元素  |      |
 | <b>`[attr|=value]`</b>   |  {attr}包含{value}值或者{value}-的元素  |      |
 | <b>`[attr~=value]`</b>   |  {attr}包含{value}值，且值是以空格作为分隔的元素  |      |
