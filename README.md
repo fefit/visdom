@@ -74,7 +74,7 @@ fn main()-> Result<(), &'static str>{
 | <b>`[attr]`</b>   |  含有{attr}的元素  |  |
 | <b>`[attr=value]`</b>   |  {attr}值为{value}的元素  |      |
 | <b>`[attr*=value]`</b>   |  {attr}包含{value}值的元素  |      |
-| <b>`[attr|=value]`</b>   |  {attr}包含{value}值或者{value}-的元素  |      |
+| <b><code>[attr&#124;=value]</code></b>   |  {attr}包含{value}值或者{value}-的元素  |      |
 | <b>`[attr~=value]`</b>   |  {attr}包含{value}值，且值是以空格作为分隔的元素  |      |
 | <b>`[attr^=value]`</b>   |  {attr}以{value}值开头的元素  |      |
 | <b>`[attr$=value]`</b>   |  {attr}以{value}值结尾的元素  |      |
@@ -88,13 +88,13 @@ fn main()-> Result<(), &'static str>{
 | <b>`:first-child`</b> |     第一个子元素     |      |
 | <b>`:last-child`</b>  |     最后一个子元素     |      |
 | <b>`:only-child`</b>  |     唯一子元素     |      |
-| <b>`:nth-child(a'n + b')`</b> | a'和b'为整数，n从0开始计数，和为1则表示第一个子元素，最终将获取所有符合该数列值的子元素 |  a'n + b'形式的选择器都支持odd和even关键字    |
-| <b>`:nth-last-child(a'n + b')`</b> | 同上，但从最后一个子元素开始计数算作第一个子元素 |      |
+| <b>`:nth-child(nth)`</b> | nth表示为a'n + b'，a'和b'为整数<零及正负>，n从0开始计数，和为1则表示第一个子元素，最终将获取所有符合该数列值的子元素 |  nth形式的选择器都支持odd和even关键字    |
+| <b>`:nth-last-child(nth)`</b> | 同上，但从最后一个子元素开始计数算作第一个子元素 |      |
 | <b>`:first-of-type`</b> | 子元素中第一个出现的标签元素<按标签名> |      |
 | <b>`:last-of-type`</b> | 子元素中最后一个出现的标签元素<按标签名> |      |
 | <b>`:only-of-type`</b> | 子元素中只出现一次的标签元素<按标签名> |      |
-| <b>`:nth-of-type(a'n + b')`</b> | 子元素中标签<按标签名>出现顺序符合数列值的元素 |      |
-| <b>`:nth-last-of-type(a'n + b')`</b> | 同上，但出现顺序从最后一个元素往前数 |      |
+| <b>`:nth-of-type(nth)`</b> | 子元素中标签<按标签名>出现顺序符合数列值的元素 |      |
+| <b>`:nth-last-of-type(nth)`</b> | 同上，但出现顺序从最后一个元素往前数 |      |
 | <b>`:not(selector)`</b> | 匹配不符合selector选择器的元素 |      |
 | <b>`:header`</b> | 所有标题元素，h1,h2,h3,h4,h5,h6 的别名 |      |
 | <b>`:input`</b> | 所有表单元素，input,select,textarea,button 的别名 |      |
