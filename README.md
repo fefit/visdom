@@ -74,29 +74,29 @@ let texts = lis.map(|_index, ele|->&str{
 
 | 选择器方法                 | 说明                                           |              备注              |
 | :------------------------------- | :--------------------------------------------- | :----------------------------: |
-| <b>`find`</b>(selector:&str)     | 查找匹配选择器的子孙元素                       | 可参见 jQuery 文档 |
-| <b>`filter`</b>(selector:&str)   | 筛选出匹配选择器的元素                         |                                |
-| <b>`filter_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则包含，false将被排除                         |       对应filter方法参数为函数的形式                         |
+| <b>`find`</b>(selector: &str)     | 查找匹配选择器的子孙元素                       | 可参见 jQuery 文档 |
+| <b>`filter`</b>(selector: &str)   | 筛选出匹配选择器的元素                         |                                |
+| <b>`filter_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则包含，false将被排除                         |       对应filter方法参数为函数的形式                         |
 | <b>`filter_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被包含，否则被排除                         |   对应filter方法参数为集合的形式                             |
-| <b>`not`</b>(selector:&str)      | 排除匹配选择器的元素                           |                                |
-| <b>`not_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则被排除，false则包含                         |        对应not方法参数为函数的形式                        |
+| <b>`not`</b>(selector: &str)      | 排除匹配选择器的元素                           |                                |
+| <b>`not_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则被排除，false则包含                         |        对应not方法参数为函数的形式                        |
 | <b>`not_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被排除，否则包含                         |        对应not方法参数为集合的形式                        |
-| <b>`is`</b>(selector:&str)       | 判断是否有一个元素匹配选择器                   |                                |
-| <b>`is_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，有任意一个为true则返回true | 对应is方法参数为函数的形式 |
+| <b>`is`</b>(selector: &str)       | 判断是否有一个元素匹配选择器                   |                                |
+| <b>`is_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，有任意一个为true则返回true | 对应is方法参数为函数的形式 |
 | <b>`is_in`</b>(node_list: &NodeList)   | 有任意一个元素包含在node_list中，则返回true                         |  对应is方法参数为集合的形式                              |
-| <b>`is_all`</b>(selector:&str)       | 判断是否所有元素都匹配选择器                   |   库额外提供方法                             |
-| <b>`is_all_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，全部为true则返回true，否则false | is_all方法参数为函数的形式 |
+| <b>`is_all`</b>(selector: &str)       | 判断是否所有元素都匹配选择器                   |   库额外提供方法                             |
+| <b>`is_all_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，全部为true则返回true，否则false | is_all方法参数为函数的形式 |
 | <b>`is_all_in`</b>(node_list: &NodeList)   | 所有元素都包含在node_list中，则返回true，否则为false                         |   is_all方法参数为集合的形式                             |
-| <b>`children`</b>(selector:&str) | 从子元素开始，查找匹配选择器的元素             |                                |
-| <b>`parent`</b>(selector:&str)   | 从父元素开始，查找匹配选择器的元素             |                                |
-| <b>`parents`</b>(selector:&str)  | 从父元素及祖先元素开始，查找匹配选择器的元素   |                                |
-| <b>`siblings`</b>(selector:&str) | 从兄弟元素开始，查找匹配选择器的元素           |                                |
-| <b>`next`</b>(selector:&str)     | 从后一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
-| <b>`next_all`</b>(selector:&str) | 从后面所有兄弟元素开始，查找匹配选择器的元素   |                                |
-| <b>`prev`</b>(selector:&str)     | 从前一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
-| <b>`prev_all`</b>(selector:&str) | 从前面所有兄弟元素开始，查找匹配选择器的元素   |                                |
-| <b>`eq`</b>(index:usize)         | 获取元素列表中第 index 个                      |                                |
-| <b>`slice`</b>(range:Range)         | 获取某段范围内元素                      | 如：slice(0..=2)，表示前三个元素                               |
+| <b>`children`</b>(selector: &str) | 从子元素开始，查找匹配选择器的元素             |                                |
+| <b>`parent`</b>(selector: &str)   | 从父元素开始，查找匹配选择器的元素             |                                |
+| <b>`parents`</b>(selector: &str)  | 从父元素及祖先元素开始，查找匹配选择器的元素   |                                |
+| <b>`siblings`</b>(selector: &str) | 从兄弟元素开始，查找匹配选择器的元素           |                                |
+| <b>`next`</b>(selector: &str)     | 从后一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
+| <b>`next_all`</b>(selector: &str) | 从后面所有兄弟元素开始，查找匹配选择器的元素   |                                |
+| <b>`prev`</b>(selector: &str)     | 从前一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
+| <b>`prev_all`</b>(selector: &str) | 从前面所有兄弟元素开始，查找匹配选择器的元素   |                                |
+| <b>`eq`</b>(index: usize)         | 获取元素列表中第 index 个                      |                                |
+| <b>`slice`</b>(range: Range)         | 获取某段范围内元素                      | 如：slice(0..=2)，表示前三个元素                               |
 
 ### 辅助方法
 
@@ -104,8 +104,8 @@ let texts = lis.map(|_index, ele|->&str{
 | :------------------------------- | :--------------------------------------------- | :----------------------------: |
 | <b>`length`</b>()                | 元素集合长度                                   |                                |
 | <b>`is_empty`</b>()              | 元素集合是否为空                               |                                |
-| <b>`foreach`</b>(&#124;index:usize,ele:&mut BoxDynNode&#124; -> bool)              |  对每个元素进行遍历，当返回值为false时停止遍历                              |                                |
-| <b>`map`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> T)              |  对每个元素进行遍历，返回回调方法返回值的集合                              |                                |
+| <b>`for_each`</b>(&#124;index: usize, ele: &mut BoxDynNode&#124; -> bool)              |  对每个元素进行遍历，当返回值为false时停止遍历                              |                                |
+| <b>`map`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> T)              |  对每个元素进行遍历，返回回调方法返回值的集合                              |                                |
 
 ### 支持选择器
 
@@ -148,21 +148,21 @@ let texts = lis.map(|_index, ele|->&str{
 
 | 属性方法                                               | 说明                                                                 | 备注 |
 | :----------------------------------------------------- | :------------------------------------------------------------------- | :--: |
-| <b>`attr`</b>(attr_name:&str)                          | 获取属性                                                             |      |
-| <b>`set_attr`</b>(attr_name:&str, value: Option<&str>) | 设置属性值，当 value 为 None 时，表示设置布尔 true，没有字符串属性值 |      |
-| <b>`remove_attr`</b>(attr_name:&str)                   | 删除属性                                                             |      |
-| <b>`add_class`</b>(class_name:&str)                    | 增加 class 类名，多个 class 用空格隔开                               |      |
-| <b>`remove_class`</b>(class_name:&str)                 | 删除 class 类名                                                      |      |
-| <b>`toggle_class`</b>(class_name:&str)                 | 切换 class 类名，存在则删除，不存在则添加                            |      |
+| <b>`attr`</b>(attr_name: &str) -> IAttrValue                         | 获取属性                                                             |  值为 `IAttrValue` 枚举类型    |
+| <b>`set_attr`</b>(attr_name: &str, value: Option<&str>) | 设置属性值，当 value 为 None 时，表示设置布尔 true，没有字符串属性值 |      |
+| <b>`remove_attr`</b>(attr_name: &str)                   | 删除属性                                                             |      |
+| <b>`add_class`</b>(class_name: &str)                    | 增加 class 类名，多个 class 用空格隔开                               |      |
+| <b>`remove_class`</b>(class_name: &str)                 | 删除 class 类名                                                      |      |
+| <b>`toggle_class`</b>(class_name: &str)                 | 切换 class 类名，存在则删除，不存在则添加                            |      |
 
 ### 文本操作
 
 | 文本方法                        | 说明                                            | 备注 |
 | :------------------------------ | :---------------------------------------------- | :--: |
 | <b>`text`</b>()                 | 获取所有元素的文本内容，实体将会自动 decode     |      |
-| <b>`set_text`</b>(content:&str) | 设置元素的内容为 content 文本<自动 encode 实体> |      |
+| <b>`set_text`</b>(content: &str) | 设置元素的内容为 content 文本<自动 encode 实体> |      |
 | <b>`html`</b>()                 | 获取第一个元素的 html 文档内容                  |      |
-| <b>`set_html`</b>(content:&str) | 设置元素的子节点为 content 解析后的子节点       |      |
+| <b>`set_html`</b>(content: &str) | 设置元素的子节点为 content 解析后的子节点       |      |
 | <b>`outer_html`</b>()           | 获取第一个元素的 html 文档内容，包含节点本身    |      |
 
 ### 节点操作
