@@ -59,7 +59,7 @@ fn main()-> Result<(), &'static str>{
 示例：
 ```rust
 // 接以上示例
-let texts = lis.map(|_index, ele|->&str{
+let texts = lis.map(|_index, ele|{
   let ele = Vis::dom(ele);
 	return String::from(ele.text());
 });
