@@ -8,7 +8,7 @@ Cargo.toml
 
 ```toml
 [depedencies]
-visdom = "0.0.1"
+visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.1", version = "0.0.1"}
 ```
 
 main.rs
@@ -34,25 +34,59 @@ fn main()-> Result<(), &'static str>{
       </body>
     </html>
   "##;
+  // init the selector api
+  Vis::init();
+  // load html
   let nodes = Vis::load(html)?;
   let lis = nodes.find("#header li")?;
   println!("{}", lis.text());
   // 将输出 "Hello,VisDom"
 }
 ```
+## Vis
 
+静态方法：`init()`
+
+    初始化ntree接口
+
+静态方法：`load(html: &str)`
+    
+    加载html文档为document文档节点
+
+静态方法：`dom(ele: &BoxDynNode)`
+
+    将一个ele元素转换为NodeList节点，主要用于在以上带回调方法参数的方法中
+示例：
+```rust
+// 接以上示例
+let texts = lis.map(|_index, ele|->&str{
+  let ele = Vis::dom(ele);
+	return String::from(ele.text());
+});
+// 则texts为Vec<String>, ["Hello,", "Vis", "Dom"]
+// 没有被包装的ele元素具备的方法可以查看ntree接口方法
+```
 ## API
 
 以下 API 接口由 [ntree](https://github.com/fefit/ntree) 接口库实现。
 
 ### 选择器操作
 
-| 选择器方法及其它                 | 说明                                           |              备注              |
+| 选择器方法                 | 说明                                           |              备注              |
 | :------------------------------- | :--------------------------------------------- | :----------------------------: |
-| <b>`find`</b>(selector:&str)     | 查找匹配选择器的子孙元素                       | 选择器方法均可参见 jQuery 文档 |
+| <b>`find`</b>(selector:&str)     | 查找匹配选择器的子孙元素                       | 可参见 jQuery 文档 |
 | <b>`filter`</b>(selector:&str)   | 筛选出匹配选择器的元素                         |                                |
+| <b>`filter_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则包含，false将被排除                         |       对应filter方法参数为函数的形式                         |
+| <b>`filter_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被包含，否则被排除                         |   对应filter方法参数为集合的形式                             |
 | <b>`not`</b>(selector:&str)      | 排除匹配选择器的元素                           |                                |
-| <b>`is`</b>(selector:&str)       | 判断是否所有元素都匹配选择器                   |                                |
+| <b>`not_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则被排除，false则包含                         |        对应not方法参数为函数的形式                        |
+| <b>`not_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被排除，否则包含                         |        对应not方法参数为集合的形式                        |
+| <b>`is`</b>(selector:&str)       | 判断是否有一个元素匹配选择器                   |                                |
+| <b>`is_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，有任意一个为true则返回true | 对应is方法参数为函数的形式 |
+| <b>`is_in`</b>(node_list: &NodeList)   | 有任意一个元素包含在node_list中，则返回true                         |  对应is方法参数为集合的形式                              |
+| <b>`is_all`</b>(selector:&str)       | 判断是否所有元素都匹配选择器                   |   库额外提供方法                             |
+| <b>`is_all_by`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，全部为true则返回true，否则false | is_all方法参数为函数的形式 |
+| <b>`is_all_in`</b>(node_list: &NodeList)   | 所有元素都包含在node_list中，则返回true，否则为false                         |   is_all方法参数为集合的形式                             |
 | <b>`children`</b>(selector:&str) | 从子元素开始，查找匹配选择器的元素             |                                |
 | <b>`parent`</b>(selector:&str)   | 从父元素开始，查找匹配选择器的元素             |                                |
 | <b>`parents`</b>(selector:&str)  | 从父元素及祖先元素开始，查找匹配选择器的元素   |                                |
@@ -62,8 +96,16 @@ fn main()-> Result<(), &'static str>{
 | <b>`prev`</b>(selector:&str)     | 从前一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
 | <b>`prev_all`</b>(selector:&str) | 从前面所有兄弟元素开始，查找匹配选择器的元素   |                                |
 | <b>`eq`</b>(index:usize)         | 获取元素列表中第 index 个                      |                                |
+| <b>`slice`</b>(range:Range)         | 获取某段范围内元素                      | 如：slice(0..=2)，表示前三个元素                               |
+
+### 辅助方法
+
+| 辅助方法                 | 说明                                           |              备注              |
+| :------------------------------- | :--------------------------------------------- | :----------------------------: |
 | <b>`length`</b>()                | 元素集合长度                                   |                                |
 | <b>`is_empty`</b>()              | 元素集合是否为空                               |                                |
+| <b>`foreach`</b>(&#124;index:usize,ele:&mut BoxDynNode&#124; -> bool)              |  对每个元素进行遍历，当返回值为false时停止遍历                              |                                |
+| <b>`map`</b>(&#124;index:usize,ele:&BoxDynNode&#124; -> T)              |  对每个元素进行遍历，返回回调方法返回值的集合                              |                                |
 
 ### 支持选择器
 
@@ -136,7 +178,7 @@ fn main()-> Result<(), &'static str>{
 | <b>`insert_before`</b>(nodes: &NodeList)  | 将所有节点插入该元素之前<BeforeStart>    |      |
 | <b>`before`</b>(nodes: &mut NodeList)     | 同上，但交换参数与调用者                 |      |
 | <b>`remove`</b>()                         | 删除节点，删除后持有的变量将不能再使用   |      |
-
+| <b>`empty`</b>()                         | 清空节点内所有子元素   |      |
 #### 示例代码
 
 ```rust

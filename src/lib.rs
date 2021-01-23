@@ -420,12 +420,12 @@ impl From<Rc<RefCell<Node>>> for Dom {
 pub struct Vis;
 
 impl Vis {
-	pub(crate) fn init() {
+	// init the patterns and all
+	pub fn init() {
 		ntree::init();
 	}
+	// load the html
 	pub fn load(html: &str) -> Result {
-		// init
-		Vis::init();
 		// nodes
 		let doc = Doc::parse(
 			html,
@@ -437,5 +437,9 @@ impl Vis {
 		.map_err(|_| "")?;
 		let root: Dom = Rc::clone(&doc.get_root_node()).into();
 		Ok(NodeList::with_nodes(vec![Box::new(root)]))
+	}
+	// return a NodeList
+	pub fn dom<'b>(node: &BoxDynNode) -> NodeList<'b> {
+		NodeList::with_nodes(vec![node.cloned()])
 	}
 }
