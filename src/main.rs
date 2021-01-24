@@ -10,6 +10,10 @@ fn main() -> Result<(), Box<dyn Error>> {
           <div class="class">class-div</div>
           <p>
             p-tag
+            <span>ooo</span>
+            <span>
+              <em>aaaa</em>
+            </span>
           </p>
         </div>
       </body>
@@ -19,6 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let root = Vis::load(html)?;
 	let id = root.find("#id")?;
 	let children = id.find("*")?;
-	println!("children:{}", children.length());
+	let p_has = children.has_in(&id.find("p")?)?;
+	println!("p_has:{}", p_has.text());
 	Ok(())
 }

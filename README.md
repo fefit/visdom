@@ -87,6 +87,8 @@ let texts = lis.map(|_index, ele|{
 | <b>`is_all`</b>(selector: &str)       | 判断是否所有元素都匹配选择器                   |   库额外提供方法                             |
 | <b>`is_all_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，全部为true则返回true，否则false | is_all方法参数为函数的形式 |
 | <b>`is_all_in`</b>(node_list: &NodeList)   | 所有元素都包含在node_list中，则返回true，否则为false                         |   is_all方法参数为集合的形式                             |
+| <b>`has`</b>(selector: &str)   | 筛选出子级元素中包含匹配选择器的元素 |  |
+| <b>`has_in`</b>(node_list: &NodeList)   | 筛选出有子级元素包含在node_list中的元素  |      |
 | <b>`children`</b>(selector: &str) | 从子元素开始，查找匹配选择器的元素             |                                |
 | <b>`parent`</b>(selector: &str)   | 从父元素开始，查找匹配选择器的元素             |                                |
 | <b>`parents`</b>(selector: &str)  | 从父元素及祖先元素开始，查找匹配选择器的元素   |                                |
@@ -214,13 +216,13 @@ container.append(&third_child);
 
 ## 依赖
 
-- 接口库：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
+- api 接口库：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
 - html 解析库：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
 - html 实体解析：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 
 ## 问题 & 建议 & Bugs?
 
-如果您在使用过程中遇到任何问题，或者有好的建议，欢迎提供 Issue. [Issue](https://github.com/fefit/visdom/issues)
+如果您在使用过程中遇到任何问题，或者有好的建议，欢迎提供 [Issue](https://github.com/fefit/visdom/issues).
 
 ## License
 
