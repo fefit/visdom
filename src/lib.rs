@@ -421,11 +421,12 @@ pub struct Vis;
 
 impl Vis {
 	// init the patterns and all
-	pub fn init() {
+	pub(crate) fn init() {
 		ntree::init();
 	}
 	// load the html
 	pub fn load(html: &str) -> Result {
+		Vis::init();
 		// nodes
 		let doc = Doc::parse(
 			html,

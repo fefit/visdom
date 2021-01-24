@@ -34,8 +34,6 @@ fn main()-> Result<(), &'static str>{
       </body>
     </html>
   "##;
-  // init the selector api
-  Vis::init();
   // load html
   let nodes = Vis::load(html)?;
   let lis = nodes.find("#header li")?;
@@ -44,10 +42,6 @@ fn main()-> Result<(), &'static str>{
 }
 ```
 ## Vis
-
-静态方法：`init()`
-
-    初始化ntree接口
 
 静态方法：`load(html: &str)`
     
