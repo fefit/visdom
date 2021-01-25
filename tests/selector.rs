@@ -1,4 +1,4 @@
-use ntree::selector::interface::{IAttrValue, KindError};
+use ntree::selector::interface::{IAttrValue, KindError, NodeList};
 use std::result::Result as StdResult;
 use visdom::Vis;
 type Result = StdResult<(), KindError>;
@@ -26,6 +26,12 @@ const HTML: &str = r##"
   </html>
 "##;
 
+fn is_attr(node_list: &NodeList, name: &str, value: &str) -> bool {
+	match node_list.attr(name) {
+		Some(IAttrValue::Value(v, _)) => v == value,
+		_ => false,
+	}
+}
 #[test]
 fn test_selector_find() -> Result {
 	let doc = Vis::load(HTML)?;
@@ -42,17 +48,14 @@ fn test_selector_find() -> Result {
 	assert_eq!(nested.length(), 1);
 	let divs = nested.find("div")?;
 	assert_eq!(divs.length(), 6);
-	let is_position_ok = if let Some(v) = divs.eq(1)?.attr("class") {
-		match v {
-			IAttrValue::Value(v, _) => v == r#"inner-div-1-1"#,
-			IAttrValue::True => false,
-		}
-	} else {
-		false
-	};
+	let is_position_ok = is_attr(&divs.eq(1)?, "class", "inner-div-1-1");
 	assert!(is_position_ok);
 	let sub_divs = divs.find("div")?;
 	assert_eq!(sub_divs.length(), 4);
+	// group
+	let outer_and_inner = nested.find("[class|='outer'],[class|='inner']")?;
+	assert_eq!(outer_and_inner.length(), 6);
+	assert!(is_attr(&outer_and_inner.eq(1)?, "class", "inner-div-1-1"));
 	Ok(())
 }
 
@@ -83,19 +86,11 @@ fn test_selector_filter_by() -> Result {
 	// filter #id
 	let filter_id = id_divs.filter_by(|index, _| index == 0)?;
 	assert_eq!(filter_id.length(), 1);
-	let is_id_ele = match filter_id.attr("id") {
-		Some(IAttrValue::Value(v, _)) => v == "id",
-		_ => false,
-	};
-	assert!(is_id_ele);
+	assert!(is_attr(&filter_id, "id", "id"));
 	// filter #id
 	let filter_id = id_divs.filter_by(|_, ele| Vis::dom(ele).is("#id").unwrap_or(false))?;
 	assert_eq!(filter_id.length(), 1);
-	let is_id_ele = match filter_id.attr("id") {
-		Some(IAttrValue::Value(v, _)) => v == "id",
-		_ => false,
-	};
-	assert!(is_id_ele);
+	assert!(is_attr(&filter_id, "id", "id"));
 	// filter #nested
 	let filter_nested = id_divs.filter_by(|_, ele| {
 		Vis::dom(ele)
@@ -104,11 +99,7 @@ fn test_selector_filter_by() -> Result {
 			.unwrap_or(false)
 	})?;
 	assert_eq!(filter_nested.length(), 1);
-	let is_nested_ele = match filter_nested.attr("id") {
-		Some(IAttrValue::Value(v, _)) => v == "nested",
-		_ => false,
-	};
-	assert!(is_nested_ele);
+	assert!(is_attr(&filter_nested, "id", "nested"));
 	Ok(())
 }
 
@@ -120,19 +111,25 @@ fn test_selector_filter_in() -> Result {
 	// filter #id
 	let filter_id = id_divs.filter_in(&id_ele)?;
 	assert_eq!(filter_id.length(), 1);
-	let is_id_ele = match filter_id.attr("id") {
-		Some(IAttrValue::Value(v, _)) => v == "id",
-		_ => false,
-	};
-	assert!(is_id_ele);
+	assert!(is_attr(&filter_id, "id", "id"));
 	// filter #nested
 	let nested_ele = id_divs.not_in(&id_ele)?.eq(0)?;
 	let filter_nested = id_divs.filter_in(&nested_ele)?;
 	assert_eq!(filter_nested.length(), 1);
-	let is_nested_ele = match filter_nested.attr("id") {
-		Some(IAttrValue::Value(v, _)) => v == "nested",
-		_ => false,
-	};
-	assert!(is_nested_ele);
+	assert!(is_attr(&filter_nested, "id", "nested"));
+	Ok(())
+}
+
+#[test]
+fn test_selector_not() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// not #id
+	let not_id = id_ele.not("#id")?;
+	assert_eq!(not_id.length(), 0);
+	// not [id]
+	let not_has_id = id_divs.not("[id]")?;
+	assert_eq!(not_has_id.length(), 0);
 	Ok(())
 }

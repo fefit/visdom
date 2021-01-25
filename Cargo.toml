@@ -5,8 +5,8 @@ authors = ["jxz_211 <jxz_211@163.com>"]
 edition = "2018"
 
 [dependencies]
-ntree = { git = "https://github.com/fefit/ntree", tag = "v0.0.5" }
-# ntree = { path = "../ntree" }
+# ntree = { git = "https://github.com/fefit/ntree", tag = "v0.0.5" }
+ntree = { path = "../ntree" }
 rphtml = { git = "https://github.com/fefit/rphtml", tag = "v0.3.2" }
 # rphtml = { path = "../rphtml" }
 
