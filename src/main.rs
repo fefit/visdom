@@ -8,13 +8,13 @@ fn main() -> Result<(), Box<dyn Error>> {
   <html>
     <head></head>
     <body>
-      <div id="id">
+      <div id="id" class="id">
         <div class="class">class-div</div>
         <p>
           p-tag
         </p>
       </div>
-      <div id="nested">
+      <div id="nested" class="nested">
         <div class="outer-div-1">
           outer-1
           <div class="inner-div-1-1">outer-1-inner-1</div>
@@ -30,7 +30,8 @@ fn main() -> Result<(), Box<dyn Error>> {
   </html>
   "##;
 	let doc = Vis::load(html)?;
-	let outer_and_inner = doc.find("div#nested")?.prev_all("")?;
-	println!("{}", outer_and_inner.length());
+	let divs = doc.find("div")?;
+	let div_in_id = divs.filter("div[class|='outer'],#nested>div")?;
+	println!("{}", div_in_id.length());
 	Ok(())
 }
