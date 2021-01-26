@@ -10,7 +10,7 @@ Cargo.toml
 
 ```toml
 [depedencies]
-visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.5", version = "0.0.5"}
+visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.6", version = "0.0.6"}
 ```
 
 main.rs
