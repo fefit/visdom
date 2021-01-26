@@ -30,8 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
   </html>
   "##;
 	let doc = Vis::load(html)?;
-	let divs = doc.find("div")?;
-	let div_in_id = divs.filter("div[class|='outer'],#nested>div")?;
-	println!("{}", div_in_id.length());
+	let div_in_id = doc.find("[class|='outer'],[class|='inner']")?.sort();
+	println!("{:?}", div_in_id.eq(1)?.attr("class"));
 	Ok(())
 }

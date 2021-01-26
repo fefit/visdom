@@ -10,15 +10,16 @@ Cargo.toml
 
 ```toml
 [depedencies]
-visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.4", version = "0.0.4"}
+visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.5", version = "0.0.5"}
 ```
 
 main.rs
 
 ```rust
 use visdom::Vis;
+use ntree::selector::interface::KindError;
 
-fn main()-> Result<(), &'static str>{
+fn main()-> Result<(), KindError>{
   let html = r##"
     <Doctype html>
     <html>
@@ -67,13 +68,13 @@ let texts = lis.map(|_index, ele|{
 
 ## API
 
-The follow API implemented by the library [ntree](https://github.com/fefit/ntree) 。
+The following API are inherited from the library [ntree](https://github.com/fefit/ntree) 。
 
 ### Selector Operation
 
 | Selector API                                                                   | Description                                                                                                              |                        Remarks                         |
 | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------: |
-| The caller `Self` is a `NodeList`, Return `Result<NodeList, ErrorKind>`        | Tha all APIs are same with jQuery                                                                                        |                                                        |
+| The caller `Self` is a `NodeList`, Return `Result<NodeList, ErrorKind>`        | Tha all APIs are same with the jQuery library                                                                            |                                                        |
 | <b>`find`</b>(selector: &str)                                                  | Get the descendants of each element in the `Self`, filtered by the `selector`.                                           |                                                        |
 | <b>`filter`</b>(selector: &str)                                                | Reduce `Self` to those that match the `selector`.                                                                        |                                                        |
 | <b>`filter_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Reduce `Self` to those that pass the `handle` function test.                                                             |                                                        |
@@ -102,12 +103,13 @@ The follow API implemented by the library [ntree](https://github.com/fefit/ntree
 
 ### Helpers
 
-| Helper API                                                                        | Description                                                                                      | Remarks |
-| :-------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- | :-----: |
-| <b>`length`</b>()                                                                 | Get the number of `Self`'s element.                                                              |         |
-| <b>`is_empty`</b>()                                                               | Check if `Self` has no element, `length() == 0`.                                                 |         |
-| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynNode&#124; -> bool) | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.        |         |
-| <b>`map`</b><T>(&#124;index: usize, ele: &BoxDynNode&#124; -> T) -> Vec<T>        | Get a collection of values by iterate the each element in `Self` and call the `handle` function. |         |
+| Helper API                                                                             | Description                                                                                                                                                                                                              |                    Remarks                     |
+| :------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------: |
+| <b>`length`</b>()                                                                      | Get the number of `Self`'s element.                                                                                                                                                                                      |                                                |
+| <b>`is_empty`</b>()                                                                    | Check if `Self` has no element, `length() == 0`.                                                                                                                                                                         |                                                |
+| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynNode&#124; -> bool)      | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.                                                                                                                                | You can also use `each` if you like less code. |
+| <b>`map`</b>&lt;T&gt;(&#124;index: usize, ele: &BoxDynNode&#124; -> T) -> Vec&lt;T&gt; | Get a collection of values by iterate the each element in `Self` and call the `handle` function.                                                                                                                         |                                                |
+| <b>`sort`</b>()                                                                        | Sort each element in `Self` by the appear order in the html document.This should only used when you use a `find` method that the selector is a selector list, e.g. `find(".a,.b")`, which `.a` and `.b` are not ordered. |                                                |
 
 ### Supported Selectors
 
@@ -154,6 +156,7 @@ The follow API implemented by the library [ntree](https://github.com/fefit/ntree
 | <b>`attr`</b>(attr_name: &str) -> IAttrValue            | Get an atrribute of key `attr_name`                                                                                                                                              | The return value is an Enum `IAttrValue` |
 | <b>`set_attr`</b>(attr_name: &str, value: Option<&str>) | Set an attribute of key `attr_name`，the value is an `Option<&str>`, when the value is `None`，that means the attribute does'n have a string value, it's a bool value of `true`. |                                          |
 | <b>`remove_attr`</b>(attr_name: &str)                   | Remove an attribute of key `attr_name`.                                                                                                                                          |                                          |
+| <b>`has_class`</b>(class_name: &str)                    | Check if `Self`'s ClassList contains `class_name`, multiple classes can be splitted by whitespaces.                                                                              |                                          |
 | <b>`add_class`</b>(class_name: &str)                    | Add class to `Self`'s ClassList, multiple classes can be splitted by whitespaces.                                                                                                |                                          |
 | <b>`remove_class`</b>(class_name: &str)                 | Remove class from `Self`'s ClassList, multiple classes can be splitted by whitespaces.名                                                                                         |                                          |
 | <b>`toggle_class`</b>(class_name: &str)                 | Toggle class from `Self`'s ClassList, multiple classes can be splitted by whitespaces.加                                                                                         |                                          |
@@ -220,8 +223,8 @@ container.append(&third_child);
 ## Depedencies
 
 - NodeList API Library：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
-- html parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
-- html encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
+- Html Parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
+- Html Entity encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 
 ## Questions & Advices & Bugs?
 
