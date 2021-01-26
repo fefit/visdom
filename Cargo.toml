@@ -12,7 +12,7 @@ rphtml = { git = "https://github.com/fefit/rphtml", tag = "v0.3.2" }
 
 [dev-dependencies]
 crossbeam = "0.8.0"
-criterion = "0.3"
+criterion = "0.3.3"
 
 [[bench]]
 name = "benchmark"
