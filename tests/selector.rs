@@ -14,8 +14,8 @@ const HTML: &str = r##"
       </div>
       <div id="nested">
         <div class="outer-div-1">
-          <div class="inner-div-1-1"></div>
-          <div class="inner-div-1-2"></div>
+          <div class="inner-div-1-1">inner-div-1-1</div>
+          <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
         </div>
         <div class="outer-div-2">
           <div class="inner-div-2-1"></div>
@@ -131,5 +131,185 @@ fn test_selector_not() -> Result {
 	// not [id]
 	let not_has_id = id_divs.not("[id]")?;
 	assert_eq!(not_has_id.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_selector_not_by() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// not #id
+	let not_id = id_ele.not_by(|_, node| {
+		node
+			.get_attribute("id")
+			.map(|v| v.is_str("id"))
+			.unwrap_or(false)
+	})?;
+	assert_eq!(not_id.length(), 0);
+	// not [id]
+	let not_has_id = id_divs.not_by(|_, node| node.get_attribute("id").is_some())?;
+	assert_eq!(not_has_id.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_selector_not_in() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// not #id
+	let not_id = id_ele.not_in(&id_divs)?;
+	assert_eq!(not_id.length(), 0);
+	// not #id
+	let not_id = id_divs.not_in(&id_ele)?.filter("#id")?;
+	assert_eq!(not_id.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_selector_is() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_id = id_ele.is("body #id")?;
+	assert!(is_id);
+	// is #id
+	let is_id = id_divs.is("body > #id")?;
+	assert!(is_id);
+	// is #id
+	let is_id = id_divs.is("div[id='id']")?;
+	assert!(is_id);
+	Ok(())
+}
+
+#[test]
+fn test_selector_is_by() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_id = id_divs.is_by(|_, node| {
+		node
+			.get_attribute("id")
+			.map(|v| v.is_str("id"))
+			.unwrap_or(false)
+	})?;
+	assert!(is_id);
+	// is #id
+	let is_id = id_ele.is_by(|_, node| node.get_attribute("id").is_some())?;
+	assert!(is_id);
+	// not [id]
+	let not_has_id = !doc
+		.find("div:not([id])")?
+		.is_by(|_, node| node.get_attribute("id").is_some())?;
+	assert!(not_has_id);
+	Ok(())
+}
+#[test]
+fn test_selector_is_in() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_id = id_ele.is_in(&id_divs)?;
+	assert!(is_id);
+	// is #id
+	let is_id = id_divs.is_in(&id_ele)?;
+	assert!(is_id);
+	// is #id
+	let is_not_id = !id_divs.is_in(&doc.find("div")?.not("[id]")?)?;
+	assert!(is_not_id);
+	Ok(())
+}
+
+#[test]
+fn test_selector_is_all() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_all_id = id_ele.is_all("body #id")?;
+	assert!(is_all_id);
+	// is #id
+	let is_not_all_id = !id_divs.is_all("body > #id")?;
+	assert!(is_not_all_id);
+	// is #id
+	let is_not_all_id = !id_divs.is_all("div[id='id']")?;
+	assert!(is_not_all_id);
+	Ok(())
+}
+
+#[test]
+fn test_selector_is_all_by() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_id = id_ele.is_all_by(|index, _| index == 0)?;
+	assert_eq!(is_id, true);
+	// is #id
+	let is_id = id_divs.is_all_by(|_, node| {
+		node
+			.get_attribute("id")
+			.map(|v| v.is_str("id"))
+			.unwrap_or(false)
+	})?;
+	assert_ne!(is_id, true);
+	// is #id
+	let is_id = id_divs.is_all_by(|_, node| node.tag_name() == "div")?;
+	assert!(is_id);
+	Ok(())
+}
+
+#[test]
+fn test_selector_is_all_in() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// is #id
+	let is_id = id_ele.is_all_in(&id_divs)?;
+	assert_eq!(is_id, true);
+	// is #id
+	let is_id = id_divs.is_all_in(&id_ele)?;
+	assert_ne!(is_id, true);
+	// is #id
+	let is_id = id_divs.is_all_in(&doc.find("div")?)?;
+	assert!(is_id);
+	Ok(())
+}
+
+#[test]
+fn test_selector_has() -> Result {
+	let doc = Vis::load(HTML)?;
+	let id_divs = doc.find("div[id]")?;
+	let id_ele = id_divs.filter("#id")?;
+	// #id
+	let has_class_div = id_ele.has("div.class")?;
+	assert_eq!(has_class_div.length(), 1);
+	// #id
+	let not_id_eles = id_divs.has("[class|='outer']")?;
+	assert_eq!(not_id_eles.length() > 0, true);
+	assert_eq!(not_id_eles.has("div.class")?.length(), 0);
+	// is #id
+	let be_id_ele = id_divs.has("div+p")?;
+	assert!(be_id_ele.is_all_in(&id_ele)?);
+	Ok(())
+}
+
+#[test]
+fn test_content_text() -> Result {
+	let doc = Vis::load(HTML)?;
+	// inner div 1-1
+	let inner_div_1_1 = doc.find("div.inner-div-1-1")?;
+	let inner_div_1_1_text = inner_div_1_1.text();
+	assert_eq!(inner_div_1_1_text, "inner-div-1-1");
+	// inner div 1-2
+	let inner_div_1_2 = doc.find("div.inner-div-1-2")?;
+	let inner_div_1_2_text = inner_div_1_2.text();
+	assert!(inner_div_1_2.children("")?.length() > 0);
+	assert_eq!(inner_div_1_2_text, "inner-div-1-2");
+	// return
 	Ok(())
 }
