@@ -1,8 +1,10 @@
 # Visdom
 
-一个 Rust 编写的 HTML 文档操作库，与 Nodejs 的 cheerio 类似，它的 API 风格基本与 jQuery 保持一致。
+A html DOM operation library written in Rust，like the Nodejs's cheerio library, they used the same API style of jQuery。
 
-## 使用方式
+## Usage
+
+[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)
 
 Cargo.toml
 
@@ -38,144 +40,150 @@ fn main()-> Result<(), &'static str>{
   let nodes = Vis::load(html)?;
   let lis = nodes.find("#header li")?;
   println!("{}", lis.text());
-  // 将输出 "Hello,VisDom"
+  // will output "Hello,VisDom"
 }
 ```
+
 ## Vis
 
-静态方法：`load(html: &str)`
-    
-    加载html文档为document文档节点
+Static method：`load(html: &str) -> Result<NodeList, KindError>`
 
-静态方法：`dom(ele: &BoxDynNode)`
+    Load the `html` string into a document `NodeList`
 
-    将一个ele元素转换为NodeList节点，主要用于在以上带回调方法参数的方法中
-示例：
+Static method：`dom(ele: &BoxDynNode) -> Result<NodeList, KindError>`
+
+    Change the `ele` node to single node `NodeList`, this will copy the `ele`, you don't need it if you just need do something with methods of the `BoxDynNode` its'own.
+
+e.g.：
+
 ```rust
-// 接以上示例
+// go on the code before
 let texts = lis.map(|_index, ele|{
   let ele = Vis::dom(ele);
 	return String::from(ele.text());
 });
-// 则texts为Vec<String>, ["Hello,", "Vis", "Dom"]
-// 没有被包装的ele元素具备的方法可以查看ntree接口方法
+// now `texts` will be a `Vec<String>`: ["Hello,", "Vis", "Dom"]
 ```
+
 ## API
 
-以下 API 接口由 [ntree](https://github.com/fefit/ntree) 接口库实现。
+The follow API implemented by the library [ntree](https://github.com/fefit/ntree) 。
 
-### 选择器操作
+### Selector Operation
 
-| 选择器方法                 | 说明                                           |              备注              |
-| :------------------------------- | :--------------------------------------------- | :----------------------------: |
-| <b>`find`</b>(selector: &str)     | 查找匹配选择器的子孙元素                       | 可参见 jQuery 文档 |
-| <b>`filter`</b>(selector: &str)   | 筛选出匹配选择器的元素                         |                                |
-| <b>`filter_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则包含，false将被排除                         |       对应filter方法参数为函数的形式                         |
-| <b>`filter_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被包含，否则被排除                         |   对应filter方法参数为集合的形式                             |
-| <b>`not`</b>(selector: &str)      | 排除匹配选择器的元素                           |                                |
-| <b>`not_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，true则被排除，false则包含                         |        对应not方法参数为函数的形式                        |
-| <b>`not_in`</b>(node_list: &NodeList)   | 在node_list中的元素将被排除，否则包含                         |        对应not方法参数为集合的形式                        |
-| <b>`is`</b>(selector: &str)       | 判断是否有一个元素匹配选择器                   |                                |
-| <b>`is_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，有任意一个为true则返回true | 对应is方法参数为函数的形式 |
-| <b>`is_in`</b>(node_list: &NodeList)   | 有任意一个元素包含在node_list中，则返回true                         |  对应is方法参数为集合的形式                              |
-| <b>`is_all`</b>(selector: &str)       | 判断是否所有元素都匹配选择器                   |   库额外提供方法                             |
-| <b>`is_all_by`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> bool)   | 根据闭包方法返回的值，全部为true则返回true，否则false | is_all方法参数为函数的形式 |
-| <b>`is_all_in`</b>(node_list: &NodeList)   | 所有元素都包含在node_list中，则返回true，否则为false                         |   is_all方法参数为集合的形式                             |
-| <b>`has`</b>(selector: &str)   | 筛选出子级元素中包含匹配选择器的元素 |  |
-| <b>`has_in`</b>(node_list: &NodeList)   | 筛选出有子级元素包含在node_list中的元素  |      |
-| <b>`children`</b>(selector: &str) | 从子元素开始，查找匹配选择器的元素             |                                |
-| <b>`parent`</b>(selector: &str)   | 从父元素开始，查找匹配选择器的元素             |                                |
-| <b>`parents`</b>(selector: &str)  | 从父元素及祖先元素开始，查找匹配选择器的元素   |                                |
-| <b>`siblings`</b>(selector: &str) | 从兄弟元素开始，查找匹配选择器的元素           |                                |
-| <b>`next`</b>(selector: &str)     | 从后一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
-| <b>`next_all`</b>(selector: &str) | 从后面所有兄弟元素开始，查找匹配选择器的元素   |                                |
-| <b>`prev`</b>(selector: &str)     | 从前一个紧挨兄弟元素开始，查找匹配选择器的元素 |                                |
-| <b>`prev_all`</b>(selector: &str) | 从前面所有兄弟元素开始，查找匹配选择器的元素   |                                |
-| <b>`eq`</b>(index: usize)         | 获取元素列表中第 index 个                      |                                |
-| <b>`slice`</b>(range: Range)         | 获取某段范围内元素                      | 如：slice(0..=2)，表示前三个元素                               |
+| Selector API                                                                   | Description                                                                                                              |                        Remarks                         |
+| :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------: |
+| The caller `Self` is a `NodeList`, Return `Result<NodeList, ErrorKind>`        | Tha all APIs are same with jQuery                                                                                        |                                                        |
+| <b>`find`</b>(selector: &str)                                                  | Get the descendants of each element in the `Self`, filtered by the `selector`.                                           |                                                        |
+| <b>`filter`</b>(selector: &str)                                                | Reduce `Self` to those that match the `selector`.                                                                        |                                                        |
+| <b>`filter_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Reduce `Self` to those that pass the `handle` function test.                                                             |                                                        |
+| <b>`filter_in`</b>(node_list: &NodeList)                                       | Reduce `Self` to those that also in the `node_list`                                                                      |                                                        |
+| <b>`not`</b>(selector: &str)                                                   | Remove elements those that match the `selector` from `Self`.                                                             |                                                        |
+| <b>`not_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool)    | Remove elements those that pass the `handle` function test from `Self`.                                                  |                                                        |
+| <b>`not_in`</b>(node_list: &NodeList)                                          | Remove elements those that also in the `node_list` from `Self`.                                                          |                                                        |
+| <b>`is`</b>(selector: &str)                                                    | Check at least one element in `Self` is match the `selector`.                                                            |                                                        |
+| <b>`is_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool)     | Check at least one element call the `handle` function return `true`.                                                     |                                                        |
+| <b>`is_in`</b>(node_list: &NodeList)                                           | Check at least one element in `Self` is also in `node_list`.                                                             |                                                        |
+| <b>`is_all`</b>(selector: &str)                                                | Check if each element in `Self` are all matched the `selector`.                                                          |                                                        |
+| <b>`is_all_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Check if each element in `Self` call the `handle` function are all returned `true`.                                      |                                                        |
+| <b>`is_all_in`</b>(node_list: &NodeList)                                       | Check if each element in `Self` are all also in `node_list`.                                                             |                                                        |
+| <b>`has`</b>(selector: &str)                                                   | Reduce `Self` to those that have a descendant that matches the `selector`.                                               |                                                        |
+| <b>`has_in`</b>(node_list: &NodeList)                                          | Reduce `Self` to those that have a descendant that in the `node_list`.                                                   |                                                        |
+| <b>`children`</b>(selector: &str)                                              | Get the children of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.           |                                                        |
+| <b>`parent`</b>(selector: &str)                                                | Get the parent of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.             |                                                        |
+| <b>`parents`</b>(selector: &str)                                               | Get the ancestors of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.          |                                                        |
+| <b>`siblings`</b>(selector: &str)                                              | Get the siblings of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.           |                                                        |
+| <b>`next`</b>(selector: &str)                                                  | Get the next sibling of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.       |                                                        |
+| <b>`next_all`</b>(selector: &str)                                              | Get all following siblings of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`. |                                                        |
+| <b>`prev`</b>(selector: &str)                                                  | Get the previous sibling of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.   |                                                        |
+| <b>`prev_all`</b>(selector: &str)                                              | Get all preceding siblings of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`. |                                                        |
+| <b>`eq`</b>(index: usize)                                                      | Get one element at the specified `index`.                                                                                |                                                        |
+| <b>`slice`</b>(range: Range)                                                   | Get a subset specified by a range of indices.                                                                            | e.g.:slice(0..=2), will match the first three element. |
 
-### 辅助方法
+### Helpers
 
-| 辅助方法                 | 说明                                           |              备注              |
-| :------------------------------- | :--------------------------------------------- | :----------------------------: |
-| <b>`length`</b>()                | 元素集合长度                                   |                                |
-| <b>`is_empty`</b>()              | 元素集合是否为空                               |                                |
-| <b>`for_each`</b>(&#124;index: usize, ele: &mut BoxDynNode&#124; -> bool)              |  对每个元素进行遍历，当返回值为false时停止遍历                              |                                |
-| <b>`map`</b>(&#124;index: usize, ele: &BoxDynNode&#124; -> T)              |  对每个元素进行遍历，返回回调方法返回值的集合                              |                                |
+| Helper API                                                                        | Description                                                                                      | Remarks |
+| :-------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- | :-----: |
+| <b>`length`</b>()                                                                 | Get the number of `Self`'s element.                                                              |         |
+| <b>`is_empty`</b>()                                                               | Check if `Self` has no element, `length() == 0`.                                                 |         |
+| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynNode&#124; -> bool) | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.        |         |
+| <b>`map`</b><T>(&#124;index: usize, ele: &BoxDynNode&#124; -> T) -> Vec<T>        | Get a collection of values by iterate the each element in `Self` and call the `handle` function. |         |
 
-### 支持选择器
+### Supported Selectors
 
-| 选择器                                 | 说明                                                                                                                         |                   备注                    |
-| :------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------: |
-| <b>`*`</b>                             | 所有元素                                                                                                                     |    元素选择器可参见 MDN css 选择器文档    |
-| <b>`#id`</b>                           | id 选择器                                                                                                                    |                                           |
-| <b>`.class`</b>                        | 类选择器                                                                                                                     |                                           |
-| <b>`p`</b>                             | 标签名选择器                                                                                                                 |                                           |
-| <b>`[attr]`</b>                        | 含有{attr}的元素                                                                                                             |                                           |
-| <b>`[attr=value]`</b>                  | {attr}值为{value}的元素                                                                                                      |                                           |
-| <b>`[attr*=value]`</b>                 | {attr}包含{value}值的元素                                                                                                    |                                           |
-| <b><code>[attr&#124;=value]</code></b> | {attr}包含{value}值或者{value}-的元素                                                                                        |                                           |
-| <b>`[attr~=value]`</b>                 | {attr}包含{value}值，且值是以空格作为分隔的元素                                                                              |                                           |
-| <b>`[attr^=value]`</b>                 | {attr}以{value}值开头的元素                                                                                                  |                                           |
-| <b>`[attr$=value]`</b>                 | {attr}以{value}值结尾的元素                                                                                                  |                                           |
-| <b>`[attr!=value]`</b>                 | 包含{attr}，且值不为{value}的元素                                                                                            |                                           |
-| <b>`span > a`</b>                      | 子元素选择器                                                                                                                 |        匹配父元素为 span 的 a 元素        |
-| <b>`span a`</b>                        | 子孙元素选择器                                                                                                               |     匹配 span 元素下的所有子孙 a 元素     |
-| <b>`span + a`</b>                      | 相邻元素选择器                                                                                                               |      匹配 span 后面紧邻的兄弟 a 元素      |
-| <b>`span ~ a`</b>                      | 后面兄弟元素选择器                                                                                                           |      匹配 span 后面所有的兄弟 a 元素      |
-| <b>`span.a`</b>                        | 多条件筛选选择器                                                                                                             |    匹配 span 且 class 名包含 a 的元素     |
-| <b>`:empty`</b>                        | 没有子元素的元素                                                                                                             |            以下都为伪类选择器             |
-| <b>`:first-child`</b>                  | 第一个子元素                                                                                                                 |                                           |
-| <b>`:last-child`</b>                   | 最后一个子元素                                                                                                               |                                           |
-| <b>`:only-child`</b>                   | 唯一子元素                                                                                                                   |                                           |
-| <b>`:nth-child(nth)`</b>               | nth 表示为 a'n + b'，a'和 b'为整数<零及正负>，n 从 0 开始计数，和为 1 则表示第一个子元素，最终将获取所有符合该数列值的子元素 | nth 形式的选择器都支持 odd 和 even 关键字 |
-| <b>`:nth-last-child(nth)`</b>          | 同上，但从最后一个子元素开始计数算作第一个子元素                                                                             |                                           |
-| <b>`:first-of-type`</b>                | 子元素中第一个出现的标签元素<按标签名>                                                                                       |                                           |
-| <b>`:last-of-type`</b>                 | 子元素中最后一个出现的标签元素<按标签名>                                                                                     |                                           |
-| <b>`:only-of-type`</b>                 | 子元素中只出现一次的标签元素<按标签名>                                                                                       |                                           |
-| <b>`:nth-of-type(nth)`</b>             | 子元素中标签<按标签名>出现顺序符合数列值的元素                                                                               |                                           |
-| <b>`:nth-last-of-type(nth)`</b>        | 同上，但出现顺序从最后一个元素往前数                                                                                         |                                           |
-| <b>`:not(selector)`</b>                | 匹配不符合 selector 选择器的元素                                                                                             |                                           |
-| <b>`:header`</b>                       | 所有标题元素，h1,h2,h3,h4,h5,h6 的别名                                                                                       |                                           |
-| <b>`:input`</b>                        | 所有表单元素，input,select,textarea,button 的别名                                                                            |                                           |
-| <b>`:submit`</b>                       | 表单提交按钮，input\[type="submit"\],button\[type="submit"\] 的别名                                                          |                                           |
+| Selectors                              | Description                                                                                                     |                                   Remarks                                   |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------: |
+| <b>`*`</b>                             | [MDN Universal Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Universal_selectors)                 |                                                                             |
+| <b>`#id`</b>                           | [MDN Id Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/ID_selectors)                                |                                                                             |
+| <b>`.class`</b>                        | [MDN Class Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/Class_selectors)                          |                                                                             |
+| <b>`p`</b>                             | [MDN Type Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Type_selectors)                           |                                                                             |
+| <b>`[attr]`</b>                        | [MDN Attribute Selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors)                 |                                                                             |
+| <b>`[attr=value]`</b>                  | See the above.                                                                                                  |                                                                             |
+| <b>`[attr*=value]`</b>                 | See the above.                                                                                                  |                                                                             |
+| <b><code>[attr&#124;=value]</code></b> | See the above.                                                                                                  |                                                                             |
+| <b>`[attr~=value]`</b>                 | See the above.                                                                                                  |                                                                             |
+| <b>`[attr^=value]`</b>                 | See the above.                                                                                                  |                                                                             |
+| <b>`[attr$=value]`</b>                 | See the above.                                                                                                  |                                                                             |
+| <b>`[attr!=value]`</b>                 | jQuery supported, match the element that has an attribute of `attr`，but it's value is not equal to `value`.    |                                                                             |
+| <b>`span > a`</b>                      | [MDN Child Combinator](https://developer.mozilla.org/en-US/docs/Web/CSS/Child_combinator)                       |           match the element of `a` that who's parent is a `span`            |
+| <b>`span a`</b>                        | [MDN Descendant Combinator](https://developer.mozilla.org/en-US/docs/Web/CSS/Descendant_combinator)             |                                                                             |
+| <b>`span + a`</b>                      | [MDN Adjacent Sibling Combinator](https://developer.mozilla.org/en-US/docs/Web/CSS/Adjacent_sibling_combinator) |                                                                             |
+| <b>`span ~ a`</b>                      | [MDN Generic Sibling Combinator](https://developer.mozilla.org/en-US/docs/Web/CSS/General_sibling_combinator)   |                                                                             |
+| <b>`span,a`</b>                        | [MDN Selector list](https://developer.mozilla.org/en-US/docs/Web/CSS/Selector_list)                             |                                                                             |
+| <b>`span.a`</b>                        | Adjoining Selectors                                                                                             | match an element that who's tag type is `span` and also has a class of `.a` |
+| <b>`:empty`</b>                        | [MDN `:empty`](https://developer.mozilla.org/en-US/docs/Web/CSS/:empty)                                         |                              Pseudo Selectors                               |
+| <b>`:first-child`</b>                  | [MDN `:first-child`](https://developer.mozilla.org/en-US/docs/Web/CSS/:first-child)                             |                                                                             |
+| <b>`:last-child`</b>                   | [MDN `:last-child`](https://developer.mozilla.org/en-US/docs/Web/CSS/:last-child)                               |                                                                             |
+| <b>`:only-child`</b>                   | [MDN `:only-child`](https://developer.mozilla.org/en-US/docs/Web/CSS/:only-child)                               |                                                                             |
+| <b>`:nth-child(nth)`</b>               | [MDN `:nth-child()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-child)                               |                   `nth` support keyword `odd` and `even`                    |
+| <b>`:nth-last-child(nth)`</b>          | [MDN `:nth-last-child()`](https://developer.mozilla.org/en-US/docs/Web/CSS/::nth-last-child)                    |                                                                             |
+| <b>`:first-of-type`</b>                | [MDN `:first-of-type`](https://developer.mozilla.org/en-US/docs/Web/CSS/:first-of-type)                         |                                                                             |
+| <b>`:last-of-type`</b>                 | [MDN `:last-of-type`](https://developer.mozilla.org/en-US/docs/Web/CSS/:last-of-type)                           |                                                                             |
+| <b>`:only-of-type`</b>                 | [MDN `:only-of-type`](https://developer.mozilla.org/en-US/docs/Web/CSS/:only-of-type)                           |                                                                             |
+| <b>`:nth-of-type(nth)`</b>             | [MDN `:nth-of-type()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-of-type)                           |                                                                             |
+| <b>`:nth-last-of-type(nth)`</b>        | [MDN `:nth-last-of-type()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-last-of-type)                 |                                                                             |
+| <b>`:not(selector)`</b>                | [MDN `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not)                                           |                                                                             |
+| <b>`:header`</b>                       | All title tags，alias of: `h1,h2,h3,h4,h5,h6`.                                                                  |                                                                             |
+| <b>`:input`</b>                        | All form input tags, alias of: `input,select,textarea,button`.                                                  |                                                                             |
+| <b>`:submit`</b>                       | Form submit buttons, alias of: `input\[type="submit"\],button\[type="submit"\]`.                                |                                                                             |
 
-### 属性操作
+### Attribute Operation
 
-| 属性方法                                               | 说明                                                                 | 备注 |
-| :----------------------------------------------------- | :------------------------------------------------------------------- | :--: |
-| <b>`attr`</b>(attr_name: &str) -> IAttrValue                         | 获取属性                                                             |  值为 `IAttrValue` 枚举类型    |
-| <b>`set_attr`</b>(attr_name: &str, value: Option<&str>) | 设置属性值，当 value 为 None 时，表示设置布尔 true，没有字符串属性值 |      |
-| <b>`remove_attr`</b>(attr_name: &str)                   | 删除属性                                                             |      |
-| <b>`add_class`</b>(class_name: &str)                    | 增加 class 类名，多个 class 用空格隔开                               |      |
-| <b>`remove_class`</b>(class_name: &str)                 | 删除 class 类名                                                      |      |
-| <b>`toggle_class`</b>(class_name: &str)                 | 切换 class 类名，存在则删除，不存在则添加                            |      |
+| Attribute API                                           | Description                                                                                                                                                                      |                 Remarks                  |
+| :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------: |
+| <b>`attr`</b>(attr_name: &str) -> IAttrValue            | Get an atrribute of key `attr_name`                                                                                                                                              | The return value is an Enum `IAttrValue` |
+| <b>`set_attr`</b>(attr_name: &str, value: Option<&str>) | Set an attribute of key `attr_name`，the value is an `Option<&str>`, when the value is `None`，that means the attribute does'n have a string value, it's a bool value of `true`. |                                          |
+| <b>`remove_attr`</b>(attr_name: &str)                   | Remove an attribute of key `attr_name`.                                                                                                                                          |                                          |
+| <b>`add_class`</b>(class_name: &str)                    | Add class to `Self`'s ClassList, multiple classes can be splitted by whitespaces.                                                                                                |                                          |
+| <b>`remove_class`</b>(class_name: &str)                 | Remove class from `Self`'s ClassList, multiple classes can be splitted by whitespaces.名                                                                                         |                                          |
+| <b>`toggle_class`</b>(class_name: &str)                 | Toggle class from `Self`'s ClassList, multiple classes can be splitted by whitespaces.加                                                                                         |                                          |
 
-### 文本操作
+### Content Operation
 
-| 文本方法                        | 说明                                            | 备注 |
-| :------------------------------ | :---------------------------------------------- | :--: |
-| <b>`text`</b>()                 | 获取所有元素的文本内容，实体将会自动 decode     |      |
-| <b>`set_text`</b>(content: &str) | 设置元素的内容为 content 文本<自动 encode 实体> |      |
-| <b>`html`</b>()                 | 获取第一个元素的 html 文档内容                  |      |
-| <b>`set_html`</b>(content: &str) | 设置元素的子节点为 content 解析后的子节点       |      |
-| <b>`outer_html`</b>()           | 获取第一个元素的 html 文档内容，包含节点本身    |      |
+| Content API                      | Description                                                                | Remarks |
+| :------------------------------- | :------------------------------------------------------------------------- | :-----: |
+| <b>`text`</b>()                  | Get the text of each element in `Self`，the html entity will auto decoded. |         |
+| <b>`set_text`</b>(content: &str) | Set the `Self`'s text, the html entity in `content` will auto encoded.     |         |
+| <b>`html`</b>()                  | Get the first element in `Self`'s html.                                    |         |
+| <b>`set_html`</b>(content: &str) | Set the html to `content` of each element in `Self`.                       |         |
+| <b>`outer_html`</b>()            | Get the first element in `Self`'s outer html.                              |         |
 
-### 节点操作
+### DOM Operation
 
-| dom 节点操作方法                          | 说明                                     | 备注 |
-| :---------------------------------------- | :--------------------------------------- | :--: |
-| <b>`append`</b>(nodes: &NodeList)         | 将所有节点插入节点子元素最后<BeforeEnd>  |      |
-| <b>`append_to`</b>(nodes: &mut NodeList)  | 同上，但交换参数与调用者                 |      |
-| <b>`prepend`</b>(nodes: &mut NodeList)    | 将所有节点插入节点子元素开始<AfterStart> |      |
-| <b>`prepend_to`</b>(nodes: &mut NodeList) | 同上，但交换参数与调用者                 |      |
-| <b>`insert_after`</b>(nodes: &NodeList)   | 将所有节点插入该元素之后<AfterEnd>       |      |
-| <b>`after`</b>(nodes: &mut NodeList)      | 同上，但交换参数与调用者                 |      |
-| <b>`insert_before`</b>(nodes: &NodeList)  | 将所有节点插入该元素之前<BeforeStart>    |      |
-| <b>`before`</b>(nodes: &mut NodeList)     | 同上，但交换参数与调用者                 |      |
-| <b>`remove`</b>()                         | 删除节点，删除后持有的变量将不能再使用   |      |
-| <b>`empty`</b>()                         | 清空节点内所有子元素   |      |
-#### 示例代码
+| DOM Insertion and Remove API              | Description                                                                         | Remarks |
+| :---------------------------------------- | :---------------------------------------------------------------------------------- | :-----: |
+| <b>`append`</b>(nodes: &NodeList)         | Append all `nodes` into `Self`, after the last child<BeforeEnd>                     |         |
+| <b>`append_to`</b>(nodes: &mut NodeList)  | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`prepend`</b>(nodes: &mut NodeList)    | Append all `nodes` into `Self`, befpre the first child<AfterStart>                  |         |
+| <b>`prepend_to`</b>(nodes: &mut NodeList) | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`insert_after`</b>(nodes: &NodeList)   | Insert all `nodes` after `Self`<AfterEnd>                                           |         |
+| <b>`after`</b>(nodes: &mut NodeList)      | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`insert_before`</b>(nodes: &NodeList)  | Insert all `nodes` before `Self`<BeforeStart>                                       |         |
+| <b>`before`</b>(nodes: &mut NodeList)     | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`remove`</b>()                         | Remove the `Self`, it will take the ownership of `Self`, so you can't use it again. |         |
+| <b>`empty`</b>()                          | Clear the all childs of each element in `Self`.                                     |         |
+
+#### Example
 
 ```rust
 let html = r##"
@@ -187,18 +195,19 @@ let html = r##"
 let root = Vis::load(html)?;
 let child = root.find(".child")?;
 let mut container = root.find("#container")?;
-// 将child元素转移到container
+// append the `child` element to the `container`
 container.append(&child);
-// 代码将变成
+// then the code become to below
 /*
 <div id="container">
   <div class="first-child"></div>
   <div class="second-child"></div>
 </div>
 */
+// create new element by `Vis::load`
 let third_child = Vis::load(r##"<div class="third-child"></div>"##)?;
 container.append(&third_child);
-// 代码将变成
+// then the code become to below
 /*
 <div id="container">
   <div class="first-child"></div>
@@ -208,15 +217,15 @@ container.append(&third_child);
 */
 ```
 
-## 依赖
+## Depedencies
 
-- api 接口库：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
-- html 解析库：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
-- html 实体解析：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
+- NodeList API Library：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
+- html parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
+- html encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 
-## 问题 & 建议 & Bugs?
+## Questions & Advices & Bugs?
 
-如果您在使用过程中遇到任何问题，或者有好的建议，欢迎提供 [Issue](https://github.com/fefit/visdom/issues).
+Welcome to report [Issue](https://github.com/fefit/visdom/issues) to us if you have any question or bug or good advice.
 
 ## License
 
