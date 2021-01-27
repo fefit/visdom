@@ -1,8 +1,8 @@
-use ntree::interface::{
+use mesdoc::interface::{
 	BoxDynNode, IAttrValue, IDocumentTrait, IErrorHandle, INodeTrait, INodeType, InsertPosition,
 	MaybeDoc, MaybeNode, NodeList,
 };
-use ntree::{self, utils::retain_by_index};
+use mesdoc::{self, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
@@ -439,7 +439,7 @@ pub struct Vis;
 impl Vis {
 	// init the patterns and all
 	pub(crate) fn parse_doc(html: &str) -> Result<Document, Box<dyn Error>> {
-		ntree::init();
+		mesdoc::init();
 		let doc = Doc::parse(
 			html,
 			ParseOptions {

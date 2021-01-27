@@ -72,7 +72,7 @@ let texts = lis.map(|_index, ele|{
 
 ## API
 
-The following API are inherited from the library [ntree](https://github.com/fefit/ntree) 。
+The following API are inherited from the library [mesdoc](https://github.com/fefit/mesdoc) 。
 
 ### Selector Operation
 
@@ -226,7 +226,7 @@ container.append(&third_child);
 
 ## Depedencies
 
-- NodeList API Library：[https://github.com/fefit/ntree](https://github.com/fefit/ntree)
+- NodeList API Library：[https://github.com/fefit/mesdoc](https://github.com/fefit/mesdoc)
 - Html Parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
 - Html Entity encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 

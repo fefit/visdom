@@ -1,4 +1,4 @@
-use ntree::interface::{IAttrValue, NodeList};
+use mesdoc::interface::{IAttrValue, NodeList};
 use std::error::Error;
 use std::result::Result as StdResult;
 use visdom::Vis;

@@ -1,14 +1,18 @@
 [package]
 name = "visdom"
 version = "0.0.7"
-authors = ["jxz_211 <jxz_211@163.com>"]
 edition = "2018"
+description = "A html document operation library written in Rust, like Nodejs library `cheerio`, they both used API like jQuery."
+keywords = ["html-parser", "jQuery-api", "querySelectorAll"]
+authors = ["jxz_211 <jxz_211@163.com>"]
+repository = "https://github.com/fefit/visdom"
+categories = ["web-programming"]
+license = "MIT"
+exclude = [".vscode/*.*", ".editorconfig", ".travis.yml"]
 
 [dependencies]
-ntree = { git = "https://github.com/fefit/ntree", tag = "v0.1.0" }
-rphtml = { git = "https://github.com/fefit/rphtml", tag = "v0.3.3" }
-# ntree = { path = "../ntree" }
-# rphtml = { path = "../rphtml" }
+mesdoc = "0.1.0"
+rphtml = "0.3.3"
 
 [dev-dependencies]
 crossbeam = "0.8.0"
