@@ -8,7 +8,7 @@ authors = ["jxz_211 <jxz_211@163.com>"]
 repository = "https://github.com/fefit/visdom"
 categories = ["web-programming"]
 license = "MIT"
-exclude = [".vscode/*.*", ".editorconfig", ".travis.yml"]
+exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs"]
 
 [dependencies]
 mesdoc = "0.1.0"
