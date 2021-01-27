@@ -1,12 +1,12 @@
 [package]
 name = "visdom"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["jxz_211 <jxz_211@163.com>"]
 edition = "2018"
 
 [dependencies]
-ntree = { git = "https://github.com/fefit/ntree", tag = "v0.0.8" }
-rphtml = { git = "https://github.com/fefit/rphtml", tag = "v0.3.2" }
+ntree = { git = "https://github.com/fefit/ntree", tag = "v0.1.0" }
+rphtml = { git = "https://github.com/fefit/rphtml", tag = "v0.3.3" }
 # ntree = { path = "../ntree" }
 # rphtml = { path = "../rphtml" }
 

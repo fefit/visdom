@@ -1,4 +1,4 @@
-use ntree::selector::interface::KindError;
+use ntree::interface::IDocumentTrait;
 use std::error::Error;
 use std::thread;
 use std::time::SystemTime;
@@ -1160,13 +1160,20 @@ fn main() -> Result<(), Box<dyn Error>> {
   
   
   "##;
-	let doc = Vis::load(html)?;
-	let lists = doc.find(".article-list-container ul > li a.title")?;
+	let root = Vis::load_catch(
+		html,
+		Box::new(|e| {
+			println!("error:{}", e);
+		}),
+	);
+	println!("root:{}", root.length());
+	root.find("a,,");
+	let lists = root.find(".article-list-container ul > li a.title");
 	let titles = lists
-		.filter_by(|_, node| node.text().contains("Rust日报"))?
+		.filter_by(|_, node| node.text().contains("Rust日报"))
 		.map(|_, node| String::from(node.text().trim()));
 	println!("{:?}", titles);
-	let links = doc.find("#footer .links")?.next_all("")?.has("span")?;
+	let links = root.find("#footer .links").next_all("").has("span");
 	println!("{}", links.length());
 	Ok(())
 }

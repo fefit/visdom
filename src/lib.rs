@@ -1,6 +1,6 @@
-use ntree::selector::interface::{
-	BoxDynNode, IAttrValue, IDocumentTrait, INodeTrait, INodeType, InsertPosition, MaybeDocResult,
-	MaybeResult, NodeList, Result,
+use ntree::interface::{
+	BoxDynNode, IAttrValue, IDocumentTrait, IErrorHandle, INodeTrait, INodeType, InsertPosition,
+	MaybeDoc, MaybeNode, NodeList,
 };
 use ntree::{self, utils::retain_by_index};
 use rphtml::{
@@ -8,6 +8,7 @@ use rphtml::{
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
 	parser::{allow_insert, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode},
 };
+use std::error::Error;
 use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
 /// type implement INodeTrait with Node
@@ -31,7 +32,7 @@ impl Dom {
 		}
 		// test if the node is self's parent node
 		let mut cur = self.cloned();
-		while let Some(parent) = &cur.parent().unwrap_or(None) {
+		while let Some(parent) = &cur.parent() {
 			if parent.is(&node) {
 				panic!("Can't {} of self's parent", method);
 			}
@@ -89,28 +90,26 @@ impl INodeTrait for Dom {
 		}
 	}
 	/// impl `parent`
-	fn parent<'b>(&self) -> MaybeResult<'b> {
+	fn parent<'b>(&self) -> MaybeNode<'b> {
 		if let Some(parent) = &self.node.borrow().parent {
 			if let Some(node) = parent.upgrade() {
 				let cur = Dom { node };
-				return Ok(Some(Box::new(cur)));
-			} else {
-				return Err("");
+				return Some(Box::new(cur));
 			}
 		}
-		Ok(None)
+		None
 	}
 	/// impl `children`
-	fn child_nodes<'b>(&self) -> Result<'b> {
+	fn child_nodes<'b>(&self) -> NodeList<'b> {
 		if let Some(childs) = &self.node.borrow().childs {
 			let mut result = NodeList::with_capacity(childs.len());
 			let nodes = result.get_mut_ref();
 			for cur in childs {
 				nodes.push(Box::new(Dom { node: cur.clone() }));
 			}
-			return Ok(result);
+			return result;
 		}
-		Ok(NodeList::new())
+		NodeList::new()
 	}
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
@@ -216,13 +215,13 @@ impl INodeTrait for Dom {
 	}
 
 	/// impl `owner_document`
-	fn owner_document(&self) -> MaybeDocResult {
+	fn owner_document(&self) -> MaybeDoc {
 		if let Some(root) = &self.node.borrow().root {
-			Ok(Some(Box::new(Document {
-				root: Rc::clone(root),
-			})))
+			Some(Box::new(Document {
+				node: Rc::clone(root),
+			}))
 		} else {
-			Err("")
+			None
 		}
 	}
 	/// impl `text_content`
@@ -285,7 +284,7 @@ impl INodeTrait for Dom {
 
 	/// impl `remov_child`
 	fn remove_child(&mut self, node: BoxDynNode) {
-		if let Some(parent) = &node.parent().unwrap_or(None) {
+		if let Some(parent) = &node.parent() {
 			if self.is(parent) {
 				// is a child
 				if let Some(childs) = self.node.borrow_mut().childs.as_mut() {
@@ -315,7 +314,7 @@ impl INodeTrait for Dom {
 		let specified: Box<dyn Any> = node.cloned().to_node();
 		if let Ok(dom) = specified.downcast::<Dom>() {
 			// remove current node from parent's childs
-			if let Ok(Some(parent)) = &mut orig_node.parent() {
+			if let Some(parent) = &mut orig_node.parent() {
 				parent.remove_child(orig_node);
 			}
 			// get the nodes
@@ -396,16 +395,34 @@ impl INodeTrait for Dom {
 }
 
 struct Document {
-	root: Rc<RefCell<RootNode>>,
+	node: Rc<RefCell<RootNode>>,
 }
+
+impl Document {
+	fn bind_error(&mut self, handle: IErrorHandle) {
+		*self.node.borrow().onerror.borrow_mut() = Some(Rc::new(handle));
+	}
+	fn list<'b>(&self) -> NodeList<'b> {
+		let root: Dom = Rc::clone(&self.node.borrow().get_node()).into();
+		NodeList::with_nodes(vec![Box::new(root)])
+	}
+}
+
 impl IDocumentTrait for Document {
 	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynNode<'b>> {
-		if let Some(node) = self.root.borrow().get_element_by_id(id) {
+		if let Some(node) = self.node.borrow().get_element_by_id(id) {
 			return Some(Box::new(Dom {
 				node: Rc::clone(&node),
 			}));
 		}
 		None
+	}
+	fn onerror(&self) -> Option<Rc<IErrorHandle>> {
+		if let Some(error_handle) = &(*self.node.borrow().onerror.borrow()) {
+			Some(Rc::clone(error_handle))
+		} else {
+			None
+		}
 	}
 }
 
@@ -421,23 +438,35 @@ pub struct Vis;
 
 impl Vis {
 	// init the patterns and all
-	pub(crate) fn init() {
+	pub(crate) fn parse_doc(html: &str) -> Result<Document, Box<dyn Error>> {
 		ntree::init();
-	}
-	// load the html
-	pub fn load(html: &str) -> Result {
-		Vis::init();
-		// nodes
 		let doc = Doc::parse(
 			html,
 			ParseOptions {
 				auto_remove_nostart_endtag: true,
 				..Default::default()
 			},
-		)
-		.map_err(|_| "")?;
-		let root: Dom = Rc::clone(&doc.get_root_node()).into();
-		Ok(NodeList::with_nodes(vec![Box::new(root)]))
+		)?;
+		Ok(Document {
+			node: Rc::clone(&doc.root),
+		})
+	}
+	// load the html
+	pub fn load(html: &str) -> Result<NodeList, Box<dyn Error>> {
+		// nodes
+		let doc = Vis::parse_doc(html)?;
+		Ok(doc.list())
+	}
+	// load the html, and catch the errors
+	pub fn load_catch(html: &str, handle: IErrorHandle) -> NodeList {
+		let doc = Vis::parse_doc(html);
+		if let Ok(mut doc) = doc {
+			doc.bind_error(handle);
+			doc.list()
+		} else {
+			handle(doc.err().unwrap());
+			NodeList::new()
+		}
 	}
 	// return a NodeList
 	pub fn dom<'b>(node: &BoxDynNode) -> NodeList<'b> {

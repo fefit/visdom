@@ -10,16 +10,16 @@ Cargo.toml
 
 ```toml
 [depedencies]
-visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.6", version = "0.0.6"}
+visdom = {git = "https://github.com/fefit/visdom", tag = "v0.0.7", version = "0.0.7"}
 ```
 
 main.rs
 
 ```rust
 use visdom::Vis;
-use ntree::selector::interface::KindError;
+use std::error::Error;
 
-fn main()-> Result<(), KindError>{
+fn main()-> Result<(), Box<dyn Error>>{
   let html = r##"
     <Doctype html>
     <html>
@@ -39,19 +39,23 @@ fn main()-> Result<(), KindError>{
   "##;
   // load html
   let nodes = Vis::load(html)?;
-  let lis = nodes.find("#header li")?;
-  println!("{}", lis.text());
+  let lis_text = nodes.find("#header li").text();
+  println!("{}", lis_text);
   // will output "Hello,VisDom"
 }
 ```
 
 ## Vis
 
-Static method：`load(html: &str) -> Result<NodeList, KindError>`
+Static method：`load(html: &str) -> Result<NodeList, Box<dyn Error>>`
 
     Load the `html` string into a document `NodeList`
 
-Static method：`dom(ele: &BoxDynNode) -> Result<NodeList, KindError>`
+Static method：`load_catch(html: &str, handle: Box<dyn Fn(Box<dyn Error>)>) -> NodeList`
+
+    Load the `html` string into a document `NodeList`, and use the handle to do with the errors such as html parse error, wrong selectors, this is useful if you don't want the process paniced by the errors.
+
+Static method：`dom(ele: &BoxDynNode) -> NodeList`
 
     Change the `ele` node to single node `NodeList`, this will copy the `ele`, you don't need it if you just need do something with methods of the `BoxDynNode` its'own.
 
@@ -74,7 +78,7 @@ The following API are inherited from the library [ntree](https://github.com/fefi
 
 | Selector API                                                                   | Description                                                                                                              |                        Remarks                         |
 | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------: |
-| The caller `Self` is a `NodeList`, Return `Result<NodeList, ErrorKind>`        | Tha all APIs are same with the jQuery library                                                                            |                                                        |
+| The caller `Self` is a `NodeList`, Return `NodeList`                           | Tha all APIs are same with the jQuery library                                                                            |                                                        |
 | <b>`find`</b>(selector: &str)                                                  | Get the descendants of each element in the `Self`, filtered by the `selector`.                                           |                                                        |
 | <b>`filter`</b>(selector: &str)                                                | Reduce `Self` to those that match the `selector`.                                                                        |                                                        |
 | <b>`filter_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Reduce `Self` to those that pass the `handle` function test.                                                             |                                                        |
@@ -195,9 +199,9 @@ let html = r##"
     <div class="second-child"></div>
   </div>
 "##;
-let root = Vis::load(html)?;
-let child = root.find(".child")?;
-let mut container = root.find("#container")?;
+let root = Vis::load(html);
+let child = root.find(".child");
+let mut container = root.find("#container");
 // append the `child` element to the `container`
 container.append(&child);
 // then the code become to below
@@ -208,7 +212,7 @@ container.append(&child);
 </div>
 */
 // create new element by `Vis::load`
-let third_child = Vis::load(r##"<div class="third-child"></div>"##)?;
+let third_child = Vis::load(r##"<div class="third-child"></div>"##);
 container.append(&third_child);
 // then the code become to below
 /*

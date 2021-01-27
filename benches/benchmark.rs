@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use crossbeam::sync::WaitGroup;
-use ntree::selector::interface::KindError;
+use std::error::Error;
 use std::thread;
 use visdom::Vis;
 
@@ -214,12 +214,12 @@ const HTML: &str = r###"
   // Google Inc.
   ;});})();(function(){google.drty&&google.drty();})();});</script><div></div></div></div><script nonce="yr9vZFEcikWx3GVdNa5eAw==">(function(){for(var i in google.iir||{}){_setImagesSrc([i],google.iir[i]);}google.iir={};})();</script><div id="reviewDialog" data-async-context="async_id_prefix:" data-jiis="up" data-async-type="reviewDialog" data-async-context-required="async_id_prefix" class="y yp"></div></body></html>
 "###;
-fn bench_selector() -> Result<(), KindError> {
+fn bench_selector() -> Result<(), Box<dyn Error>> {
 	let root = Vis::load(HTML)?;
-	let lists = root.find(".g")?;
-	lists.find(":header")?;
-	let all_lis = lists.find("li")?;
-	all_lis.filter("div > ol > li")?;
+	let lists = root.find(".g");
+	lists.find(":header");
+	let all_lis = lists.find("li");
+	all_lis.filter("div > ol > li");
 	Ok(())
 }
 fn criterion_benchmark(c: &mut Criterion) {
