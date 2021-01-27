@@ -199,7 +199,7 @@ let html = r##"
     <div class="second-child"></div>
   </div>
 "##;
-let root = Vis::load(html);
+let root = Vis::load(html)?;
 let child = root.find(".child");
 let mut container = root.find("#container");
 // append the `child` element to the `container`
@@ -212,7 +212,7 @@ container.append(&child);
 </div>
 */
 // create new element by `Vis::load`
-let third_child = Vis::load(r##"<div class="third-child"></div>"##);
+let third_child = Vis::load(r##"<div class="third-child"></div>"##)?;
 container.append(&third_child);
 // then the code become to below
 /*
