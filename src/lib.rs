@@ -1,6 +1,7 @@
 use mesdoc::interface::{
-	BoxDynNode, IAttrValue, IDocumentTrait, IErrorHandle, INodeTrait, INodeType, InsertPosition,
-	MaybeDoc, MaybeNode, NodeList,
+	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUnuse, Elements, IAttrValue, IDocumentTrait,
+	IElementTrait, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUnuseTrait, InsertPosition,
+	MaybeDoc, MaybeElement,
 };
 use mesdoc::{self, utils::retain_by_index};
 use rphtml::{
@@ -16,7 +17,7 @@ struct Dom {
 	node: Rc<RefCell<Node>>,
 }
 impl Dom {
-	fn validate_dom_change(&self, node: &BoxDynNode, method: &str) {
+	fn validate_dom_change(&self, node: &BoxDynElement, method: &str) {
 		// test if current node is element node
 		let my_node_type = self.node.borrow().node_type;
 		if my_node_type != NodeType::Tag {
@@ -49,26 +50,22 @@ impl INodeTrait for Dom {
 	fn to_node(self: Box<Self>) -> Box<dyn Any> {
 		self
 	}
-	/// impl `cloned`
-	fn cloned<'b>(&self) -> BoxDynNode<'b> {
+	/// impl `clone_node`
+	fn clone_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(Dom {
 			node: self.node.clone(),
 		})
 	}
-	/// impl `tag_name`
-	fn tag_name(&self) -> &str {
+	fn typed<'b>(
+		self: Box<Self>,
+	) -> Result<BoxDynElement<'b>, Result<BoxDynText<'b>, BoxDynUnuse<'b>>> {
 		match self.node_type() {
-			INodeType::Element => {
-				if let Some(meta) = &self.node.borrow().meta {
-					let name = meta.borrow().get_name(false);
-					return to_static_str(name);
-				}
-				panic!("Html syntax error: not found a tag name.");
-			}
-			INodeType::Document | INodeType::AbstractRoot => "",
-			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
+			INodeType::Element | INodeType::AbstractRoot => Ok(self as BoxDynElement),
+			INodeType::Text => Err(Ok(self as BoxDynText)),
+			_ => Err(Err(self as BoxDynUnuse)),
 		}
 	}
+
 	/// impl `node_type`
 	fn node_type(&self) -> INodeType {
 		let node = self.node.borrow();
@@ -90,7 +87,7 @@ impl INodeTrait for Dom {
 		}
 	}
 	/// impl `parent`
-	fn parent<'b>(&self) -> MaybeNode<'b> {
+	fn parent<'b>(&self) -> MaybeElement<'b> {
 		if let Some(parent) = &self.node.borrow().parent {
 			if let Some(node) = parent.upgrade() {
 				let cur = Dom { node };
@@ -99,17 +96,98 @@ impl INodeTrait for Dom {
 		}
 		None
 	}
+
+	/// impl `uuid`
+	fn uuid(&self) -> Option<&str> {
+		if let Some(uuid) = &self.node.borrow().uuid {
+			return Some(to_static_str(uuid.clone()));
+		}
+		None
+	}
+
+	/// impl `owner_document`
+	fn owner_document(&self) -> MaybeDoc {
+		if let Some(root) = &self.node.borrow().root {
+			Some(Box::new(Document {
+				node: Rc::clone(root),
+			}))
+		} else {
+			None
+		}
+	}
+	/// impl `text_content`
+	fn text_content(&self) -> &str {
+		to_static_str(self.node.borrow().build(
+			&RenderOptions {
+				decode_entity: true,
+				..Default::default()
+			},
+			true,
+		))
+	}
+
+	/// impl `set_text`
+	fn set_text(&mut self, content: &str) {
+		let mut node = self.node.borrow_mut();
+		if content.is_empty() {
+			node.childs = None;
+		} else {
+			let content = encode(content, SpecialChars, NamedOrDecimal);
+			let text_node = Node::create_text_node(&content, None);
+			node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+		}
+	}
+
+	/// impl `set_html`
+	fn set_html(&mut self, content: &str) {
+		let doc = Doc::parse(
+			content,
+			ParseOptions {
+				auto_remove_nostart_endtag: true,
+				..Default::default()
+			},
+		)
+		.unwrap();
+		if let Some(childs) = &mut doc.get_root_node().borrow_mut().childs {
+			// set childs with new childs
+			self.node.borrow_mut().childs = Some(childs.split_off(0));
+		} else {
+			// remove the childs
+			self.node.borrow_mut().childs = None;
+		}
+	}
+}
+
+impl ITextTrait for Dom {}
+
+impl IUnuseTrait for Dom {}
+
+impl IElementTrait for Dom {
+	/// impl `tag_name`
+	fn tag_name(&self) -> &str {
+		match self.node_type() {
+			INodeType::Element => {
+				if let Some(meta) = &self.node.borrow().meta {
+					let name = meta.borrow().get_name(false);
+					return to_static_str(name);
+				}
+				panic!("Html syntax error: not found a tag name.");
+			}
+			INodeType::Document | INodeType::AbstractRoot => "",
+			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
+		}
+	}
+
 	/// impl `children`
-	fn child_nodes<'b>(&self) -> NodeList<'b> {
+	fn child_nodes<'b>(&self) -> Vec<BoxDynNode<'b>> {
 		if let Some(childs) = &self.node.borrow().childs {
-			let mut result = NodeList::with_capacity(childs.len());
-			let nodes = result.get_mut_ref();
+			let mut result = Vec::with_capacity(childs.len());
 			for cur in childs {
-				nodes.push(Box::new(Dom { node: cur.clone() }));
+				result.push(Box::new(Dom { node: cur.clone() }) as BoxDynNode);
 			}
 			return result;
 		}
-		NodeList::new()
+		vec![]
 	}
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
@@ -206,46 +284,6 @@ impl INodeTrait for Dom {
 			}
 		}
 	}
-	/// impl `uuid`
-	fn uuid(&self) -> Option<&str> {
-		if let Some(uuid) = &self.node.borrow().uuid {
-			return Some(to_static_str(uuid.clone()));
-		}
-		None
-	}
-
-	/// impl `owner_document`
-	fn owner_document(&self) -> MaybeDoc {
-		if let Some(root) = &self.node.borrow().root {
-			Some(Box::new(Document {
-				node: Rc::clone(root),
-			}))
-		} else {
-			None
-		}
-	}
-	/// impl `text_content`
-	fn text_content(&self) -> &str {
-		to_static_str(self.node.borrow().build(
-			&RenderOptions {
-				decode_entity: true,
-				..Default::default()
-			},
-			true,
-		))
-	}
-
-	/// impl `set_text`
-	fn set_text(&mut self, content: &str) {
-		let mut node = self.node.borrow_mut();
-		if content.is_empty() {
-			node.childs = None;
-		} else {
-			let content = encode(content, SpecialChars, NamedOrDecimal);
-			let text_node = Node::create_text_node(&content, None);
-			node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
-		}
-	}
 
 	/// impl `inner_html`
 	fn inner_html(&self) -> &str {
@@ -263,27 +301,8 @@ impl INodeTrait for Dom {
 		to_static_str(self.node.borrow().build(&Default::default(), false))
 	}
 
-	/// impl `set_html`
-	fn set_html(&mut self, content: &str) {
-		let doc = Doc::parse(
-			content,
-			ParseOptions {
-				auto_remove_nostart_endtag: true,
-				..Default::default()
-			},
-		)
-		.unwrap();
-		if let Some(childs) = &mut doc.get_root_node().borrow_mut().childs {
-			// set childs with new childs
-			self.node.borrow_mut().childs = Some(childs.split_off(0));
-		} else {
-			// remove the childs
-			self.node.borrow_mut().childs = None;
-		}
-	}
-
 	/// impl `remov_child`
-	fn remove_child(&mut self, node: BoxDynNode) {
+	fn remove_child(&mut self, node: BoxDynElement) {
 		if let Some(parent) = &node.parent() {
 			if self.is(parent) {
 				// is a child
@@ -292,7 +311,7 @@ impl INodeTrait for Dom {
 					for (index, child) in childs.iter().enumerate() {
 						let dom = Box::new(Dom {
 							node: Rc::clone(child),
-						}) as BoxDynNode;
+						}) as BoxDynElement;
 						if node.is(&dom) {
 							find_index = Some(index);
 						}
@@ -305,7 +324,7 @@ impl INodeTrait for Dom {
 		}
 	}
 	// append child
-	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynNode) {
+	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
 		// base validate
 		let action = position.action();
 		self.validate_dom_change(&node, action);
@@ -402,14 +421,14 @@ impl Document {
 	fn bind_error(&mut self, handle: IErrorHandle) {
 		*self.node.borrow().onerror.borrow_mut() = Some(Rc::new(handle));
 	}
-	fn list<'b>(&self) -> NodeList<'b> {
+	fn list<'b>(&self) -> Elements<'b> {
 		let root: Dom = Rc::clone(&self.node.borrow().get_node()).into();
-		NodeList::with_nodes(vec![Box::new(root)])
+		Elements::with_nodes(vec![Box::new(root)])
 	}
 }
 
 impl IDocumentTrait for Document {
-	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynNode<'b>> {
+	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynElement<'b>> {
 		if let Some(node) = self.node.borrow().get_element_by_id(id) {
 			return Some(Box::new(Dom {
 				node: Rc::clone(&node),
@@ -452,24 +471,24 @@ impl Vis {
 		})
 	}
 	// load the html
-	pub fn load(html: &str) -> Result<NodeList, Box<dyn Error>> {
+	pub fn load(html: &str) -> Result<Elements, Box<dyn Error>> {
 		// nodes
 		let doc = Vis::parse_doc(html)?;
 		Ok(doc.list())
 	}
 	// load the html, and catch the errors
-	pub fn load_catch(html: &str, handle: IErrorHandle) -> NodeList {
+	pub fn load_catch(html: &str, handle: IErrorHandle) -> Elements {
 		let doc = Vis::parse_doc(html);
 		if let Ok(mut doc) = doc {
 			doc.bind_error(handle);
 			doc.list()
 		} else {
 			handle(doc.err().unwrap());
-			NodeList::new()
+			Elements::new()
 		}
 	}
-	// return a NodeList
-	pub fn dom<'b>(node: &BoxDynNode) -> NodeList<'b> {
-		NodeList::with_nodes(vec![node.cloned()])
+	// return a Elements
+	pub fn dom<'b>(node: &BoxDynElement) -> Elements<'b> {
+		Elements::with_nodes(vec![node.cloned()])
 	}
 }

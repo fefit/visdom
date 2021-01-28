@@ -1,4 +1,4 @@
-use mesdoc::interface::{IAttrValue, NodeList};
+use mesdoc::interface::{Elements, IAttrValue};
 use std::error::Error;
 use std::result::Result as StdResult;
 use visdom::Vis;
@@ -27,7 +27,7 @@ const HTML: &str = r##"
   </html>
 "##;
 
-fn is_attr(node_list: &NodeList, name: &str, value: &str) -> bool {
+fn is_attr(node_list: &Elements, name: &str, value: &str) -> bool {
 	match node_list.attr(name) {
 		Some(IAttrValue::Value(v, _)) => v == value,
 		_ => false,

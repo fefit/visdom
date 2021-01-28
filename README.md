@@ -47,17 +47,17 @@ fn main()-> Result<(), Box<dyn Error>>{
 
 ## Vis
 
-Static method：`load(html: &str) -> Result<NodeList, Box<dyn Error>>`
+Static method：`load(html: &str) -> Result<Elements, Box<dyn Error>>`
 
-    Load the `html` string into a document `NodeList`
+    Load the `html` string into a document `Elements`
 
-Static method：`load_catch(html: &str, handle: Box<dyn Fn(Box<dyn Error>)>) -> NodeList`
+Static method：`load_catch(html: &str, handle: Box<dyn Fn(Box<dyn Error>)>) -> Elements`
 
-    Load the `html` string into a document `NodeList`, and use the handle to do with the errors such as html parse error, wrong selectors, this is useful if you don't want the process paniced by the errors.
+    Load the `html` string into a document `Elements`, and use the handle to do with the errors such as html parse error, wrong selectors, this is useful if you don't want the process paniced by the errors.
 
-Static method：`dom(ele: &BoxDynNode) -> NodeList`
+Static method：`dom(ele: &BoxDynElement) -> Elements`
 
-    Change the `ele` node to single node `NodeList`, this will copy the `ele`, you don't need it if you just need do something with methods of the `BoxDynNode` its'own.
+    Change the `ele` node to single node `Elements`, this will copy the `ele`, you don't need it if you just need do something with methods of the `BoxDynElement` its'own.
 
 e.g.：
 
@@ -78,22 +78,22 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 
 | Selector API                                                                   | Description                                                                                                              |                        Remarks                         |
 | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------: |
-| The caller `Self` is a `NodeList`, Return `NodeList`                           | Tha all APIs are same with the jQuery library                                                                            |                                                        |
+| The caller `Self` is a `Elements`, Return `Elements`                           | Tha all APIs are same with the jQuery library                                                                            |                                                        |
 | <b>`find`</b>(selector: &str)                                                  | Get the descendants of each element in the `Self`, filtered by the `selector`.                                           |                                                        |
 | <b>`filter`</b>(selector: &str)                                                | Reduce `Self` to those that match the `selector`.                                                                        |                                                        |
-| <b>`filter_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Reduce `Self` to those that pass the `handle` function test.                                                             |                                                        |
-| <b>`filter_in`</b>(node_list: &NodeList)                                       | Reduce `Self` to those that also in the `node_list`                                                                      |                                                        |
+| <b>`filter_by`</b>(handle: &#124;index: usize, ele: &BoxDynElement&#124; -> bool) | Reduce `Self` to those that pass the `handle` function test.                                                             |                                                        |
+| <b>`filter_in`</b>(node_list: &Elements)                                       | Reduce `Self` to those that also in the `node_list`                                                                      |                                                        |
 | <b>`not`</b>(selector: &str)                                                   | Remove elements those that match the `selector` from `Self`.                                                             |                                                        |
-| <b>`not_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool)    | Remove elements those that pass the `handle` function test from `Self`.                                                  |                                                        |
-| <b>`not_in`</b>(node_list: &NodeList)                                          | Remove elements those that also in the `node_list` from `Self`.                                                          |                                                        |
+| <b>`not_by`</b>(handle: &#124;index: usize, ele: &BoxDynElement&#124; -> bool)    | Remove elements those that pass the `handle` function test from `Self`.                                                  |                                                        |
+| <b>`not_in`</b>(node_list: &Elements)                                          | Remove elements those that also in the `node_list` from `Self`.                                                          |                                                        |
 | <b>`is`</b>(selector: &str)                                                    | Check at least one element in `Self` is match the `selector`.                                                            |                                                        |
-| <b>`is_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool)     | Check at least one element call the `handle` function return `true`.                                                     |                                                        |
-| <b>`is_in`</b>(node_list: &NodeList)                                           | Check at least one element in `Self` is also in `node_list`.                                                             |                                                        |
+| <b>`is_by`</b>(handle: &#124;index: usize, ele: &BoxDynElement&#124; -> bool)     | Check at least one element call the `handle` function return `true`.                                                     |                                                        |
+| <b>`is_in`</b>(node_list: &Elements)                                           | Check at least one element in `Self` is also in `node_list`.                                                             |                                                        |
 | <b>`is_all`</b>(selector: &str)                                                | Check if each element in `Self` are all matched the `selector`.                                                          |                                                        |
-| <b>`is_all_by`</b>(handle: &#124;index: usize, ele: &BoxDynNode&#124; -> bool) | Check if each element in `Self` call the `handle` function are all returned `true`.                                      |                                                        |
-| <b>`is_all_in`</b>(node_list: &NodeList)                                       | Check if each element in `Self` are all also in `node_list`.                                                             |                                                        |
+| <b>`is_all_by`</b>(handle: &#124;index: usize, ele: &BoxDynElement&#124; -> bool) | Check if each element in `Self` call the `handle` function are all returned `true`.                                      |                                                        |
+| <b>`is_all_in`</b>(node_list: &Elements)                                       | Check if each element in `Self` are all also in `node_list`.                                                             |                                                        |
 | <b>`has`</b>(selector: &str)                                                   | Reduce `Self` to those that have a descendant that matches the `selector`.                                               |                                                        |
-| <b>`has_in`</b>(node_list: &NodeList)                                          | Reduce `Self` to those that have a descendant that in the `node_list`.                                                   |                                                        |
+| <b>`has_in`</b>(node_list: &Elements)                                          | Reduce `Self` to those that have a descendant that in the `node_list`.                                                   |                                                        |
 | <b>`children`</b>(selector: &str)                                              | Get the children of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.           |                                                        |
 | <b>`parent`</b>(selector: &str)                                                | Get the parent of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.             |                                                        |
 | <b>`parents`</b>(selector: &str)                                               | Get the ancestors of each element in `Self`, when the `selector` is not empty, will filtered by the `selector`.          |                                                        |
@@ -111,8 +111,8 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 | :------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------: |
 | <b>`length`</b>()                                                                      | Get the number of `Self`'s element.                                                                                                                                                                                      |                                                |
 | <b>`is_empty`</b>()                                                                    | Check if `Self` has no element, `length() == 0`.                                                                                                                                                                         |                                                |
-| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynNode&#124; -> bool)      | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.                                                                                                                                | You can also use `each` if you like less code. |
-| <b>`map`</b>&lt;T&gt;(&#124;index: usize, ele: &BoxDynNode&#124; -> T) -> Vec&lt;T&gt; | Get a collection of values by iterate the each element in `Self` and call the `handle` function.                                                                                                                         |                                                |
+| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynElement&#124; -> bool)      | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.                                                                                                                                | You can also use `each` if you like less code. |
+| <b>`map`</b>&lt;T&gt;(&#124;index: usize, ele: &BoxDynElement&#124; -> T) -> Vec&lt;T&gt; | Get a collection of values by iterate the each element in `Self` and call the `handle` function.                                                                                                                         |                                                |
 | <b>`sort`</b>()                                                                        | Sort each element in `Self` by the appear order in the html document.This should only used when you use a `find` method that the selector is a selector list, e.g. `find(".a,.b")`, which `.a` and `.b` are not ordered. |                                                |
 
 ### Supported Selectors
@@ -179,14 +179,14 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 
 | DOM Insertion and Remove API              | Description                                                                         | Remarks |
 | :---------------------------------------- | :---------------------------------------------------------------------------------- | :-----: |
-| <b>`append`</b>(nodes: &NodeList)         | Append all `nodes` into `Self`, after the last child<BeforeEnd>                     |         |
-| <b>`append_to`</b>(nodes: &mut NodeList)  | The same as the above，but exchange the caller and the parameter target.            |         |
-| <b>`prepend`</b>(nodes: &mut NodeList)    | Append all `nodes` into `Self`, befpre the first child<AfterStart>                  |         |
-| <b>`prepend_to`</b>(nodes: &mut NodeList) | The same as the above，but exchange the caller and the parameter target.            |         |
-| <b>`insert_after`</b>(nodes: &NodeList)   | Insert all `nodes` after `Self`<AfterEnd>                                           |         |
-| <b>`after`</b>(nodes: &mut NodeList)      | The same as the above，but exchange the caller and the parameter target.            |         |
-| <b>`insert_before`</b>(nodes: &NodeList)  | Insert all `nodes` before `Self`<BeforeStart>                                       |         |
-| <b>`before`</b>(nodes: &mut NodeList)     | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`append`</b>(nodes: &Elements)         | Append all `nodes` into `Self`, after the last child<BeforeEnd>                     |         |
+| <b>`append_to`</b>(nodes: &mut Elements)  | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`prepend`</b>(nodes: &mut Elements)    | Append all `nodes` into `Self`, befpre the first child<AfterStart>                  |         |
+| <b>`prepend_to`</b>(nodes: &mut Elements) | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`insert_after`</b>(nodes: &Elements)   | Insert all `nodes` after `Self`<AfterEnd>                                           |         |
+| <b>`after`</b>(nodes: &mut Elements)      | The same as the above，but exchange the caller and the parameter target.            |         |
+| <b>`insert_before`</b>(nodes: &Elements)  | Insert all `nodes` before `Self`<BeforeStart>                                       |         |
+| <b>`before`</b>(nodes: &mut Elements)     | The same as the above，but exchange the caller and the parameter target.            |         |
 | <b>`remove`</b>()                         | Remove the `Self`, it will take the ownership of `Self`, so you can't use it again. |         |
 | <b>`empty`</b>()                          | Clear the all childs of each element in `Self`.                                     |         |
 
@@ -226,7 +226,7 @@ container.append(&third_child);
 
 ## Depedencies
 
-- NodeList API Library：[https://github.com/fefit/mesdoc](https://github.com/fefit/mesdoc)
+- Elements API Library：[https://github.com/fefit/mesdoc](https://github.com/fefit/mesdoc)
 - Html Parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
 - Html Entity encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 
