@@ -10,7 +10,7 @@ Cargo.toml
 
 ```toml
 [depedencies]
-visdom = "0.0.7"
+visdom = "0.0.8"
 ```
 
 main.rs
