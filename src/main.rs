@@ -1175,5 +1175,46 @@ fn main() -> Result<(), Box<dyn Error>> {
 	println!("{:?}", titles);
 	let links = root.find("#footer .links").next_all("").has("span");
 	println!("{}", links.length());
+	let all_titles = root.find("a.title");
+	let not_in_container = all_titles.filter(":not(.article-list-container) > ul > li > *");
+	println!(
+		"all_titles:{}, not_in_container:{}",
+		all_titles.length(),
+		not_in_container.length()
+	);
+	let mut texts = root.find("#footer").texts(0).filter_by(|_, text_node| {
+		if text_node.text().trim().is_empty() {
+			return false;
+		}
+		true
+	});
+	texts.for_each(|_, text_node| {
+		println!("text_node:{}", text_node.text());
+		let chars = text_node.text().chars().collect::<Vec<char>>();
+		let total = chars.len();
+		if total > 5 {
+			let mut mix = String::with_capacity(total);
+			let mut cur_index = 0;
+			let mut loop_num = 0;
+			while cur_index < total {
+				let moved = 5;
+				let end = cur_index + moved;
+				let end = if end > total { total } else { end };
+				let cur_chars = chars[cur_index..end].iter().collect::<String>();
+				if loop_num % 2 == 0 || cur_chars.trim().is_empty() {
+					mix.push_str(&cur_chars);
+				} else {
+					let wrapped = format!("<span class='a2xgd5o3k'>{}</span>", cur_chars);
+					mix.push_str(&wrapped);
+				}
+				loop_num += 1;
+				cur_index += moved;
+			}
+			text_node.set_html(&mix);
+		}
+		true
+	});
+	texts.remove();
+	println!("转换后变成：{}", root.find("#footer").outer_html());
 	Ok(())
 }

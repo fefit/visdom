@@ -1,7 +1,7 @@
 use mesdoc::interface::{
-	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUnuse, Elements, IAttrValue, IDocumentTrait,
-	IElementTrait, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUnuseTrait, InsertPosition,
-	MaybeDoc, MaybeElement,
+	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IAttrValue, IDocumentTrait,
+	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
+	InsertPosition, MaybeDoc, MaybeElement, Texts,
 };
 use mesdoc::{self, utils::retain_by_index};
 use rphtml::{
@@ -46,36 +46,52 @@ fn to_static_str(orig: String) -> &'static str {
 	Box::leak(orig.into_boxed_str())
 }
 
+// get current node's index and do with the sibling nodes
+fn get_index_then_do(cur: &RefNode, siblings: &[RefNode]) -> Option<usize> {
+	let mut find_index: Option<usize> = None;
+	for (index, node) in siblings.iter().enumerate() {
+		if Node::is_same(cur, node) {
+			find_index = Some(index);
+			break;
+		}
+	}
+	find_index
+}
+
 impl INodeTrait for Dom {
+	/// impl `to_node`
 	fn to_node(self: Box<Self>) -> Box<dyn Any> {
 		self
 	}
+
 	/// impl `clone_node`
 	fn clone_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(Dom {
 			node: self.node.clone(),
 		})
 	}
-	fn typed<'b>(
-		self: Box<Self>,
-	) -> Result<BoxDynElement<'b>, Result<BoxDynText<'b>, BoxDynUnuse<'b>>> {
+
+	/// impl `typed`
+	fn typed<'b>(self: Box<Self>) -> IEnumTyped<'b> {
 		match self.node_type() {
-			INodeType::Element | INodeType::AbstractRoot => Ok(self as BoxDynElement),
-			INodeType::Text => Err(Ok(self as BoxDynText)),
-			_ => Err(Err(self as BoxDynUnuse)),
+			INodeType::Element | INodeType::DocumentFragement => {
+				IEnumTyped::Element(self as BoxDynElement)
+			}
+			INodeType::Text => IEnumTyped::Text(self as BoxDynText),
+			_ => IEnumTyped::UncareNode(self as BoxDynUncareNode),
 		}
 	}
 
 	/// impl `node_type`
 	fn node_type(&self) -> INodeType {
-		let node = self.node.borrow();
-		match node.node_type {
+		let node_type = self.node.borrow().node_type;
+		match node_type {
 			NodeType::AbstractRoot => {
-				let (is_document, _) = node.is_document();
+				let (is_document, _) = self.node.borrow().is_document();
 				if is_document {
 					INodeType::Document
 				} else {
-					INodeType::AbstractRoot
+					INodeType::DocumentFragement
 				}
 			}
 			NodeType::Comment => INodeType::Comment,
@@ -122,19 +138,45 @@ impl INodeTrait for Dom {
 				decode_entity: true,
 				..Default::default()
 			},
-			true,
+			matches!(self.node_type(), INodeType::Element),
 		))
 	}
 
 	/// impl `set_text`
 	fn set_text(&mut self, content: &str) {
+		let node_type = self.node_type();
 		let mut node = self.node.borrow_mut();
-		if content.is_empty() {
-			node.childs = None;
-		} else {
-			let content = encode(content, SpecialChars, NamedOrDecimal);
-			let text_node = Node::create_text_node(&content, None);
-			node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+		match node_type {
+			INodeType::Element => {
+				if content.is_empty() {
+					node.childs = None;
+				} else {
+					let content = encode(content, SpecialChars, NamedOrDecimal);
+					let text_node = Node::create_text_node(&content, None);
+					node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+				}
+			}
+			INodeType::Text => {
+				if content.is_empty() {
+					if let Some(parent) = &self.node.borrow_mut().parent {
+						if let Some(parent) = parent.upgrade() {
+							if let Some(siblings) = &mut parent.borrow_mut().childs {
+								// remove the node
+								if let Some(index) = get_index_then_do(&self.node, siblings) {
+									siblings.remove(index);
+								}
+							}
+						}
+					}
+				} else {
+					// replace the text node
+					let text_node = Node::create_text_node(&content, None);
+					*node = text_node;
+				}
+			}
+			_ => {
+				// other node types nothing to do
+			}
 		}
 	}
 
@@ -150,7 +192,24 @@ impl INodeTrait for Dom {
 		.unwrap();
 		if let Some(childs) = &mut doc.get_root_node().borrow_mut().childs {
 			// set childs with new childs
-			self.node.borrow_mut().childs = Some(childs.split_off(0));
+			match self.node_type() {
+				INodeType::Element => self.node.borrow_mut().childs = Some(childs.split_off(0)),
+				INodeType::Text => {
+					if let Some(parent) = &self.node.borrow_mut().parent {
+						if let Some(parent) = parent.upgrade() {
+							if let Some(siblings) = &mut parent.borrow_mut().childs {
+								if let Some(index) = get_index_then_do(&self.node, siblings) {
+									// delete the node and append childs
+									siblings.splice(index..index + 1, childs.split_off(0));
+								}
+							}
+						}
+					}
+				}
+				_ => {
+					// nothing to do with other nodes
+				}
+			};
 		} else {
 			// remove the childs
 			self.node.borrow_mut().childs = None;
@@ -160,7 +219,7 @@ impl INodeTrait for Dom {
 
 impl ITextTrait for Dom {}
 
-impl IUnuseTrait for Dom {}
+impl IUncareNodeTrait for Dom {}
 
 impl IElementTrait for Dom {
 	/// impl `tag_name`
@@ -173,7 +232,7 @@ impl IElementTrait for Dom {
 				}
 				panic!("Html syntax error: not found a tag name.");
 			}
-			INodeType::Document | INodeType::AbstractRoot => "",
+			INodeType::Document | INodeType::DocumentFragement => "",
 			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
 		}
 	}
@@ -338,7 +397,7 @@ impl IElementTrait for Dom {
 			}
 			// get the nodes
 			let mut nodes = match node_type {
-				INodeType::AbstractRoot => {
+				INodeType::DocumentFragement => {
 					if let Some(childs) = &dom.node.borrow().childs {
 						childs
 							.iter()
@@ -375,18 +434,12 @@ impl IElementTrait for Dom {
 					if let Some(parent) = &self.node.borrow_mut().parent {
 						if let Some(parent) = parent.upgrade() {
 							if let Some(siblings) = &mut parent.borrow_mut().childs {
-								let mut find_index: Option<usize> = None;
-								for (index, sibling) in siblings.iter().enumerate() {
-									if Node::is_same(&self.node, sibling) {
-										find_index = Some(index);
-									}
-								}
-								if let Some(mut index) = find_index {
-									// insert
+								if let Some(mut index) = get_index_then_do(&self.node, siblings) {
+									// delete the node and append childs
 									if *position == AfterEnd {
 										index += 1;
 									}
-									siblings.splice(index..index, nodes);
+									siblings.splice(index..index, (&mut nodes).split_off(0));
 								}
 							}
 						}
@@ -410,6 +463,49 @@ impl IElementTrait for Dom {
 			// not the Dom
 			panic!("Can't {} that not implemented 'Dom'", action);
 		}
+	}
+	/// impl `texts`
+	fn texts<'b>(&self, limit_depth: u32) -> Option<Texts<'b>> {
+		let limit_depth = if limit_depth == 0 {
+			u32::MAX
+		} else {
+			limit_depth
+		};
+		let mut result: Texts = Texts::with_capacity(5);
+		fn loop_handle(node: BoxDynElement, result: &mut Texts, cur_depth: u32, limit_depth: u32) {
+			let child_nodes = node.child_nodes();
+			if !child_nodes.is_empty() {
+				let next_depth = cur_depth + 1;
+				let recursive = next_depth < limit_depth;
+				for node in &node.child_nodes() {
+					match node.node_type() {
+						INodeType::Text => {
+							// append text node to result
+							let node = node.clone_node();
+							let text = node.typed().into_text().expect("TextNode must true");
+							result.get_mut_ref().push(text);
+						}
+						INodeType::Element => {
+							// if need recursive find the text node
+							if recursive {
+								let node = node.clone_node();
+								let ele = node.typed().into_element().expect("TextNode must true");
+								loop_handle(ele, result, next_depth, limit_depth);
+							}
+						}
+						_ => {}
+					}
+				}
+			}
+		}
+		let node = Box::new(Dom {
+			node: Rc::clone(&self.node),
+		}) as BoxDynElement;
+		loop_handle(node, &mut result, 0, limit_depth);
+		if !result.is_empty() {
+			return Some(result);
+		}
+		None
 	}
 }
 
