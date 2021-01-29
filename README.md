@@ -174,6 +174,7 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 | <b>`html`</b>()                  | Get the first element in `Self`'s html.                                    |         |
 | <b>`set_html`</b>(content: &str) | Set the html to `content` of each element in `Self`.                       |         |
 | <b>`outer_html`</b>()            | Get the first element in `Self`'s outer html.                              |         |
+| <b>`texts`</b>(limit_depth: u32)            | Get the text node of each element in `Self`, if `limit_depth` is `0`, will get all the descendant text nodes; if `1`, will just get the children text nodes.                              |         |
 
 ### DOM Operation
 

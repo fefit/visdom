@@ -3,7 +3,7 @@ use mesdoc::interface::{
 	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
 	InsertPosition, MaybeDoc, MaybeElement, Texts,
 };
-use mesdoc::{self, utils::retain_by_index};
+use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
@@ -17,28 +17,45 @@ struct Dom {
 	node: Rc<RefCell<Node>>,
 }
 impl Dom {
-	fn validate_dom_change(&self, node: &BoxDynElement, method: &str) {
+	fn halt(&self, method: &str, message: &str) {
+		if let Some(doc) = &self.owner_document() {
+			doc.trigger_error(Box::new(IError::InvalidTraitMethodCall {
+				method: String::from(method),
+				message: String::from(message),
+			}));
+		}
+	}
+
+	fn validate_dom_change(&self, node: &BoxDynElement, method: &str) -> bool {
 		// test if current node is element node
 		let my_node_type = self.node.borrow().node_type;
 		if my_node_type != NodeType::Tag {
-			panic!("Can't {} for a {:?} type", method, my_node_type);
+			self.halt(
+				method,
+				&format!("Can't {} for a {:?} type", method, my_node_type),
+			);
+			return false;
 		}
 		// document
 		if let INodeType::Document = node.node_type() {
-			panic!("Can't {} of a document type", method);
+			self.halt(method, &format!("Can't {} of a document type", method));
+			return false;
 		}
 		// test if same node
 		if self.is(&node) {
-			panic!("Can't {} of self.", method);
+			self.halt(method, &format!("Can't {} of self.", method));
+			return false;
 		}
 		// test if the node is self's parent node
 		let mut cur = self.cloned();
 		while let Some(parent) = &cur.parent() {
 			if parent.is(&node) {
-				panic!("Can't {} of self's parent", method);
+				self.halt(method, &format!("Can't {} of self's parent", method));
+				return false;
 			}
 			cur = parent.cloned();
 		}
+		true
 	}
 }
 
@@ -47,15 +64,26 @@ fn to_static_str(orig: String) -> &'static str {
 }
 
 // get current node's index and do with the sibling nodes
-fn get_index_then_do(cur: &RefNode, siblings: &[RefNode]) -> Option<usize> {
-	let mut find_index: Option<usize> = None;
-	for (index, node) in siblings.iter().enumerate() {
-		if Node::is_same(cur, node) {
-			find_index = Some(index);
-			break;
+fn get_index_then_do<F>(cur: &RefNode, mut handle: F)
+where
+	F: FnMut(&mut Vec<RefNode>, usize),
+{
+	if let Some(parent) = &cur.borrow_mut().parent {
+		if let Some(parent) = parent.upgrade() {
+			if let Some(siblings) = &mut parent.borrow_mut().childs {
+				let mut find_index: Option<usize> = None;
+				for (index, node) in siblings.iter().enumerate() {
+					if Node::is_same(cur, node) {
+						find_index = Some(index);
+						break;
+					}
+				}
+				if let Some(index) = find_index {
+					handle(siblings, index);
+				}
+			}
 		}
 	}
-	find_index
 }
 
 impl INodeTrait for Dom {
@@ -158,16 +186,9 @@ impl INodeTrait for Dom {
 			}
 			INodeType::Text => {
 				if content.is_empty() {
-					if let Some(parent) = &self.node.borrow_mut().parent {
-						if let Some(parent) = parent.upgrade() {
-							if let Some(siblings) = &mut parent.borrow_mut().childs {
-								// remove the node
-								if let Some(index) = get_index_then_do(&self.node, siblings) {
-									siblings.remove(index);
-								}
-							}
-						}
-					}
+					self.halt("set_text",
+            "the text parameter can't be empty, if you want to remove a text node, you can use 'remove' method instead."
+          );
 				} else {
 					// replace the text node
 					let text_node = Node::create_text_node(&content, None);
@@ -195,16 +216,10 @@ impl INodeTrait for Dom {
 			match self.node_type() {
 				INodeType::Element => self.node.borrow_mut().childs = Some(childs.split_off(0)),
 				INodeType::Text => {
-					if let Some(parent) = &self.node.borrow_mut().parent {
-						if let Some(parent) = parent.upgrade() {
-							if let Some(siblings) = &mut parent.borrow_mut().childs {
-								if let Some(index) = get_index_then_do(&self.node, siblings) {
-									// delete the node and append childs
-									siblings.splice(index..index + 1, childs.split_off(0));
-								}
-							}
-						}
-					}
+					get_index_then_do(&self.node, |siblings, index| {
+						// delete the node and append childs
+						siblings.splice(index..index + 1, childs.split_off(0));
+					});
 				}
 				_ => {
 					// nothing to do with other nodes
@@ -217,7 +232,14 @@ impl INodeTrait for Dom {
 	}
 }
 
-impl ITextTrait for Dom {}
+impl ITextTrait for Dom {
+	fn remove(self: Box<Self>) {
+		get_index_then_do(&self.node, |siblings, index| {
+			println!("index:{}", index);
+			siblings.remove(index);
+		});
+	}
+}
 
 impl IUncareNodeTrait for Dom {}
 
@@ -230,11 +252,15 @@ impl IElementTrait for Dom {
 					let name = meta.borrow().get_name(false);
 					return to_static_str(name);
 				}
-				panic!("Html syntax error: not found a tag name.");
+				self.halt("tag_name", "Html syntax error: not found a tag name.");
 			}
-			INodeType::Document | INodeType::DocumentFragement => "",
-			cur_type => panic!("The node type of '{:?}' doesn't have a tag name.", cur_type),
-		}
+			INodeType::Document | INodeType::DocumentFragement => {}
+			cur_type => self.halt(
+				"tag_name",
+				&format!("The node type of '{:?}' doesn't have a tag name.", cur_type),
+			),
+		};
+		""
 	}
 
 	/// impl `children`
@@ -386,7 +412,9 @@ impl IElementTrait for Dom {
 	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
 		// base validate
 		let action = position.action();
-		self.validate_dom_change(&node, action);
+		if !self.validate_dom_change(&node, action) {
+			return;
+		}
 		let orig_node = node.cloned();
 		let node_type = node.node_type();
 		let specified: Box<dyn Any> = node.cloned().to_node();
@@ -431,19 +459,13 @@ impl IElementTrait for Dom {
 			match position {
 				BeforeBegin | AfterEnd => {
 					// insertBefore,insertAfter
-					if let Some(parent) = &self.node.borrow_mut().parent {
-						if let Some(parent) = parent.upgrade() {
-							if let Some(siblings) = &mut parent.borrow_mut().childs {
-								if let Some(mut index) = get_index_then_do(&self.node, siblings) {
-									// delete the node and append childs
-									if *position == AfterEnd {
-										index += 1;
-									}
-									siblings.splice(index..index, (&mut nodes).split_off(0));
-								}
-							}
+					get_index_then_do(&self.node, |siblings, mut index| {
+						// delete the node and append childs
+						if *position == AfterEnd {
+							index += 1;
 						}
-					}
+						siblings.splice(index..index, (&mut nodes).split_off(0));
+					});
 				}
 				AfterBegin | BeforeEnd => {
 					// prepend, append
@@ -461,7 +483,10 @@ impl IElementTrait for Dom {
 			}
 		} else {
 			// not the Dom
-			panic!("Can't {} that not implemented 'Dom'", action);
+			self.halt(
+				action,
+				&format!("Can't {} that not implemented 'Dom'", action),
+			);
 		}
 	}
 	/// impl `texts`

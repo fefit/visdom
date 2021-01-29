@@ -1192,6 +1192,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 		println!("text_node:{}", text_node.text());
 		let chars = text_node.text().chars().collect::<Vec<char>>();
 		let total = chars.len();
+		// text_node.set_text("哈哈");
 		if total > 5 {
 			let mut mix = String::with_capacity(total);
 			let mut cur_index = 0;
