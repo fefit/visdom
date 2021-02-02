@@ -235,7 +235,6 @@ impl INodeTrait for Dom {
 impl ITextTrait for Dom {
 	fn remove(self: Box<Self>) {
 		get_index_then_do(&self.node, |siblings, index| {
-			println!("index:{}", index);
 			siblings.remove(index);
 		});
 	}
