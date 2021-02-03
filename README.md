@@ -199,16 +199,16 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 
 ```rust
 let html = r##"
+  <div class="second-child"></div>
   <div id="container">
     <div class="first-child"></div>
-    <div class="second-child"></div>
   </div>
 "##;
 let root = Vis::load(html)?;
-let mut child = root.find(".child");
 let mut container = root.find("#container");
-// append the `child` element to the `container`
-container.append(&mut child);
+let mut second_child = root.find(".second-child");
+// append the `second-child` element to the `container`
+container.append(&mut second_child);
 // then the code become to below
 /*
 <div id="container">
