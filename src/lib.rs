@@ -7,7 +7,9 @@ use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
-	parser::{allow_insert, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode},
+	parser::{
+		allow_insert, is_content_tag, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode,
+	},
 };
 use std::error::Error;
 use std::rc::Rc;
@@ -173,18 +175,30 @@ impl INodeTrait for Dom {
 	/// impl `set_text`
 	fn set_text(&mut self, content: &str) {
 		let node_type = self.node_type();
-		let mut node = self.node.borrow_mut();
 		match node_type {
 			INodeType::Element => {
-				if content.is_empty() {
-					node.childs = None;
-				} else {
+				let tag_name = self.tag_name();
+				let no_content_tag = !is_content_tag(tag_name);
+				let mut node = self.node.borrow_mut();
+				if !content.is_empty() {
 					let content = encode(content, SpecialChars, NamedOrDecimal);
-					let text_node = Node::create_text_node(&content, None);
-					node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+					if no_content_tag {
+						let text_node = Node::create_text_node(&content, None);
+						node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
+					} else {
+						node.content = Some(content.chars().collect::<Vec<char>>());
+					}
+				} else {
+					// empty content
+					if no_content_tag {
+						node.childs = None;
+					} else {
+						node.content = None;
+					}
 				}
 			}
 			INodeType::Text => {
+				let mut node = self.node.borrow_mut();
 				if content.is_empty() {
 					self.halt("set_text",
             "the text parameter can't be empty, if you want to remove a text node, you can use 'remove' method instead."
@@ -233,10 +247,29 @@ impl INodeTrait for Dom {
 }
 
 impl ITextTrait for Dom {
+	// delete the node
 	fn remove(self: Box<Self>) {
 		get_index_then_do(&self.node, |siblings, index| {
 			siblings.remove(index);
 		});
+	}
+	// append text
+	fn append_text(&mut self, content: &str) {
+		let chars = content.chars().collect::<Vec<char>>();
+		if let Some(content) = &mut self.node.borrow_mut().content {
+			content.extend(chars);
+		} else {
+			self.node.borrow_mut().content = Some(chars);
+		}
+	}
+	// prepend text
+	fn prepend_text(&mut self, content: &str) {
+		let chars = content.chars().collect::<Vec<char>>();
+		if let Some(content) = &mut self.node.borrow_mut().content {
+			content.splice(0..0, chars);
+		} else {
+			self.node.borrow_mut().content = Some(chars);
+		}
 	}
 }
 
@@ -248,7 +281,7 @@ impl IElementTrait for Dom {
 		match self.node_type() {
 			INodeType::Element => {
 				if let Some(meta) = &self.node.borrow().meta {
-					let name = meta.borrow().get_name(false);
+					let name = meta.borrow().get_name(true);
 					return to_static_str(name);
 				}
 				self.halt("tag_name", "Html syntax error: not found a tag name.");
@@ -513,13 +546,20 @@ impl IElementTrait for Dom {
 							// if need recursive find the text node
 							if recursive {
 								let node = node.clone_node();
-								let ele = node.typed().into_element().expect("TextNode must true");
+								let ele = node.typed().into_element().expect("ElementNode must true");
 								loop_handle(ele, result, next_depth, limit_depth);
 							}
 						}
 						_ => {}
 					}
 				}
+			} else if is_content_tag(node.tag_name()) {
+				// content tag, change the element into text type
+				result.get_mut_ref().push(
+					node
+						.into_text()
+						.expect("Content tag must be able to translate into text node"),
+				);
 			}
 		}
 		let node = Box::new(Dom {
@@ -530,6 +570,17 @@ impl IElementTrait for Dom {
 			return Some(result);
 		}
 		None
+	}
+	/// impl `into_text`
+	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, Box<dyn Error>> {
+		if is_content_tag(self.tag_name()) {
+			Ok(self as BoxDynText)
+		} else {
+			Err(Box::new(IError::InvalidTraitMethodCall {
+				method: "into_text".into(),
+				message: "Can't call 'into_text' with tags those are not content tags.".into(),
+			}))
+		}
 	}
 }
 

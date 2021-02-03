@@ -19,10 +19,25 @@ fn main() -> Result<(), Box<dyn Error>> {
       <dd>definition 3-a</dd>
       <dd>definition 3-b</dd>
   </dl>
+  <style>
+    .a{color:red;}
+  </style>
   "##;
-	let root = Vis::load(html)?;
+	let root = Vis::load_catch(
+		html,
+		Box::new(|e| {
+			println!("error is:{}", e.to_string());
+		}),
+	);
 	let id_term_2 = root.find("#term-2");
-	let dd_after_term_2 = id_term_2.next_until("dt", "", true);
+	let dd_after_term_2 = id_term_2.next_until("dt", "", false);
 	assert_eq!(dd_after_term_2.length(), 3);
+	let mut style_ele = root.find("style");
+	let mut texts = style_ele.texts(1);
+	println!("texts:{}", texts.length());
+	let mut dl = root.find("dl");
+	let mut style_ele = Vis::load("<style>.me{color:red}</style>")?;
+	style_ele.insert_before(&mut dl);
+	println!("outer html:{}", root.outer_html());
 	Ok(())
 }
