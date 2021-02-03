@@ -571,6 +571,7 @@ impl IElementTrait for Dom {
 		}
 		None
 	}
+
 	/// impl `into_text`
 	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, Box<dyn Error>> {
 		if is_content_tag(self.tag_name()) {
@@ -581,6 +582,15 @@ impl IElementTrait for Dom {
 				message: "Can't call 'into_text' with tags those are not content tags.".into(),
 			}))
 		}
+	}
+
+	/// impl `is`, is much faster than compare the `uuid`
+	fn is(&self, ele: &BoxDynElement) -> bool {
+		let specified: Box<dyn Any> = ele.cloned().to_node();
+		if let Ok(dom) = specified.downcast::<Dom>() {
+			return Node::is_same(&self.node, &dom.node);
+		}
+		false
 	}
 }
 
