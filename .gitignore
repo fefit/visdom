@@ -17,3 +17,6 @@ Cargo.lock
 
 # Coverage files
 *.profraw
+
+# System files
+.Ds_*

@@ -18,6 +18,7 @@ use std::{any::Any, cell::RefCell};
 struct Dom {
 	node: Rc<RefCell<Node>>,
 }
+
 impl Dom {
 	fn halt(&self, method: &str, message: &str) {
 		if let Some(doc) = &self.owner_document() {
@@ -88,10 +89,21 @@ where
 	}
 }
 
+fn reset_next_siblings_index(start_index: usize, childs: &[RefNode]) {
+	for (step, node) in childs.iter().enumerate() {
+		node.borrow_mut().index = start_index + step;
+	}
+}
+
 impl INodeTrait for Dom {
 	/// impl `to_node`
 	fn to_node(self: Box<Self>) -> Box<dyn Any> {
 		self
+	}
+
+	/// impl `index`
+	fn index(&self) -> usize {
+		self.node.borrow().index
 	}
 
 	/// impl `clone_node`
@@ -296,15 +308,23 @@ impl IElementTrait for Dom {
 	}
 
 	/// impl `children`
-	fn child_nodes<'b>(&self) -> Vec<BoxDynNode<'b>> {
+	fn child_nodes_length(&self) -> usize {
+		self
+			.node
+			.borrow()
+			.childs
+			.as_ref()
+			.map_or(0, |childs| childs.len())
+	}
+	fn child_nodes_item<'b>(&self, index: usize) -> Option<BoxDynNode<'b>> {
 		if let Some(childs) = &self.node.borrow().childs {
-			let mut result = Vec::with_capacity(childs.len());
-			for cur in childs {
-				result.push(Box::new(Dom { node: cur.clone() }) as BoxDynNode);
-			}
-			return result;
+			return childs.get(index).map(|node| {
+				Box::new(Dom {
+					node: Rc::clone(node),
+				}) as BoxDynNode
+			});
 		}
-		vec![]
+		None
 	}
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
@@ -419,22 +439,27 @@ impl IElementTrait for Dom {
 	}
 
 	/// impl `remov_child`
-	fn remove_child(&mut self, node: BoxDynElement) {
-		if let Some(parent) = &node.parent() {
+	fn remove_child(&mut self, ele: BoxDynElement) {
+		if let Some(parent) = &ele.parent() {
 			if self.is(parent) {
 				// is a child
 				if let Some(childs) = self.node.borrow_mut().childs.as_mut() {
 					let mut find_index: Option<usize> = None;
 					for (index, child) in childs.iter().enumerate() {
-						let dom = Box::new(Dom {
-							node: Rc::clone(child),
-						}) as BoxDynElement;
-						if node.is(&dom) {
-							find_index = Some(index);
+						if matches!(child.borrow().node_type, NodeType::Tag) {
+							let dom = Box::new(Dom {
+								node: Rc::clone(child),
+							}) as BoxDynElement;
+							if ele.is(&dom) {
+								find_index = Some(index);
+								break;
+							}
 						}
 					}
 					if let Some(index) = find_index {
 						childs.remove(index);
+						// reset indexs
+						reset_next_siblings_index(index, &childs[index..]);
 					}
 				}
 			}
