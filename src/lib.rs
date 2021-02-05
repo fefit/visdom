@@ -243,6 +243,10 @@ impl INodeTrait for Dom {
 				INodeType::Element => self.node.borrow_mut().childs = Some(childs.split_off(0)),
 				INodeType::Text => {
 					get_index_then_do(&self.node, |siblings, index| {
+						// change append childs index begin with index
+						reset_next_siblings_index(index, &childs[..]);
+						// change next siblings index begin with index+childs.len
+						reset_next_siblings_index(index + childs.len(), &siblings[index + 1..]);
 						// delete the node and append childs
 						siblings.splice(index..index + 1, childs.split_off(0));
 					});
@@ -263,6 +267,8 @@ impl ITextTrait for Dom {
 	fn remove(self: Box<Self>) {
 		get_index_then_do(&self.node, |siblings, index| {
 			siblings.remove(index);
+			// change next siblings index
+			reset_next_siblings_index(index, &siblings[index..]);
 		});
 	}
 	// append text
@@ -472,14 +478,9 @@ impl IElementTrait for Dom {
 		if !self.validate_dom_change(&node, action) {
 			return;
 		}
-		let orig_node = node.cloned();
 		let node_type = node.node_type();
 		let specified: Box<dyn Any> = node.cloned().to_node();
 		if let Ok(dom) = specified.downcast::<Dom>() {
-			// remove current node from parent's childs
-			if let Some(parent) = &mut orig_node.parent() {
-				parent.remove_child(orig_node);
-			}
 			// get the nodes
 			let mut nodes = match node_type {
 				INodeType::DocumentFragement => {
@@ -493,6 +494,10 @@ impl IElementTrait for Dom {
 					}
 				}
 				_ => {
+					// remove current node from parent's childs
+					if let Some(parent) = &mut node.parent() {
+						parent.remove_child(node.cloned());
+					}
 					vec![dom.node]
 				}
 			};
@@ -517,23 +522,47 @@ impl IElementTrait for Dom {
 				BeforeBegin | AfterEnd => {
 					// insertBefore,insertAfter
 					get_index_then_do(&self.node, |siblings, mut index| {
-						// delete the node and append childs
+						// it's insertAfter, increase the insertion index
 						if *position == AfterEnd {
 							index += 1;
 						}
-						siblings.splice(index..index, (&mut nodes).split_off(0));
+						let nodes = nodes.split_off(0);
+						// reset nodes index
+						reset_next_siblings_index(index, &nodes[..]);
+						if index < siblings.len() {
+							// reset next siblings index
+							let nexts = siblings.split_off(index);
+							reset_next_siblings_index(index + nodes.len(), &nexts[..]);
+							// insert nodes
+							siblings.extend(nodes);
+							siblings.extend(nexts);
+						} else {
+							siblings.extend(nodes);
+						}
 					});
 				}
 				AfterBegin | BeforeEnd => {
 					// prepend, append
 					if let Some(childs) = &mut self.node.borrow_mut().childs {
 						if *position == BeforeEnd {
+							// reset nodes index
+							reset_next_siblings_index(childs.len(), &nodes[..]);
+							// append nodes
 							childs.extend(nodes);
 						} else {
+							// reset childs index
+							reset_next_siblings_index(nodes.len(), &childs[..]);
+							// append childs to nodes
 							nodes.append(childs);
+							// set childs to nodes
 							*childs = nodes;
 						}
 					} else {
+						if not_allowed_num > 0 {
+							// reset nodes index
+							let start_index = not_allowed_indexs[0];
+							reset_next_siblings_index(start_index, &nodes[start_index..]);
+						}
 						self.node.borrow_mut().childs = Some(nodes);
 					}
 				}

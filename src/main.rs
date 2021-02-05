@@ -40,5 +40,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 	println!("ul:{}", ul.get(0).unwrap().index());
 	p.remove();
 	println!("ul:{}", ul.get(0).unwrap().index());
+	let root = Vis::load(r##"<div class="parent"><div class="first_child"></div></div>"##)?;
+	let mut parent = root.find(".parent");
+	let first_child = parent.find(".first_child");
+	let mut new_elements =
+		Vis::load(r#"<div class="second-child"></div><div class="third-child"></div>"#)?;
+	println!("first_child:{}", first_child.get(0).unwrap().index());
+	parent.append(&mut new_elements);
+	println!("first_child:{}", first_child.get(0).unwrap().index());
+	let childs = parent.children("");
+	println!("childs:{}", childs.length());
+	let last_child = childs.eq(childs.length() - 1);
+	println!("childs:{}", last_child.get(0).unwrap().index());
+	let mut new_elements = Vis::load(r#"<div class="parent-1"></div><div class="parent-2"></div>"#)?;
+	new_elements.insert_before(&mut parent);
+	println!("parent:{}", parent.get(0).unwrap().index());
 	Ok(())
 }
