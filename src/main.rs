@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         {}
       </ul>
     "##,
-		String::from("<li></li>").repeat(1000)
+		String::from("<li></li>").repeat(10000)
 	);
 	const TIMES: u32 = 200;
 	let root = Vis::load(&html)?;
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let start_time = SystemTime::now();
 	for _ in 0..TIMES {
 		let list = root.children("ul");
-		let childs = list.children(":nth-child(2n),:nth-child(3n),:nth-child(6n)");
+		let childs = list.children("li:nth-child(2n),li:nth-child(2n+1)");
 		println!("{}", childs.length());
 	}
 	let end_time = SystemTime::now();

@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "0.0.12"
+version = "0.1.0"
 edition = "2018"
 description = "A html document operation library written in Rust, like Nodejs library `cheerio`, they both used API like jQuery."
 keywords = ["html-parser", "jQuery-api", "querySelectorAll", "crawl"]
@@ -11,13 +11,10 @@ license = "MIT"
 exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs"]
 
 [dependencies]
-mesdoc = "0.1.5"
+mesdoc = "0.1.6"
 rphtml = "0.3.6"
 # mesdoc = { path = "../mesdoc" }
 # rphtml = { path = "../rphtml"}
-
-[profile.release]
-debug = true
 
 [dev-dependencies]
 crossbeam = "0.8.0"
