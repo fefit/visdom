@@ -12,6 +12,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     "##,
 		String::from("<li></li>").repeat(1000)
 	);
+	// let doc = Vis::load(&html)?;
+	// let lis = doc.find("li:nth-child(2n)");
+	// let parent = lis.parent("");
+	// println!("parent length:{}", parent.length());
 	// const TIMES: u32 = 200;
 	// let root = Vis::load(&html)?;
 
@@ -19,7 +23,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// let start_time = SystemTime::now();
 	// for _ in 0..TIMES {
 	// 	let list = root.children("ul");
-	// 	let childs = list.children(":nth-child(2n),:nth-child(3n)");
+	// 	let childs = list.children("li");
+	// 	let parent = childs.parent("");
+	// 	println!("parent length:{}", parent.length());
 	// 	// println!("{}", childs.length());
 	// }
 	// let end_time = SystemTime::now();
@@ -29,6 +35,23 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// 	used_time,
 	// 	used_time / TIMES
 	// );
+	let root = Vis::load(
+		r#"
+	    <div class="closest">
+	      <p>
+	        <a class="closest">aaa</a>
+          <b class="closest">bbb</b>
+          <c>ccc</c>
+	      </p>
+	      <a>top-aaaa</a>
+	    </div>
+	"#,
+	)?;
+	let a = root.find("a,b,c");
+	println!("a:{}", a.length());
+	let closest = a.closest(".closest");
+	println!("length:{}", closest.length());
+	println!("closest:{}", closest.eq(0).outer_html());
 	// let root = Vis::load(
 	// 	r#"
 	//   <div><p></p><ul></ul><ol></ol></div>

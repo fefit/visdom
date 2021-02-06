@@ -738,6 +738,49 @@ impl From<Rc<RefCell<Node>>> for Dom {
 	}
 }
 
+/// Vis: Entry struct of the `mesdoc`'s api.
+///
+/// # Examples
+///
+/// ```
+/// use visdom::Vis;
+/// use std::error::Error;
+/// fn main()-> Result<(), Box<dyn Error>>{
+///   let html = r##"
+///      <!doctype html>
+///      <html>
+///        <head>
+///          <meta charset="utf-8" />
+///        </head>
+///        <body>
+///           <nav id="header">
+///            <ul>
+///              <li>Hello,</li>
+///              <li>Vis</li>
+///              <li>Dom</li>
+///            </ul>
+///          </nav>
+///        </body>
+///     </html>
+///   "##;
+///   let doc = Vis::load(html)?;
+///   // All useful css selectors are well supported.
+///   let header = doc.find("#header");
+///   let list_items = header.children("ul > li");
+///   assert_eq!(list_items.length(), 3);
+///   assert_eq!(list_items.text(), "Hello,VisDom");
+///   let second_child = list_items.filter(":nth-child(2)");
+///   assert_eq!(second_child.text(), "Vis");
+///   // Easy to operate the nodes.
+///   let mut fourth_child = Vis::load("<li>!</li>")?;
+///   let mut parent = list_items.parent("");
+///   assert_eq!(parent.length(), 1);
+///   fourth_child.append_to(&mut parent);
+///   let cur_list_items = header.children("ul > li");
+///   assert_eq!(cur_list_items.length(), 4);
+///   Ok(())
+/// }
+/// ```
 pub struct Vis;
 
 impl Vis {
