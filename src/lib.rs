@@ -185,7 +185,10 @@ impl INodeTrait for Dom {
 				if !content.is_empty() {
 					let content = encode(content, SpecialChars, NamedOrDecimal);
 					if no_content_tag {
-						let text_node = Node::create_text_node(&content, None);
+						let mut text_node = Node::create_text_node(&content, None);
+						// set text node parent
+						text_node.parent = Some(Rc::downgrade(&self.node));
+						// set childs
 						node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
 					} else {
 						node.content = Some(content.chars().collect::<Vec<char>>());
@@ -211,6 +214,8 @@ impl INodeTrait for Dom {
 					// set the index to orig index
 					let orig_index = node.index;
 					text_node.index = orig_index;
+					// set text node parent
+					text_node.parent = Some(Rc::downgrade(&self.node));
 					// replace the text node
 					*node = text_node;
 				}
@@ -234,22 +239,30 @@ impl INodeTrait for Dom {
 		if let Some(nodes) = &mut doc.get_root_node().borrow_mut().childs {
 			// set childs with new childs
 			match self.node_type() {
-				INodeType::Element => self.node.borrow_mut().childs = Some(nodes.split_off(0)),
+				INodeType::Element => {
+					let nodes = nodes.split_off(0);
+					for node in &nodes {
+						node.borrow_mut().parent = Some(Rc::downgrade(&self.node));
+					}
+					self.node.borrow_mut().childs = Some(nodes);
+				}
 				INodeType::Text => {
 					let index = self.index();
 					if let Some(parent) = &self.node.borrow_mut().parent {
 						if let Some(parent) = &parent.upgrade() {
+							// clone parent
 							let clone_parent = Rc::clone(parent);
 							let parent_ele = Box::new(Dom { node: clone_parent }) as BoxDynElement;
 							let tag_name = parent_ele.tag_name();
 							if let Some(childs) = &mut parent.borrow_mut().childs {
-								let not_allowed_indexs = remove_not_allowed_nodes(tag_name, nodes);
-								if index > 0 {
-									// change append nodes index begin with index
-									reset_next_siblings_index(index, &nodes[..]);
-								} else if !not_allowed_indexs.is_empty() {
+								let mut nodes = nodes.split_off(0);
+								let not_allowed_indexs = remove_not_allowed_nodes(tag_name, &mut nodes);
+								if !not_allowed_indexs.is_empty() {
 									let start_index = not_allowed_indexs[0];
 									reset_next_siblings_index(start_index, &nodes[start_index..]);
+								} else {
+									// change append nodes index begin with index
+									reset_next_siblings_index(index, &nodes[..]);
 								}
 								// not last node
 								if index < childs.len() - 1 {
@@ -258,7 +271,11 @@ impl INodeTrait for Dom {
 								}
 								// delete the node and append childs
 								if !nodes.is_empty() {
-									childs.splice(index..index + 1, nodes.split_off(0));
+									// set nodes parent
+									for node in &nodes {
+										node.borrow_mut().parent = Some(Rc::downgrade(parent));
+									}
+									childs.splice(index..index + 1, nodes);
 								} else {
 									// just remove self
 									childs.remove(index);
@@ -532,20 +549,23 @@ impl IElementTrait for Dom {
 					if *position == AfterEnd {
 						index += 1;
 					}
-					// not the start, or some node are filtered
-					if index > 0 {
-						// reset nodes index
-						reset_next_siblings_index(index, &nodes[..]);
-					} else if has_not_allowed {
+					if has_not_allowed {
 						let start_index = not_allowed_indexs[0];
 						reset_next_siblings_index(start_index, &nodes[start_index..]);
+					} else {
+						// always reset nodes
+						reset_next_siblings_index(index, &nodes[..]);
 					}
 					if let Some(parent) = &self.node.borrow_mut().parent {
-						if let Some(parent) = parent.upgrade() {
+						if let Some(parent) = &parent.upgrade() {
 							if let Some(childs) = &mut parent.borrow_mut().childs {
 								// split the nexts for reset index.
 								if index < childs.len() {
 									nexts = childs.split_off(index);
+								}
+								// set node parent
+								for node in &nodes {
+									node.borrow_mut().parent = Some(Rc::downgrade(parent));
 								}
 								// insert nodes at the end
 								childs.extend(nodes);

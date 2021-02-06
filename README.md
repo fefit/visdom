@@ -1,10 +1,16 @@
 # Visdom
 
+[![Build Status](https://travis-ci.org/fefit/visdom.svg?branch=main)](https://travis-ci.com/github/fefit/visdom)
+[![crates.io](https://img.shields.io/crates/v/visdom.svg)](https://crates.io/crates/visdom)
+[![tag](https://img.shields.io/github/v/tag/fefit/visdom.svg?sort=semver)](https://github.com/fefit/visdom/tags)
+[![GitHub license](https://img.shields.io/github/license/fefit/visdom)](https://github.com/fefit/visdom/blob/main/LICENSE)
+
 A html DOM operation library written in Rust，like the Nodejs's cheerio library, they used the same API style of jQuery。
 
 ## Usage
 
-[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)
+[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)   [中文 CHANGELOG](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
+
 
 main.rs
 

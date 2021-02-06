@@ -10,25 +10,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         {}
       </ul>
     "##,
-		String::from("<li></li>").repeat(10000)
+		String::from("<li></li>").repeat(1000)
 	);
-	const TIMES: u32 = 200;
-	let root = Vis::load(&html)?;
+	// const TIMES: u32 = 200;
+	// let root = Vis::load(&html)?;
 
-	println!("start....");
-	let start_time = SystemTime::now();
-	for _ in 0..TIMES {
-		let list = root.children("ul");
-		let childs = list.children("li:nth-child(2n),li:nth-child(2n+1)");
-		println!("{}", childs.length());
-	}
-	let end_time = SystemTime::now();
-	let used_time = end_time.duration_since(start_time)?;
-	println!(
-		"take time:{:?}\navg time：{:?}",
-		used_time,
-		used_time / TIMES
-	);
+	// println!("start....");
+	// let start_time = SystemTime::now();
+	// for _ in 0..TIMES {
+	// 	let list = root.children("ul");
+	// 	let childs = list.children(":nth-child(2n),:nth-child(3n)");
+	// 	// println!("{}", childs.length());
+	// }
+	// let end_time = SystemTime::now();
+	// let used_time = end_time.duration_since(start_time)?;
+	// println!(
+	// 	"take time:{:?}\navg time：{:?}",
+	// 	used_time,
+	// 	used_time / TIMES
+	// );
 	// let root = Vis::load(
 	// 	r#"
 	//   <div><p></p><ul></ul><ol></ol></div>
