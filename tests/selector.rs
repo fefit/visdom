@@ -352,6 +352,52 @@ fn test_selector_find_closest() -> Result {
 }
 
 #[test]
+fn test_selector_closest() -> Result {
+	let root = Vis::load(
+		r#"
+	    <div class="closest">
+	      <p>
+	        <a class="closest">aaa</a>
+          <b class="closest">bbb</b>
+          <c>ccc</c>
+	      </p>
+	      <a>top-aaaa</a>
+	    </div>
+	"#,
+	)?;
+	let abc = root.find("a,b,c");
+	assert_eq!(abc.length(), 4);
+	let closest = abc.closest(".closest");
+	assert_eq!(closest.length(), 3);
+	assert_eq!(closest.eq(0).get(0).unwrap().tag_name(), "div");
+	Ok(())
+}
+
+#[test]
+fn test_selector_siblings() -> Result {
+	let root = Vis::load(
+		r#"
+	    <div class="closest">
+	      <p>
+	        <a class="closest">aaa</a>
+          <b class="closest">bbb</b>
+          <c>ccc</c>
+	      </p>
+	      <a>top-aaaa</a>
+	    </div>
+	"#,
+	)?;
+	let abc = root.find("a,b,c");
+	let siblings = abc.siblings("");
+	assert_eq!(siblings.length(), 4);
+	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "p");
+	let siblings = abc.siblings(".closest");
+	assert_eq!(siblings.length(), 2);
+	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "a");
+	Ok(())
+}
+
+#[test]
 fn test_content_text() -> Result {
 	let root = Vis::load(HTML)?;
 	// inner div 1-1

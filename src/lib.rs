@@ -203,21 +203,13 @@ impl INodeTrait for Dom {
 				}
 			}
 			INodeType::Text => {
-				let mut node = self.node.borrow_mut();
 				if content.is_empty() {
 					self.halt("set_text",
             "the text parameter can't be empty, if you want to remove a text node, you can use 'remove' method instead."
           );
 				} else {
-					// create a new text node
-					let mut text_node = Node::create_text_node(&content, None);
-					// set the index to orig index
-					let orig_index = node.index;
-					text_node.index = orig_index;
-					// set text node parent
-					text_node.parent = Some(Rc::downgrade(&self.node));
-					// replace the text node
-					*node = text_node;
+					// replace the text content
+					self.node.borrow_mut().content = Some(content.chars().collect::<Vec<char>>());
 				}
 			}
 			_ => {
@@ -250,13 +242,15 @@ impl INodeTrait for Dom {
 					let index = self.index();
 					if let Some(parent) = &self.node.borrow_mut().parent {
 						if let Some(parent) = &parent.upgrade() {
-							// clone parent
-							let clone_parent = Rc::clone(parent);
-							let parent_ele = Box::new(Dom { node: clone_parent }) as BoxDynElement;
-							let tag_name = parent_ele.tag_name();
+							let tag_name = parent
+								.borrow()
+								.meta
+								.as_ref()
+								.map(|meta| meta.borrow().get_name(true))
+								.expect("`set_html` a tag name must have");
 							if let Some(childs) = &mut parent.borrow_mut().childs {
 								let mut nodes = nodes.split_off(0);
-								let not_allowed_indexs = remove_not_allowed_nodes(tag_name, &mut nodes);
+								let not_allowed_indexs = remove_not_allowed_nodes(&tag_name, &mut nodes);
 								if !not_allowed_indexs.is_empty() {
 									let start_index = not_allowed_indexs[0];
 									reset_next_siblings_index(start_index, &nodes[start_index..]);
@@ -587,6 +581,10 @@ impl IElementTrait for Dom {
 					}
 				}
 				AfterBegin | BeforeEnd => {
+					// set nodes parent
+					for node in &nodes {
+						node.borrow_mut().parent = Some(Rc::downgrade(&self.node));
+					}
 					// prepend, append
 					if let Some(childs) = &mut self.node.borrow_mut().childs {
 						if *position == BeforeEnd {
@@ -776,8 +774,34 @@ impl From<Rc<RefCell<Node>>> for Dom {
 ///   let mut parent = list_items.parent("");
 ///   assert_eq!(parent.length(), 1);
 ///   fourth_child.append_to(&mut parent);
-///   let cur_list_items = header.children("ul > li");
+///   let mut cur_list_items = header.children("ul > li");
 ///   assert_eq!(cur_list_items.length(), 4);
+///   assert_eq!(cur_list_items.text(), "Hello,VisDom!");
+///   // Powerful api for operate text nodes
+///   // use append_text and prepend_text to change text
+///   let mut texts = cur_list_items.texts(0);
+///   texts.for_each(|_index, text_node|{
+///      text_node.prepend_text("[");
+///      text_node.append_text("]");
+///      true
+///   });
+///   assert_eq!(cur_list_items.text(), "[Hello,][Vis][Dom][!]");
+///   // use set_text to change text
+///   texts.for_each(|_index, text_node|{
+///       text_node.set_text("@");
+///       true
+///   });
+///   assert_eq!(cur_list_items.text(), "@@@@");
+///   // use set_html to mix content
+///   texts.for_each(|_index, text_node|{
+///       let orig_text = text_node.text();
+///       let replace_html = format!("<span>{}</span><b>!</b>", orig_text);
+///       // Be careful that now the text_node is destoryed by `set_html`
+///       text_node.set_html(&replace_html);
+///       true
+///   });
+///   assert_eq!(cur_list_items.children("b").length(), 4);
+///   assert_eq!(cur_list_items.text(), "@!@!@!@!");
 ///   Ok(())
 /// }
 /// ```

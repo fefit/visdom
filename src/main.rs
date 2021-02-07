@@ -3,55 +3,56 @@ use std::error::Error;
 use std::thread;
 use std::time::SystemTime;
 use visdom::Vis;
+
 fn main() -> Result<(), Box<dyn Error>> {
+	const TOTAL: usize = 4000;
 	let html: String = format!(
 		r##"
       <ul>
         {}
       </ul>
     "##,
-		String::from("<li></li>").repeat(1000)
+		String::from("<li></li>").repeat(TOTAL)
 	);
-	// let doc = Vis::load(&html)?;
-	// let lis = doc.find("li:nth-child(2n)");
-	// let parent = lis.parent("");
-	// println!("parent length:{}", parent.length());
-	// const TIMES: u32 = 200;
-	// let root = Vis::load(&html)?;
-
-	// println!("start....");
-	// let start_time = SystemTime::now();
-	// for _ in 0..TIMES {
-	// 	let list = root.children("ul");
-	// 	let childs = list.children("li");
-	// 	let parent = childs.parent("");
-	// 	println!("parent length:{}", parent.length());
-	// 	// println!("{}", childs.length());
-	// }
-	// let end_time = SystemTime::now();
-	// let used_time = end_time.duration_since(start_time)?;
-	// println!(
-	// 	"take time:{:?}\navg time：{:?}",
-	// 	used_time,
-	// 	used_time / TIMES
-	// );
-	let root = Vis::load(
-		r#"
-	    <div class="closest">
-	      <p>
-	        <a class="closest">aaa</a>
-          <b class="closest">bbb</b>
-          <c>ccc</c>
-	      </p>
-	      <a>top-aaaa</a>
-	    </div>
-	"#,
-	)?;
-	let a = root.find("a,b,c");
-	println!("a:{}", a.length());
-	let closest = a.closest(".closest");
-	println!("length:{}", closest.length());
-	println!("closest:{}", closest.eq(0).outer_html());
+	const TIMES: u32 = 200;
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	const SELECTOR: &str = ":nth-child(2n)";
+	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
+	println!(r#"search：ul.children("{}")"#, SELECTOR);
+	println!("find nodes：{}", ul.children(SELECTOR).length());
+	println!("execute {} times to get average time...", TIMES);
+	let start_time = SystemTime::now();
+	for _ in 0..TIMES {
+		let childs = ul.children(SELECTOR);
+	}
+	let end_time = SystemTime::now();
+	let used_time = end_time.duration_since(start_time)?;
+	println!(
+		"total take time:{:?}\naverage time:{:?}",
+		used_time,
+		used_time / TIMES
+	);
+	// let root = Vis::load(
+	// 	r#"
+	//     <div class="closest">
+	//       <p>
+	//         <a class="closest">aaa</a>
+	//         <b class="closest">bbb</b>
+	//         <c>ccc</c>
+	//       </p>
+	//       <a>top-aaaa</a>
+	//     </div>
+	// "#,
+	// )?;
+	// let a = root.find("a,b,c");
+	// println!("a:{}", a.length());
+	// let closest = a.closest(".closest");
+	// println!("length:{}", closest.length());
+	// println!("closest:{}", closest.eq(0).outer_html());
+	// let siblings = a.siblings("");
+	// println!("siblings:{}", siblings.length());
+	// println!("first:{}", siblings.eq(0).get(0).unwrap().tag_name());
 	// let root = Vis::load(
 	// 	r#"
 	//   <div><p></p><ul></ul><ol></ol></div>

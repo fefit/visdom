@@ -9,8 +9,7 @@ A html DOM operation library written in Rust，like the Nodejs's cheerio library
 
 ## Usage
 
-[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)   [中文 CHANGELOG](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
-
+[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)&nbsp;&nbsp;&nbsp;&nbsp;[CHANGELOG](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
 
 main.rs
 
@@ -110,12 +109,12 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 
 ### Helpers
 
-| Helper API                                                                                | Description                                                                                                                                                                                                              |                    Remarks                     |
-| :---------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------: |
-| <b>`length`</b>()                                                                         | Get the number of `Self`'s element.                                                                                                                                                                                      |                                                |
-| <b>`is_empty`</b>()                                                                       | Check if `Self` has no element, `length() == 0`.                                                                                                                                                                         |                                                |
-| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynElement&#124; -> bool)      | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.                                                                                                                                | You can also use `each` if you like less code. |
-| <b>`map`</b>&lt;T&gt;(&#124;index: usize, ele: &BoxDynElement&#124; -> T) -> Vec&lt;T&gt; | Get a collection of values by iterate the each element in `Self` and call the `handle` function.                                                                                                                         |                                                |
+| Helper API                                                                                | Description                                                                                      |                    Remarks                     |
+| :---------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- | :--------------------------------------------: |
+| <b>`length`</b>()                                                                         | Get the number of `Self`'s element.                                                              |                                                |
+| <b>`is_empty`</b>()                                                                       | Check if `Self` has no element, `length() == 0`.                                                 |                                                |
+| <b>`for_each`</b>(handle: &#124;index: usize, ele: &mut BoxDynElement&#124; -> bool)      | Iterate over the elements in `Self`, when the `handle` return `false`, stop the iterator.        | You can also use `each` if you like less code. |
+| <b>`map`</b>&lt;T&gt;(&#124;index: usize, ele: &BoxDynElement&#124; -> T) -> Vec&lt;T&gt; | Get a collection of values by iterate the each element in `Self` and call the `handle` function. |                                                |
 
 ### Supported Selectors
 
