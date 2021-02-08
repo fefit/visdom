@@ -56,7 +56,7 @@ fn test_selector_find() -> Result {
 	// group
 	let outer_and_inner = nested.find("[class|='outer'],[class|='inner']");
 	assert_eq!(outer_and_inner.length(), 6);
-	// assert!(is_attr(&outer_and_inner.eq(1), "class", "inner-div-1-1"));
+	assert!(is_attr(&outer_and_inner.eq(1), "class", "inner-div-1-1"));
 	Ok(())
 }
 
