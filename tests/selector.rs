@@ -36,23 +36,23 @@ fn is_attr(node_list: &Elements, name: &str, value: &str) -> bool {
 #[test]
 fn test_selector_find() -> Result {
 	let root = Vis::load(HTML)?;
-	// let id_ele = root.find("div#id");
-	// assert_eq!(id_ele.length(), 1);
-	// let children = id_ele.find("> *");
-	// assert_eq!(children.length(), 2);
-	// let p_ele = id_ele.find("p");
-	// assert_eq!(p_ele.length(), 1);
-	// let ul_ele = id_ele.find("ul");
-	// assert_eq!(ul_ele.length(), 0);
+	let id_ele = root.find("div#id");
+	assert_eq!(id_ele.length(), 1);
+	let children = id_ele.find("> *");
+	assert_eq!(children.length(), 2);
+	let p_ele = id_ele.find("p");
+	assert_eq!(p_ele.length(), 1);
+	let ul_ele = id_ele.find("ul");
+	assert_eq!(ul_ele.length(), 0);
 	// nested
 	let nested = root.find("div#id ~ div#nested");
-	// assert_eq!(nested.length(), 1);
-	// let divs = nested.find("div");
-	// assert_eq!(divs.length(), 6);
-	// let is_position_ok = is_attr(&divs.eq(1), "class", "inner-div-1-1");
-	// assert!(is_position_ok);
-	// let sub_divs = divs.find("div");
-	// assert_eq!(sub_divs.length(), 4);
+	assert_eq!(nested.length(), 1);
+	let divs = nested.find("div");
+	assert_eq!(divs.length(), 6);
+	let is_position_ok = is_attr(&divs.eq(1), "class", "inner-div-1-1");
+	assert!(is_position_ok);
+	let sub_divs = divs.find("div");
+	assert_eq!(sub_divs.length(), 4);
 	// group
 	let outer_and_inner = nested.find("[class|='outer'],[class|='inner']");
 	assert_eq!(outer_and_inner.length(), 6);

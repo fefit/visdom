@@ -134,6 +134,7 @@ impl INodeTrait for Dom {
 			_ => INodeType::Other,
 		}
 	}
+
 	/// impl `parent`
 	fn parent<'b>(&self) -> MaybeElement<'b> {
 		if let Some(parent) = &self.node.borrow().parent {
@@ -163,6 +164,7 @@ impl INodeTrait for Dom {
 			None
 		}
 	}
+
 	/// impl `text_content`
 	fn text_content(&self) -> &str {
 		to_static_str(self.node.borrow().build(
@@ -304,6 +306,7 @@ impl ITextTrait for Dom {
 			}
 		}
 	}
+
 	// append text
 	fn append_text(&mut self, content: &str) {
 		let chars = content.chars().collect::<Vec<char>>();
@@ -313,6 +316,7 @@ impl ITextTrait for Dom {
 			self.node.borrow_mut().content = Some(chars);
 		}
 	}
+
 	// prepend text
 	fn prepend_text(&mut self, content: &str) {
 		let chars = content.chars().collect::<Vec<char>>();
@@ -443,18 +447,16 @@ impl IElementTrait for Dom {
 			});
 		}
 	}
+
 	/// impl `remove_attribute`
 	fn remove_attribute(&mut self, name: &str) {
 		if let Some(meta) = &self.node.borrow().meta {
-			let mut find_index: Option<usize> = None;
-			for (index, attr) in meta.borrow().attrs.iter().enumerate() {
+			let find_index = meta.borrow().attrs.iter().position(|attr| {
 				if let Some(key) = &attr.key {
-					if key.content == name {
-						find_index = Some(index);
-						break;
-					}
+					return key.content == name;
 				}
-			}
+				false
+			});
 			if let Some(index) = find_index {
 				meta.borrow_mut().attrs.remove(index);
 			}
@@ -623,6 +625,7 @@ impl IElementTrait for Dom {
 			);
 		}
 	}
+
 	/// impl `texts`
 	fn texts<'b>(&self, limit_depth: u32) -> Option<Texts<'b>> {
 		let limit_depth = if limit_depth == 0 {
