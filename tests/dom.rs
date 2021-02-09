@@ -51,7 +51,12 @@ fn test_dom_append_child() -> Result {
 	parent.append(&mut new_childs);
 	assert_eq!(0, first_child.get(0).unwrap().index());
 	let all_childs = parent.children("");
-	let last_child = all_childs.eq(all_childs.length() - 1);
+	let last_child = all_childs.last();
+	assert_eq!(2, last_child.get(0).unwrap().index());
+	// empty
+	let mut empty = Vis::load("")?;
+	parent.append(&mut empty);
+	let last_child = parent.children("").last();
 	assert_eq!(2, last_child.get(0).unwrap().index());
 	Ok(())
 }
@@ -95,5 +100,56 @@ fn test_dom_insert_before() -> Result {
 	assert_eq!(1, second_child.get(0).unwrap().index());
 	assert_eq!(0, first_child.get(0).unwrap().index());
 	assert_eq!(0, inserted.children("").length());
+	Ok(())
+}
+
+#[test]
+fn test_dom_insert_after() -> Result {
+	const HTML: &str = r#"<div class="parent"><div class="first-child"></div></div>"#;
+	let root = Vis::load(HTML)?;
+	let parent = root.children(".parent");
+	let mut first_child = parent.children(".first-child");
+	let inserted = Vis::load(r#"<div class="second-child"></div><div class="third-child"></div>"#)?;
+	let inserted_childs = inserted.children("");
+	assert_eq!(0, first_child.get(0).unwrap().index());
+	// append second child
+	let mut second_child = inserted_childs.filter(".second-child");
+	second_child.insert_after(&mut first_child);
+	assert_eq!(0, first_child.get(0).unwrap().index());
+	assert_eq!(1, second_child.get(0).unwrap().index());
+	assert_eq!(1, inserted.children("").length());
+	// append third_child
+	let mut third_child = inserted_childs.filter(".third-child");
+	third_child.insert_after(&mut second_child);
+	assert_eq!(2, third_child.get(0).unwrap().index());
+	assert_eq!(1, second_child.get(0).unwrap().index());
+	assert_eq!(0, first_child.get(0).unwrap().index());
+	assert_eq!(0, inserted.children("").length());
+	Ok(())
+}
+
+#[test]
+fn test_dom_set_html() -> Result {
+	let html: &str = r#"<div class="parent"></div>"#;
+	// normal tag
+	let root = Vis::load(html)?;
+	let mut parent = root.children(".parent");
+	let setted = "This is a <strong>test</strong>!";
+	parent.set_html(setted);
+	assert_eq!(parent.text(), "This is a test!");
+	assert_eq!(parent.children("strong").length(), 1);
+	assert_eq!(parent.html(), setted);
+	parent.set_html("");
+	assert!(parent.html().is_empty());
+	// content tag
+	let html: &str = r#"<pre class="parent"></pre>"#;
+	let root = Vis::load(html)?;
+	let mut parent = root.children(".parent");
+	parent.set_html(setted);
+	assert_eq!(parent.html(), setted);
+	assert_eq!(parent.text(), setted);
+	assert_eq!(parent.children("strong").length(), 0);
+	parent.set_html("");
+	assert!(parent.html().is_empty());
 	Ok(())
 }

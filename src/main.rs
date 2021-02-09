@@ -6,7 +6,6 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	// const TOTAL: usize = 3000;
 	// let html: String = format!(
 	// 	r##"
 	//     <ul>

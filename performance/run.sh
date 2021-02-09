@@ -7,8 +7,8 @@ yarn --silent
 # go
 echo "Build go env:"
 cd ../go
-export GOPATH=$GOPATH:$PWD
-go get -u github.com/PuerkitoBio/goquery
+export GOPATH=$GOPATH:${PWD}/src
+GOMODULE111=true go get -u github.com/PuerkitoBio/goquery
 # rust
 echo "Build rust env:"
 cd ../rust
@@ -21,7 +21,7 @@ node index.js
 # goquery
 printf "\n---------------------Goquery in Go:------------------\n"
 cd ../go
-go run main.go
+go run src/main.go
 # visdom
 printf "\n"
 printf "\n---------------------Visdom in Rust------------------\n"

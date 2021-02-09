@@ -1,12 +1,13 @@
-//! # Visdom
+//! Visdom
 //!
-//! ## Description
+//! ### Description
 //! A library use jquery-like api to operate html, easy to use for scraping and poisoning html.
 //!
-//! ## Supported
-//! - Support most css selectors, e.g. `:nth-child`, `:nth-of-type`, `:not` and so on.
-//! - Support most selector methods, such as `find`,`filter`,`has`, `not`
-//! - Support powerful text operation ability: `set_html`, `set_text`, `append_text` can used for text node.
+//! ### Supported
+//! - Most css selectors, e.g. `:nth-child`, `:nth-of-type`, `:not`, `:contains` and so on.
+//! - Most selector methods, such as `find`,`filter`,`has`, `not`, `add`.
+//! - Powerful text modification ability: `set_html`, `set_text`, `append_text`, `prepend_text` can used for text node.
+//! - Well-defined and easy to use apis.
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IAttrValue, IDocumentTrait,
 	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
@@ -81,8 +82,9 @@ fn reset_next_siblings_index(start_index: usize, childs: &[RefNode]) {
 	}
 }
 
-fn remove_not_allowed_nodes(tag_name: &str, nodes: &mut Vec<RefNode>) -> Vec<usize> {
+fn remove_not_allowed_nodes(tag_name: &str, nodes: &mut Vec<RefNode>) -> bool {
 	let mut not_allowed_indexs: Vec<usize> = Vec::with_capacity(nodes.len());
+	let orig_len = nodes.len();
 	for (index, node) in nodes.iter().enumerate() {
 		if !allow_insert(tag_name, node.borrow().node_type) {
 			not_allowed_indexs.push(index);
@@ -91,7 +93,8 @@ fn remove_not_allowed_nodes(tag_name: &str, nodes: &mut Vec<RefNode>) -> Vec<usi
 	if !not_allowed_indexs.is_empty() {
 		retain_by_index(nodes, &not_allowed_indexs);
 	}
-	not_allowed_indexs
+	let now_allowed_len = not_allowed_indexs.len();
+	now_allowed_len > 0 && now_allowed_len != orig_len
 }
 
 impl INodeTrait for Dom {
@@ -231,71 +234,84 @@ impl INodeTrait for Dom {
 
 	/// impl `set_html`
 	fn set_html(&mut self, content: &str) {
-		let doc = Doc::parse(
-			content,
-			ParseOptions {
-				auto_remove_nostart_endtag: true,
-				..Default::default()
-			},
-		)
-		.unwrap();
-		if let Some(nodes) = &mut doc.get_root_node().borrow_mut().childs {
-			// set childs with new childs
-			match self.node_type() {
-				INodeType::Element => {
-					let nodes = nodes.split_off(0);
-					for node in &nodes {
-						node.borrow_mut().parent = Some(Rc::downgrade(&self.node));
+		let mut is_element = true;
+		let target = match self.node_type() {
+			INodeType::Element => Some(Rc::clone(&self.node)),
+			INodeType::Text => {
+				if let Some(parent) = &self.node.borrow_mut().parent {
+					if let Some(parent) = &parent.upgrade() {
+						is_element = false;
+						Some(Rc::clone(parent))
+					} else {
+						None
 					}
-					self.node.borrow_mut().childs = Some(nodes);
+				} else {
+					None
 				}
-				INodeType::Text => {
-					let index = self.index();
-					if let Some(parent) = &self.node.borrow_mut().parent {
-						if let Some(parent) = &parent.upgrade() {
-							let tag_name = parent
-								.borrow()
-								.meta
-								.as_ref()
-								.map(|meta| meta.borrow().get_name(true))
-								.expect("`set_html` a tag name must have");
-							if let Some(childs) = &mut parent.borrow_mut().childs {
-								let mut nodes = nodes.split_off(0);
-								let not_allowed_indexs = remove_not_allowed_nodes(&tag_name, &mut nodes);
-								if !not_allowed_indexs.is_empty() {
-									let start_index = not_allowed_indexs[0];
-									reset_next_siblings_index(start_index, &nodes[start_index..]);
-								} else {
-									// change append nodes index begin with index
-									reset_next_siblings_index(index, &nodes[..]);
-								}
-								// not last node
-								if index < childs.len() - 1 {
-									// change next siblings index begin with index+nodes.len
-									reset_next_siblings_index(index + nodes.len(), &childs[index + 1..]);
-								}
-								// delete the node and append childs
-								if !nodes.is_empty() {
-									// set nodes parent
-									for node in &nodes {
-										node.borrow_mut().parent = Some(Rc::downgrade(parent));
-									}
-									childs.splice(index..index + 1, nodes);
-								} else {
-									// just remove self
-									childs.remove(index);
-								}
-							}
+			}
+			_ => None,
+		};
+		if let Some(target) = &target {
+			let tag_name = target
+				.borrow()
+				.meta
+				.as_ref()
+				.map(|meta| meta.borrow().get_name(true))
+				.expect("A tag use `set_html` must have a tag name.");
+			if is_content_tag(&tag_name) {
+				// content tag, just set html as content, no need encode
+				target.borrow_mut().content = Some(content.chars().collect::<Vec<char>>());
+			} else {
+				let doc = Doc::parse(
+					content,
+					ParseOptions {
+						auto_remove_nostart_endtag: true,
+						..Default::default()
+					},
+				)
+				.unwrap();
+				if let Some(nodes) = &mut doc.get_root_node().borrow_mut().childs {
+					let mut nodes = nodes.split_off(0);
+					let has_not_allowed = remove_not_allowed_nodes(&tag_name, &mut nodes);
+					let has_nodes = !nodes.is_empty();
+					if has_nodes {
+						// set nodes parent as target
+						for node in &nodes {
+							node.borrow_mut().parent = Some(Rc::downgrade(target));
 						}
 					}
+					if is_element {
+						// reset node indexs
+						if has_not_allowed {
+							reset_next_siblings_index(0, &nodes);
+						}
+						// set childs as new nodes
+						(*target.borrow_mut()).childs = if has_nodes { Some(nodes) } else { None };
+					} else if let Some(childs) = &mut target.borrow_mut().childs {
+						let index = self.index();
+						// not last node, whenever nodes is empty or not, reset next childs indexs
+						if index < childs.len() - 1 {
+							// change next siblings index begin with index+nodes.len
+							reset_next_siblings_index(index + nodes.len(), &childs[index + 1..]);
+						}
+						// delete the node and append childs
+						if has_nodes {
+							// change append nodes index begin with index
+							reset_next_siblings_index(index, &nodes);
+							// remove self and insert nodes
+							childs.splice(index..index + 1, nodes);
+						} else {
+							// then just remove self
+							childs.remove(index);
+						}
+					} else {
+						// text node's parent can't be empty
+					}
+				} else {
+					// empty html, just set childs to none
+					target.borrow_mut().childs = None;
 				}
-				_ => {
-					// nothing to do with other nodes
-				}
-			};
-		} else {
-			// remove the childs
-			self.node.borrow_mut().childs = None;
+			}
 		}
 	}
 }
@@ -537,8 +553,9 @@ impl IElementTrait for Dom {
 			};
 			// filter the node allowed
 			let tag_name = self.tag_name();
-			let not_allowed_indexs = remove_not_allowed_nodes(tag_name, &mut nodes);
-			let has_not_allowed = !not_allowed_indexs.is_empty();
+			// remove not allowed nodes
+			remove_not_allowed_nodes(tag_name, &mut nodes);
+			// check if is empty
 			if nodes.is_empty() {
 				return;
 			}
@@ -554,13 +571,9 @@ impl IElementTrait for Dom {
 					if *position == AfterEnd {
 						index += 1;
 					}
-					if has_not_allowed {
-						let start_index = not_allowed_indexs[0];
-						reset_next_siblings_index(start_index, &nodes[start_index..]);
-					} else {
-						// always reset nodes
-						reset_next_siblings_index(index, &nodes[..]);
-					}
+					// always reset node indexs
+					reset_next_siblings_index(index, &nodes);
+					// split to prev and next
 					if let Some(parent) = &self.node.borrow_mut().parent {
 						if let Some(parent) = &parent.upgrade() {
 							if let Some(childs) = &mut parent.borrow_mut().childs {
@@ -579,7 +592,7 @@ impl IElementTrait for Dom {
 					}
 					if !nexts.is_empty() {
 						// reset nexts index
-						reset_next_siblings_index(index + insert_len, &nexts[..]);
+						reset_next_siblings_index(index + insert_len, &nexts);
 						// for borrrow check
 						if let Some(parent) = &self.node.borrow_mut().parent {
 							if let Some(parent) = parent.upgrade() {
@@ -600,28 +613,23 @@ impl IElementTrait for Dom {
 					if let Some(childs) = &mut self.node.borrow_mut().childs {
 						if *position == BeforeEnd {
 							// reset nodes index
-							reset_next_siblings_index(childs.len(), &nodes[..]);
+							reset_next_siblings_index(childs.len(), &nodes);
 							// append nodes
 							childs.extend(nodes);
 						} else {
-							// reset if needed
-							if has_not_allowed {
-								let start_index = not_allowed_indexs[0];
-								reset_next_siblings_index(start_index, &nodes[start_index..]);
-							}
+							// always reset nodes index
+							reset_next_siblings_index(0, &nodes);
 							// reset childs index
-							reset_next_siblings_index(nodes.len(), &childs[..]);
+							reset_next_siblings_index(nodes.len(), &childs);
 							// append childs to nodes
 							nodes.append(childs);
 							// set childs to nodes
 							*childs = nodes;
 						}
 					} else {
-						if has_not_allowed {
-							// reset nodes index
-							let start_index = not_allowed_indexs[0];
-							reset_next_siblings_index(start_index, &nodes[start_index..]);
-						}
+						// reset nodes index
+						reset_next_siblings_index(0, &nodes);
+						// set nodes as childs
 						self.node.borrow_mut().childs = Some(nodes);
 					}
 				}
