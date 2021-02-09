@@ -40,6 +40,7 @@ fn main()-> Result<(), Box<dyn Error>>{
   let lis_text = nodes.find("#header li").text();
   println!("{}", lis_text);
   // will output "Hello,VisDom"
+  Ok(())
 }
 ```
 
@@ -153,6 +154,7 @@ The following API are inherited from the library [mesdoc](https://github.com/fef
 | <b>`:nth-of-type(nth)`</b>             | [MDN `:nth-of-type()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-of-type)                           |                                                                             |
 | <b>`:nth-last-of-type(nth)`</b>        | [MDN `:nth-last-of-type()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-last-of-type)                 |                                                                             |
 | <b>`:not(selector)`</b>                | [MDN `:not()`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not)                                           |                                                                             |
+| <b>`:contains(content)`</b>            | Match the element who's `text()` contains the content.                                                          |                                                                             |
 | <b>`:header`</b>                       | All title tags，alias of: `h1,h2,h3,h4,h5,h6`.                                                                  |                                                                             |
 | <b>`:input`</b>                        | All form input tags, alias of: `input,select,textarea,button`.                                                  |                                                                             |
 | <b>`:submit`</b>                       | Form submit buttons, alias of: `input\[type="submit"\],button\[type="submit"\]`.                                |                                                                             |

@@ -398,6 +398,104 @@ fn test_selector_siblings() -> Result {
 }
 
 #[test]
+fn test_attribute_selector() -> Result {
+	let html = r##"
+  <nav id="lang">
+    <a href="#" lang="en">en</a>
+    <a href="#" lang="en-UK">en-UK</a>
+    <a href="#" lang="english">english</a>
+    <a href="#" lang="uk en">uk-en</a>
+  </nav>
+  "##;
+	let root = Vis::load(&html)?;
+	let lang = root.find("#lang");
+	let links = lang.children("");
+	// equal
+	let equal_en = links.filter("[lang='en']");
+	assert_eq!(equal_en.length(), 1);
+	// begin with
+	let begin_en = links.filter("[lang^='en']");
+	assert_eq!(begin_en.length(), 3);
+	// end with
+	let end_en = links.filter("[lang$='en']");
+	assert_eq!(end_en.length(), 2);
+	// appear
+	let appear_en = links.filter("[lang*='en']");
+	assert_eq!(appear_en.length(), 4);
+	// equal or begin with `en-`
+	let split_en = links.filter("[lang|= en]");
+	assert_eq!(split_en.length(), 2);
+	// not equal to  `en`
+	let not_en = links.filter("[lang!=en]");
+	assert_eq!(not_en.length(), 3);
+	// split list en
+	let ws_en = links.filter("[lang~='en']");
+	assert_eq!(ws_en.length(), 2);
+	Ok(())
+}
+
+#[test]
+fn test_id_selector() -> Result {
+	let html = r##"
+  <nav id="lang">
+    <a id="link"></a>
+  </nav>
+  "##;
+	let root = Vis::load(&html)?;
+	let lang = root.find("#lang");
+	assert_eq!(lang.length(), 1);
+	// link
+	let link = root.find("#link");
+	assert_eq!(link.length(), 1);
+	// nested
+	let link = root.find("#lang #link");
+	assert_eq!(link.length(), 1);
+	// not found
+	let link = root.find("#none #link");
+	assert_eq!(link.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_class_selector() -> Result {
+	let html = r##"
+  <nav id="lang">
+    <a class="en link"></a>
+    <a class="en-US link"></a>
+    <span class="en"></span>
+  </nav>
+  "##;
+	let root = Vis::load(&html)?;
+	let lang = root.find("#lang");
+	assert_eq!(lang.find(".link").length(), 2);
+	assert_eq!(lang.find(".en").length(), 2);
+	assert_eq!(lang.find(".en.link").length(), 1);
+	assert_eq!(lang.find("a.link[class|='en']").length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_pseudo_selectors() -> Result {
+	let html = r##"
+  <div id="content">
+    <p>Visdom</p>
+    <p>
+      Vis<span>dom</span>!
+    </p>
+    <p>
+      Vis&nbsp;<span>dom</span>!
+    </p>
+  </div>
+  "##;
+	let root = Vis::load(&html)?;
+	let content = root.find("#content");
+	assert_eq!(content.find("p:contains('Visdom')").length(), 2);
+	// npsp; &#160; space: &#32;
+	assert_eq!(content.find("p:contains('Vis dom')").length(), 0);
+	Ok(())
+}
+
+#[test]
 fn test_content_text() -> Result {
 	let root = Vis::load(HTML)?;
 	// inner div 1-1

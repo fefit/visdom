@@ -1,3 +1,12 @@
+//! # Visdom
+//!
+//! ## Description
+//! A library use jquery-like api to operate html, easy to use for scraping and poisoning html.
+//!
+//! ## Supported
+//! - Support most css selectors, e.g. `:nth-child`, `:nth-of-type`, `:not` and so on.
+//! - Support most selector methods, such as `find`,`filter`,`has`, `not`
+//! - Support powerful text operation ability: `set_html`, `set_text`, `append_text` can used for text node.
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IAttrValue, IDocumentTrait,
 	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
@@ -738,7 +747,6 @@ impl From<Rc<RefCell<Node>>> for Dom {
 		}
 	}
 }
-
 /// Vis: Entry struct of the `mesdoc`'s api.
 ///
 /// # Examples

@@ -19,4 +19,4 @@ Cargo.lock
 *.profraw
 
 # System files
-.Ds_*
+.DS_*
