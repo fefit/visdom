@@ -1,0 +1,7 @@
+[package]
+name = "visdom-performance"
+edition = "2018"
+version = "0.0.1"
+
+[dependencies]
+visdom = "0.1.2"
