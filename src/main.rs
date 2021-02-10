@@ -6,33 +6,34 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	// let html: String = format!(
-	// 	r##"
-	//     <ul>
-	//       {}
-	//     </ul>
-	//   "##,
-	// 	String::from("<li></li>").repeat(TOTAL)
-	// );
-	// const TIMES: u32 = 200;
-	// let root = Vis::load(&html)?;
-	// let ul = root.children("ul");
-	// const SELECTOR: &str = ":nth-child(2n),:nth-child(3n),:nth-child(5n)";
-	// println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
-	// println!(r#"查找：ul.children("{}")"#, SELECTOR);
-	// println!("共找到节点数：{}", ul.children(SELECTOR).length());
-	// println!("执行{}次求平均时间...", TIMES);
-	// let start_time = SystemTime::now();
-	// for _ in 0..TIMES {
-	// 	let childs = ul.children(SELECTOR);
-	// }
-	// let end_time = SystemTime::now();
-	// let used_time = end_time.duration_since(start_time)?;
-	// println!(
-	// 	"共消耗时间:{:?}，平均时间:{:?}",
-	// 	used_time,
-	// 	used_time / TIMES
-	// );
+	const TOTAL: usize = 1000;
+	let html: String = format!(
+		r##"
+	    <dl>{}{}</dl>
+	  "##,
+		String::from("<dd></dd>").repeat(TOTAL),
+		String::from("<dt></dt>").repeat(TOTAL)
+	);
+	const TIMES: u32 = 1;
+	let root = Vis::load(&html)?;
+	let ul = root.children("dl");
+	const SELECTOR: &str = ":nth-of-type(2n)";
+	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
+	println!(r#"查找：ul.children("{}")"#, SELECTOR);
+	println!("共找到节点数：{}", ul.children(SELECTOR).length());
+	println!("{}", ul.children(SELECTOR).get(0).unwrap().index());
+	println!("执行{}次求平均时间...", TIMES);
+	let start_time = SystemTime::now();
+	for _ in 0..TIMES {
+		let childs = ul.children(SELECTOR);
+	}
+	let end_time = SystemTime::now();
+	let used_time = end_time.duration_since(start_time)?;
+	println!(
+		"共消耗时间:{:?}，平均时间:{:?}",
+		used_time,
+		used_time / TIMES
+	);
 	// let root = Vis::load(
 	// 	r#"
 	//     <div class="closest">
