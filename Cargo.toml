@@ -12,10 +12,8 @@ license = "MIT"
 exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs"]
 
 [dependencies]
-# mesdoc = "0.1.11"
+mesdoc = "0.1.12"
 rphtml = "0.3.6"
-mesdoc = { path = "../mesdoc" }
-# rphtml = { path = "../rphtml"}
 
 [dev-dependencies]
 crossbeam = "0.8.0"

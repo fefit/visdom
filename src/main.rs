@@ -6,18 +6,19 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const TOTAL: usize = 1000;
+	const TOTAL: usize = 2000;
 	let html: String = format!(
 		r##"
-	    <dl>{}{}</dl>
+	    <dl>{}{}{}</dl>
 	  "##,
 		String::from("<dd></dd>").repeat(TOTAL),
-		String::from("<dt></dt>").repeat(TOTAL)
+		String::from("<dt></dt>").repeat(TOTAL),
+		String::from("<li></li>")
 	);
 	const TIMES: u32 = 1;
 	let root = Vis::load(&html)?;
 	let ul = root.children("dl");
-	const SELECTOR: &str = ":nth-of-type(2n)";
+	const SELECTOR: &str = ":only-of-type";
 	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
 	println!(r#"查找：ul.children("{}")"#, SELECTOR);
 	println!("共找到节点数：{}", ul.children(SELECTOR).length());
