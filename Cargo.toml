@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2018"
 description = "A html document operation library written in Rust, like Nodejs library `cheerio`, they both used API like jQuery."
 keywords = ["html-parser", "jQuery-api", "querySelectorAll", "crawl"]
