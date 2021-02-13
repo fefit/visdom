@@ -1,11 +1,11 @@
 //! Visdom
 //!
 //! ### Description
-//! A library use jquery-like api to operate html, easy to use for scraping and poisoning html.
+//! A library use jquery-like api to operate html document, well experienced for scraping and keep away from scraping.
 //!
-//! ### Supported
-//! - Most css selectors, e.g. `:nth-child`, `:nth-of-type`, `:not`, `:contains` and so on.
-//! - Most selector methods, such as `find`,`filter`,`has`, `not`, `add`.
+//! ### Features
+//! - Most css selectors, e.g. `#id`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`, `:contains` and so on.
+//! - Most selector methods, such as `find`,`filter`,`has`, `not`, `add`, `closest`.
 //! - Powerful text modification ability: `set_html`, `set_text`, `append_text`, `prepend_text` can used for text node.
 //! - Well-defined and easy to use apis.
 use mesdoc::interface::{

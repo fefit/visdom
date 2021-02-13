@@ -4,4 +4,4 @@ edition = "2018"
 version = "0.0.1"
 
 [dependencies]
-visdom = "0.1.2"
+visdom = "0.1.5"

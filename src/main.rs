@@ -6,27 +6,72 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
+	// const HTML: &str = r##"
+	//   <html>
+	//     <head></head>
+	//     <body>
+	//       <div id="id">
+	//         <div class="class">class-div</div>
+	//         <p>
+	//           p-tag
+	//         </p>
+	//       </div>
+	//       <div id="nested">
+	//         <div class="outer-div-1">
+	//           <div class="inner-div-1-1">inner-div-1-1</div>
+	//           <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
+	//         </div>
+	//         <div class="outer-div-2">
+	//           <div class="inner-div-2-1"></div>
+	//           <div class="inner-div-2-2" id="inner"></div>
+	//         </div>
+	//       </div>
+	//     </body>
+	//   </html>
+	// "##;
+	// let root = Vis::load(HTML)?;
+	// let inner = root.find("#nested > .outer-div-2 > #inner.inner-div-2-2");
+	// println!("inner:{}", inner.length());
+	// let divs = root.find("div");
+	// let id_ele = divs.filter("#id");
+	// assert_eq!(id_ele.length(), 1);
+	// let div_in_id = divs.filter("#id > *");
+	// assert_eq!(div_in_id.length(), 1);
+	// let outer_div_in_nested = divs.filter("#nested > [class|='outer']");
+	// assert_eq!(outer_div_in_nested.length(), 2);
+	// let inner_div_in_nested = divs.filter("#nested > [class|='outer'] > [class|='inner']");
+	// assert_eq!(inner_div_in_nested.length(), 4);
+	// let id_not_ok_ele = divs.filter("div > #id");
+	// assert_eq!(id_not_ok_ele.length(), 0);
+	// let id_ok_ele = divs.filter("html body > #id");
+	// assert_eq!(id_ok_ele.length(), 1);
 	const TOTAL: usize = 2000;
 	let html: String = format!(
 		r##"
 	    <dl>{}{}{}</dl>
 	  "##,
-		String::from("<dd></dd>").repeat(TOTAL),
 		String::from("<dt></dt>").repeat(TOTAL),
+		String::from("<dd></dd>").repeat(TOTAL),
 		String::from("<li></li>")
 	);
-	const TIMES: u32 = 1;
+	const TIMES: u32 = 200;
 	let root = Vis::load(&html)?;
 	let ul = root.children("dl");
-	const SELECTOR: &str = ":only-of-type";
+	const SELECTOR: &str = "dl > dd:nth-child(2n), dl > :nth-child(3n)";
 	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
 	println!(r#"查找：ul.children("{}")"#, SELECTOR);
-	println!("共找到节点数：{}", ul.children(SELECTOR).length());
-	println!("{}", ul.children(SELECTOR).get(0).unwrap().index());
+	println!(
+		"共找到节点数：{}",
+		ul.children("").filter(SELECTOR).length()
+	);
+	println!(
+		"{}",
+		ul.children("").filter(SELECTOR).get(0).unwrap().index()
+	);
 	println!("执行{}次求平均时间...", TIMES);
 	let start_time = SystemTime::now();
 	for _ in 0..TIMES {
-		let childs = ul.children(SELECTOR);
+		let childs = ul.children("").filter(SELECTOR);
 	}
 	let end_time = SystemTime::now();
 	let used_time = end_time.duration_since(start_time)?;
