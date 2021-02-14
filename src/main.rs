@@ -57,17 +57,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 	const TIMES: u32 = 200;
 	let root = Vis::load(&html)?;
 	let ul = root.children("dl");
-	const SELECTOR: &str = "dl > dd:nth-child(2n), dl > :nth-child(3n)";
+	const SELECTOR: &str = "dl > :empty";
 	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
 	println!(r#"查找：ul.children("{}")"#, SELECTOR);
 	println!(
 		"共找到节点数：{}",
 		ul.children("").filter(SELECTOR).length()
 	);
-	println!(
-		"{}",
-		ul.children("").filter(SELECTOR).get(0).unwrap().index()
-	);
+	// println!(
+	// 	"{}",
+	// 	ul.children("").filter(SELECTOR).get(0).unwrap().index()
+	// );
 	println!("执行{}次求平均时间...", TIMES);
 	let start_time = SystemTime::now();
 	for _ in 0..TIMES {
