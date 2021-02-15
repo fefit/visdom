@@ -3,14 +3,14 @@ name = "visdom"
 version = "0.1.8"
 edition = "2018"
 description = "A html document operation library written in Rust, like Nodejs library `cheerio`, they both used API like jQuery."
-keywords = ["html-parser", "dom", "css-selector", "jquery", "scrape", "crawl"]
+keywords = ["html-parser", "dom", "jquery", "scrape", "crawl"]
 authors = ["jxz_211 <jxz_211@163.com>"]
 homepage = "https://github.com/fefit/visdom"
 repository = "https://github.com/fefit/visdom"
 documentation = "https://docs.rs/visdom/"
 categories = ["web-programming"]
 license = "MIT"
-exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs"]
+exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "performance/*.*"]
 
 [dependencies]
 mesdoc = "0.1.15"
