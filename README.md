@@ -5,7 +5,9 @@
 [![tag](https://img.shields.io/github/v/tag/fefit/visdom.svg?sort=semver)](https://github.com/fefit/visdom/tags)
 [![GitHub license](https://img.shields.io/github/license/fefit/visdom)](https://github.com/fefit/visdom/blob/main/LICENSE)
 
-A html DOM operation library written in Rust，like the Nodejs's cheerio library, they used the same API style of jQuery。
+A server-side html document syntax and operation library written in Rust, it uses apis similar to [jQuery](https://jquery.com), left off the parts thoes only worked in browser(e.g. render and event related methods), and use names with snake-case instead of camel-case in javasript.
+
+It's not only helpful for the working with web scraping, but also supported useful apis to operate `text` nodes, so you can use it to mix your html with dirty html segement to keep away from web scrapers.
 
 ## Usage
 

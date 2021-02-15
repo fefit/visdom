@@ -1,10 +1,11 @@
 [package]
 name = "visdom"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2018"
 description = "A html document operation library written in Rust, like Nodejs library `cheerio`, they both used API like jQuery."
-keywords = ["html-parser", "jQuery-api", "querySelectorAll", "crawl"]
+keywords = ["html-parser", "dom", "css-selector", "jquery", "scrape", "crawl"]
 authors = ["jxz_211 <jxz_211@163.com>"]
+homepage = "https://github.com/fefit/visdom"
 repository = "https://github.com/fefit/visdom"
 documentation = "https://docs.rs/visdom/"
 categories = ["web-programming"]
@@ -12,7 +13,7 @@ license = "MIT"
 exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs"]
 
 [dependencies]
-mesdoc = "0.1.14"
+mesdoc = "0.1.15"
 rphtml = "0.3.6"
 
 [dev-dependencies]

@@ -50,20 +50,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 		r##"
 	    <dl>{}{}{}</dl>
 	  "##,
-		String::from("<dt></dt>").repeat(TOTAL),
-		String::from("<dd></dd>").repeat(TOTAL),
+		String::from("<dt><span></span></dt>").repeat(TOTAL),
+		String::from("<dd><span></span><b></b><c></c></dd>").repeat(TOTAL),
 		String::from("<li></li>")
 	);
 	const TIMES: u32 = 200;
 	let root = Vis::load(&html)?;
 	let ul = root.children("dl");
-	const SELECTOR: &str = "dl > :empty";
+	const SELECTOR: &str = "dl :only-child";
 	println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
 	println!(r#"查找：ul.children("{}")"#, SELECTOR);
-	println!(
-		"共找到节点数：{}",
-		ul.children("").filter(SELECTOR).length()
-	);
+	let searchs = ul.children("").children("span").filter(SELECTOR);
+	println!("共找到节点数：{}", searchs.length());
+	println!("{}", searchs.last().parent("").get(0).unwrap().index());
 	// println!(
 	// 	"{}",
 	// 	ul.children("").filter(SELECTOR).get(0).unwrap().index()
@@ -71,7 +70,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	println!("执行{}次求平均时间...", TIMES);
 	let start_time = SystemTime::now();
 	for _ in 0..TIMES {
-		let childs = ul.children("").filter(SELECTOR);
+		let childs = ul.children("").children("span").filter(SELECTOR);
 	}
 	let end_time = SystemTime::now();
 	let used_time = end_time.duration_since(start_time)?;
