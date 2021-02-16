@@ -135,6 +135,7 @@ fn test_dom_set_html() -> Result {
 	let root = Vis::load(html)?;
 	let mut parent = root.children(".parent");
 	let setted = "This is a <strong>test</strong>!";
+	let encode_setted = "This is a &lt;strong&gt;test&lt;/strong&gt;!";
 	parent.set_html(setted);
 	assert_eq!(parent.text(), "This is a test!");
 	assert_eq!(parent.children("strong").length(), 1);
@@ -146,10 +147,52 @@ fn test_dom_set_html() -> Result {
 	let root = Vis::load(html)?;
 	let mut parent = root.children(".parent");
 	parent.set_html(setted);
-	assert_eq!(parent.html(), setted);
+	assert_eq!(parent.html(), encode_setted);
 	assert_eq!(parent.text(), setted);
 	assert_eq!(parent.children("strong").length(), 0);
 	parent.set_html("");
 	assert!(parent.html().is_empty());
+	// text node
+	let text = "This is a test!";
+	let html = format!(r#"<div class="parent">{}</div>"#, text);
+	let root = Vis::load(&html)?;
+	let parent = root.children(".parent");
+	let mut texts = parent.texts(1);
+	assert_eq!(texts.length(), 1);
+	texts.for_each(|_, node| {
+		assert_eq!(node.text(), text);
+		node.set_html("This is a <strong>test</strong>!");
+		true
+	});
+	assert_eq!(parent.text(), text);
+	assert_eq!(parent.children("strong").length(), 1);
+	assert_eq!(parent.children("strong").text(), "test");
+	Ok(())
+}
+
+#[test]
+fn test_dom_set_text() -> Result {
+	let html: &str = r#"<div class="parent"></div>"#;
+	// normal tag
+	let root = Vis::load(html)?;
+	let mut parent = root.children(".parent");
+	let setted = "This is a <strong>test</strong>!";
+	let encoded_setted = "This is a &lt;strong&gt;test&lt;/strong&gt;!";
+	parent.set_text(setted);
+	assert_eq!(parent.text(), setted);
+	assert_eq!(parent.children("strong").length(), 0);
+	assert_eq!(parent.html(), encoded_setted);
+	parent.set_text("");
+	assert!(parent.text().is_empty());
+	// content tag
+	let html: &str = r#"<pre class="parent"></pre>"#;
+	let root = Vis::load(html)?;
+	let mut parent = root.children(".parent");
+	parent.set_text(setted);
+	assert_eq!(parent.html(), encoded_setted);
+	assert_eq!(parent.text(), setted);
+	assert_eq!(parent.children("strong").length(), 0);
+	parent.set_text("");
+	assert!(parent.text().is_empty());
 	Ok(())
 }

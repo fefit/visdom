@@ -197,8 +197,9 @@ impl INodeTrait for Dom {
 				let no_content_tag = !is_content_tag(tag_name);
 				let mut node = self.node.borrow_mut();
 				if !content.is_empty() {
-					let content = encode(content, SpecialChars, NamedOrDecimal);
 					if no_content_tag {
+						// encode content
+						let content = encode(content, SpecialChars, NamedOrDecimal);
 						let mut text_node = Node::create_text_node(&content, None);
 						// set text node parent
 						text_node.parent = Some(Rc::downgrade(&self.node));
@@ -493,6 +494,7 @@ impl IElementTrait for Dom {
 		to_static_str(self.node.borrow().build(
 			&RenderOptions {
 				inner_html: true,
+				encode_content: true,
 				..Default::default()
 			},
 			false,
@@ -501,7 +503,13 @@ impl IElementTrait for Dom {
 
 	/// impl `outer_html`
 	fn outer_html(&self) -> &str {
-		to_static_str(self.node.borrow().build(&Default::default(), false))
+		to_static_str(self.node.borrow().build(
+			&RenderOptions {
+				encode_content: true,
+				..Default::default()
+			},
+			false,
+		))
 	}
 
 	/// impl `remov_child`
