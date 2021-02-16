@@ -6,30 +6,34 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"
-	  <html>
-	    <head></head>
-	    <body>
-	      <div id="id">
-	        <div class="class">class-div</div>
-	        <p>
-	          p-tag
-	        </p>
-	      </div>
-	      <div id="nested">
-	        <div class="outer-div-1">
-	          <div class="inner-div-1-1">inner-div-1-1</div>
-	          <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
-	        </div>
-	        <div class="outer-div-2">
-	          <div class="inner-div-2-1"></div>
-	          <div class="inner-div-2-2" id="inner"></div>
-	        </div>
-	      </div>
-	    </body>
-	  </html>
-	"##;
-	let root = Vis::load(HTML)?;
+	// const HTML: &str = r##"
+	//   <html>
+	//     <head></head>
+	//     <body>
+	//       <div id="id">
+	//         <div class="class">class-div</div>
+	//         <p>
+	//           p-tag
+	//         </p>
+	//       </div>
+	//       <div id="nested">
+	//         <div class="outer-div-1">
+	//           <div class="inner-div-1-1">inner-div-1-1</div>
+	//           <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
+	//         </div>
+	//         <div class="outer-div-2">
+	//           <div class="inner-div-2-1"></div>
+	//           <div class="inner-div-2-2" id="inner"></div>
+	//         </div>
+	//       </div>
+	//     </body>
+	//   </html>
+	// "##;
+	// let root = Vis::load(HTML)?;
+	// let eles = root.find("body, #nested");
+	// println!("eles:{:?}", eles.length());
+	// let tests = eles.find(".inner-div-2-1");
+	// println!("tests:{}", tests.length());
 	// let inner = root.find("#nested > .outer-div-2 > #inner.inner-div-2-2");
 	// println!("inner:{}", inner.length());
 	// let divs = root.find("div");
@@ -63,10 +67,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// let searchs = ul.children("").children("span").filter(SELECTOR);
 	// println!("共找到节点数：{}", searchs.length());
 	// println!("{}", searchs.last().parent("").get(0).unwrap().index());
-	// println!(
-	// 	"{}",
-	// 	ul.children("").filter(SELECTOR).get(0).unwrap().index()
-	// );
+	// // println!(
+	// // 	"{}",
+	// // 	ul.children("").filter(SELECTOR).get(0).unwrap().index()
+	// // );
 	// println!("执行{}次求平均时间...", TIMES);
 	// let start_time = SystemTime::now();
 	// for _ in 0..TIMES {
