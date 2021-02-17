@@ -1,4 +1,3 @@
-use mesdoc::interface::compare_indexs;
 use mesdoc::interface::IDocumentTrait;
 use std::thread;
 use std::time::SystemTime;
@@ -30,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	//   </html>
 	// "##;
 	// let root = Vis::load(HTML)?;
-	// let eles = root.find("body, #nested");
+	// let eles = root.find("body, #nested, #id");
 	// println!("eles:{:?}", eles.length());
 	// let tests = eles.find(".inner-div-2-1");
 	// println!("tests:{}", tests.length());
@@ -61,12 +60,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// const TIMES: u32 = 200;
 	// let root = Vis::load(&html)?;
 	// let ul = root.children("dl");
-	// const SELECTOR: &str = "dl :only-child";
+	// const SELECTOR: &str = "dl :empty-child";
 	// println!(r#"html: <ul>{{"<li></li>".repeat({})}}</ul>"#, TOTAL);
 	// println!(r#"查找：ul.children("{}")"#, SELECTOR);
-	// let searchs = ul.children("").children("span").filter(SELECTOR);
+	// let searchs = ul.children("dt,dd,li").siblings("dt");
 	// println!("共找到节点数：{}", searchs.length());
-	// println!("{}", searchs.last().parent("").get(0).unwrap().index());
+	// // println!("{}", searchs.last().parent("").get(0).unwrap().index());
 	// // println!(
 	// // 	"{}",
 	// // 	ul.children("").filter(SELECTOR).get(0).unwrap().index()
@@ -74,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// println!("执行{}次求平均时间...", TIMES);
 	// let start_time = SystemTime::now();
 	// for _ in 0..TIMES {
-	// 	let childs = ul.children("").children("span").filter(SELECTOR);
+	// 	let childs = ul.children("dt,dd,li").siblings("dt");
 	// }
 	// let end_time = SystemTime::now();
 	// let used_time = end_time.duration_since(start_time)?;
