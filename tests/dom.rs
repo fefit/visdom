@@ -135,25 +135,25 @@ fn test_dom_set_html() -> Result {
 	let root = Vis::load(html)?;
 	let mut parent = root.children(".parent");
 	let setted = "This is a <strong>test</strong>!";
-	let encode_setted = "This is a &lt;strong&gt;test&lt;/strong&gt;!";
+	let only_text = "This is a test!";
 	parent.set_html(setted);
-	assert_eq!(parent.text(), "This is a test!");
+	assert_eq!(parent.text(), only_text);
 	assert_eq!(parent.children("strong").length(), 1);
 	assert_eq!(parent.html(), setted);
 	parent.set_html("");
 	assert!(parent.html().is_empty());
-	// content tag
+	// pre tag
 	let html: &str = r#"<pre class="parent"></pre>"#;
 	let root = Vis::load(html)?;
 	let mut parent = root.children(".parent");
 	parent.set_html(setted);
-	assert_eq!(parent.html(), encode_setted);
-	assert_eq!(parent.text(), setted);
-	assert_eq!(parent.children("strong").length(), 0);
+	assert_eq!(parent.html(), setted);
+	assert_eq!(parent.text(), only_text);
+	assert_eq!(parent.children("strong").length(), 1);
 	parent.set_html("");
 	assert!(parent.html().is_empty());
 	// text node
-	let text = "This is a test!";
+	let text = only_text;
 	let html = format!(r#"<div class="parent">{}</div>"#, text);
 	let root = Vis::load(&html)?;
 	let parent = root.children(".parent");

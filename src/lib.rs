@@ -118,7 +118,7 @@ impl INodeTrait for Dom {
 	/// impl `typed`
 	fn typed<'b>(self: Box<Self>) -> IEnumTyped<'b> {
 		match self.node_type() {
-			INodeType::Element | INodeType::DocumentFragement => {
+			INodeType::Element | INodeType::DocumentFragement | INodeType::Document => {
 				IEnumTyped::Element(self as BoxDynElement)
 			}
 			INodeType::Text => IEnumTyped::Text(self as BoxDynText),
@@ -739,6 +739,7 @@ impl Document {
 }
 
 impl IDocumentTrait for Document {
+	// get element by id
 	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynElement<'b>> {
 		if let Some(node) = self.node.borrow().get_element_by_id(id) {
 			return Some(Box::new(Dom {
@@ -747,6 +748,24 @@ impl IDocumentTrait for Document {
 		}
 		None
 	}
+	// source code
+	fn source_code(&self) -> &'static str {
+		to_static_str(
+			self
+				.node
+				.borrow()
+				.get_node()
+				.borrow()
+				.build(&Default::default(), false),
+		)
+	}
+	// get root node
+	fn get_root_node<'b>(&self) -> BoxDynNode<'b> {
+		Box::new(Dom {
+			node: Rc::clone(&self.node.borrow().get_node()),
+		})
+	}
+	// onerror
 	fn onerror(&self) -> Option<Rc<IErrorHandle>> {
 		if let Some(error_handle) = &(*self.node.borrow().onerror.borrow()) {
 			Some(Rc::clone(error_handle))

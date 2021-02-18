@@ -5,34 +5,39 @@ use std::{collections::VecDeque, error::Error};
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	// const HTML: &str = r##"
-	//   <html>
-	//     <head></head>
-	//     <body>
-	//       <div id="id">
-	//         <div class="class">class-div</div>
-	//         <p>
-	//           p-tag
-	//         </p>
-	//       </div>
-	//       <div id="nested">
-	//         <div class="outer-div-1">
-	//           <div class="inner-div-1-1">inner-div-1-1</div>
-	//           <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
-	//         </div>
-	//         <div class="outer-div-2">
-	//           <div class="inner-div-2-1"></div>
-	//           <div class="inner-div-2-2" id="inner"></div>
-	//         </div>
-	//       </div>
-	//     </body>
-	//   </html>
-	// "##;
-	// let root = Vis::load(HTML)?;
-	// let eles = root.find("body, #nested, #id");
-	// println!("eles:{:?}", eles.length());
-	// let tests = eles.find(".inner-div-2-1");
-	// println!("tests:{}", tests.length());
+	const HTML: &str = r##"
+	  <html>
+	    <head>
+        <title><div> tag</title>
+      </head>
+	    <body>
+	      <div id="id">
+	        <div class="class">class-div</div>
+	        <p>
+	          p-tag
+	        </p>
+	      </div>
+	      <div id="nested">
+	        <div class="outer-div-1">
+	          <div class="inner-div-1-1">inner-div-1-1</div>
+	          <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
+	        </div>
+	        <div class="outer-div-2">
+	          <div class="inner-div-2-1"></div>
+	          <div class="inner-div-2-2" id="inner"></div>
+	        </div>
+	      </div>
+	    </body>
+	  </html>
+	"##;
+	let root = Vis::load(HTML)?;
+
+	let eles = root.find("body, #nested, #id");
+	println!("eles:{:?}", eles.length());
+	let doc = &eles.get(0).unwrap().owner_document().unwrap();
+	println!("doc.title{:?}", doc.title());
+	let tests = eles.find(".inner-div-2-1");
+	println!("tests:{}", tests.length());
 	// let inner = root.find("#nested > .outer-div-2 > #inner.inner-div-2-2");
 	// println!("inner:{}", inner.length());
 	// let divs = root.find("div");
