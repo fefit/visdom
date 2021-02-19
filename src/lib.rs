@@ -18,7 +18,8 @@ use rphtml::{
 	config::{ParseOptions, RenderOptions},
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
 	parser::{
-		allow_insert, is_content_tag, Attr, AttrData, CodePosAt, Doc, Node, NodeType, RefNode, RootNode,
+		allow_insert, is_content_tag, Attr, AttrData, CodePosAt, Doc, DocHolder, Node, NodeType,
+		RefNode,
 	},
 };
 use std::error::Error;
@@ -169,12 +170,15 @@ impl INodeTrait for Dom {
 	/// impl `owner_document`
 	fn owner_document(&self) -> MaybeDoc {
 		if let Some(root) = &self.node.borrow().root {
-			Some(Box::new(Document {
-				node: Rc::clone(root),
-			}))
-		} else {
-			None
+			if let Some(root) = &root.upgrade() {
+				if let Some(doc) = &root.borrow().document {
+					return Some(Box::new(Document {
+						doc: Rc::clone(doc).into(),
+					}));
+				}
+			}
 		}
+		None
 	}
 
 	/// impl `text_content`
@@ -263,7 +267,7 @@ impl INodeTrait for Dom {
 				// content tag, just set html as content, no need encode
 				target.borrow_mut().content = Some(content.chars().collect::<Vec<char>>());
 			} else {
-				let doc = Doc::parse(
+				let doc_holder = Doc::parse(
 					content,
 					ParseOptions {
 						auto_remove_nostart_endtag: true,
@@ -271,7 +275,7 @@ impl INodeTrait for Dom {
 					},
 				)
 				.unwrap();
-				if let Some(nodes) = &mut doc.get_root_node().borrow_mut().childs {
+				if let Some(nodes) = &mut doc_holder.get_root_node().borrow_mut().childs {
 					let mut nodes = nodes.split_off(0);
 					let has_not_allowed = remove_not_allowed_nodes(&tag_name, &mut nodes);
 					let has_nodes = !nodes.is_empty();
@@ -725,15 +729,15 @@ impl IElementTrait for Dom {
 }
 
 struct Document {
-	node: Rc<RefCell<RootNode>>,
+	doc: DocHolder,
 }
 
 impl Document {
 	fn bind_error(&mut self, handle: IErrorHandle) {
-		*self.node.borrow().onerror.borrow_mut() = Some(Rc::new(handle));
+		*self.doc.borrow().onerror.borrow_mut() = Some(Rc::new(handle));
 	}
 	fn list<'b>(&self) -> Elements<'b> {
-		let root: Dom = Rc::clone(&self.node.borrow().get_node()).into();
+		let root: Dom = Rc::clone(&self.doc.borrow().root).into();
 		Elements::with_nodes(vec![Box::new(root)])
 	}
 }
@@ -741,7 +745,7 @@ impl Document {
 impl IDocumentTrait for Document {
 	// get element by id
 	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynElement<'b>> {
-		if let Some(node) = self.node.borrow().get_element_by_id(id) {
+		if let Some(node) = self.doc.get_element_by_id(id) {
 			return Some(Box::new(Dom {
 				node: Rc::clone(&node),
 			}));
@@ -750,24 +754,17 @@ impl IDocumentTrait for Document {
 	}
 	// source code
 	fn source_code(&self) -> &'static str {
-		to_static_str(
-			self
-				.node
-				.borrow()
-				.get_node()
-				.borrow()
-				.build(&Default::default(), false),
-		)
+		to_static_str(self.doc.render(&Default::default()))
 	}
 	// get root node
 	fn get_root_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(Dom {
-			node: Rc::clone(&self.node.borrow().get_node()),
+			node: Rc::clone(&self.doc.borrow().root),
 		})
 	}
 	// onerror
 	fn onerror(&self) -> Option<Rc<IErrorHandle>> {
-		if let Some(error_handle) = &(*self.node.borrow().onerror.borrow()) {
+		if let Some(error_handle) = &(*self.doc.borrow().onerror.borrow()) {
 			Some(Rc::clone(error_handle))
 		} else {
 			None
@@ -864,9 +861,7 @@ impl Vis {
 				..Default::default()
 			},
 		)?;
-		Ok(Document {
-			node: Rc::clone(&doc.root),
-		})
+		Ok(Document { doc })
 	}
 	// load the html
 	pub fn load(html: &str) -> Result<Elements, Box<dyn Error>> {

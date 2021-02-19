@@ -31,11 +31,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 	  </html>
 	"##;
 	let root = Vis::load(HTML)?;
-
+	println!(
+		"root:{:?}",
+		root.document().unwrap().body().unwrap().tag_name()
+	);
 	let eles = root.find("body, #nested, #id");
 	println!("eles:{:?}", eles.length());
-	let doc = &eles.get(0).unwrap().owner_document().unwrap();
-	println!("doc.title{:?}", doc.title());
+	println!("first:{:?}", eles.get(0).unwrap().tag_name());
 	let tests = eles.find(".inner-div-2-1");
 	println!("tests:{}", tests.length());
 	// let inner = root.find("#nested > .outer-div-2 > #inner.inner-div-2-2");

@@ -75,6 +75,22 @@ let texts = lis.map(|_index, ele|{
 
 The following API are inherited from the library [mesdoc](https://github.com/fefit/mesdoc) 。
 
+### Trait methods
+
+| Instance                      | Trait          | Inherit    | Document                                                                                            |
+| :---------------------------- | :------------- | :--------- | :-------------------------------------------------------------------------------------------------- |
+| BoxDynNode                    | INodeTrait     | None       | [INodeTrait Document](https://docs.rs/mesdoc/latest/mesdoc/interface/trait.INodeTrait.html)         |
+| BoxDynElement                 | IElementTrait  | INodeTrait | [IElementTrait Document](https://docs.rs/mesdoc/latest/mesdoc/interface/trait.IElementTrait.html)   |
+| BoxDynText                    | ITextTrait     | INodeTrait | [ITextTrait Document](https://docs.rs/mesdoc/latest/mesdoc/interface/trait.ITextTrait.html)         |
+| Box&lt;dyn IDocumentTrait&gt; | IDocumentTrait | None       | [IDocumentTrait Document](https://docs.rs/mesdoc/latest/mesdoc/interface/trait.IDocumentTrait.html) |
+
+### Collections APIs
+
+| Collections | Document                                                                                 |
+| :---------- | :--------------------------------------------------------------------------------------- |
+| Elements    | [Elements Document](https://docs.rs/mesdoc/latest/mesdoc/interface/struct.Elements.html) |
+| Texts       | [Texts Document](https://docs.rs/mesdoc/latest/mesdoc/interface/struct.Texts.html)       |
+
 ### Selector Operation
 
 | Selector API                                                                      | Description                                                                                                                                                                                                                                                                          |                        Remarks                        |
