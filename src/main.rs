@@ -2,44 +2,31 @@ use mesdoc::interface::IDocumentTrait;
 use std::thread;
 use std::time::SystemTime;
 use std::{collections::VecDeque, error::Error};
+use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"
-	  <html>
-	    <head>
-        <title><div> tag</title>
-      </head>
-	    <body>
-	      <div id="id">
-	        <div class="class">class-div</div>
-	        <p>
-	          p-tag
-	        </p>
-	      </div>
-	      <div id="nested">
-	        <div class="outer-div-1">
-	          <div class="inner-div-1-1">inner-div-1-1</div>
-	          <div class="inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
-	        </div>
-	        <div class="outer-div-2">
-	          <div class="inner-div-2-1"></div>
-	          <div class="inner-div-2-2" id="inner"></div>
-	        </div>
-	      </div>
-	    </body>
-	  </html>
-	"##;
-	let root = Vis::load(HTML)?;
-	println!(
-		"root:{:?}",
-		root.document().unwrap().body().unwrap().tag_name()
-	);
-	let eles = root.find("body, #nested, #id");
-	println!("eles:{:?}", eles.length());
-	println!("first:{:?}", eles.get(0).unwrap().tag_name());
-	let tests = eles.find(".inner-div-2-1");
-	println!("tests:{}", tests.length());
+	// const HTML: &str = r##"
+	// <html>
+	//   <head>
+	//     <link href="style.css" />
+	//   </head>
+	//   <body>
+	//     <div id="content">
+	//       <p>去年七月份才开始涉足短视频的逍遥，之前的主业是运营公众号。他向果酱妹坦言:“抖音和快手都没有抓住机会，因为感觉做视频的门槛比较高，自己以前只是弄图文，从来没接触过视频领域。”</p>
+	//       <p>直至被内测到了视频号入口，逍遥觉得，<strong>是时候逼自己一把了</strong>。但万事开头难，原本对剪辑一窍不通的他日复一日地找素材、剪辑，想文案。逍遥直言:“前面是最痛苦的，到后面产生兴趣了，遇到困难就愿意去找解决办法<strong>，归根结底，感兴趣是最重要的</strong>。”</p>
+	//       <script>var a = 1; var b = 2;</script>
+	//     </div>
+	//   </body>
+	// </html>
+	// "##;
+	// let root = Vis::load(HTML)?;
+	// let content = root.find("#content");
+	// println!("content:{}", content.length());
+	// let texts = content
+	// 	.texts(0)
+	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));
+	// println!("texts{}", texts.length());
 	// let inner = root.find("#nested > .outer-div-2 > #inner.inner-div-2-2");
 	// println!("inner:{}", inner.length());
 	// let divs = root.find("div");

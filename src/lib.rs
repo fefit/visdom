@@ -13,6 +13,10 @@ use mesdoc::interface::{
 	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
 	InsertPosition, MaybeDoc, MaybeElement, Texts,
 };
+// re export `IAttrValue` `IEnumTyped` `INodeType`
+pub mod types {
+	pub use mesdoc::interface::{IAttrValue, IEnumTyped, INodeType};
+}
 use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
@@ -232,7 +236,7 @@ impl INodeTrait for Dom {
 				}
 			}
 			_ => {
-				// other node types nothing to do
+				// nothing to do with other node types
 			}
 		}
 	}
