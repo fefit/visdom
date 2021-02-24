@@ -21,10 +21,7 @@ use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::{ParseOptions, RenderOptions},
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
-	parser::{
-		allow_insert, is_content_tag, Attr, AttrData, CodePosAt, Doc, DocHolder, Node, NodeType,
-		RefNode,
-	},
+	parser::{allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, Node, NodeType, RefNode},
 };
 use std::error::Error;
 use std::rc::Rc;
@@ -165,9 +162,6 @@ impl INodeTrait for Dom {
 
 	/// impl `uuid`
 	fn uuid(&self) -> Option<&str> {
-		if let Some(uuid) = &self.node.borrow().uuid {
-			return Some(to_static_str(uuid.clone()));
-		}
 		None
 	}
 
@@ -274,7 +268,8 @@ impl INodeTrait for Dom {
 				let doc_holder = Doc::parse(
 					content,
 					ParseOptions {
-						auto_remove_nostart_endtag: true,
+						auto_fix_unexpected_endtag: true,
+						auto_fix_unescaped_lt: true,
 						..Default::default()
 					},
 				)
@@ -425,7 +420,6 @@ impl IElementTrait for Dom {
 	fn set_attribute(&mut self, name: &str, value: Option<&str>) {
 		let mut need_quote = false;
 		let mut quote: char = '"';
-		let pos = CodePosAt::default();
 		if let Some(meta) = &self.node.borrow().meta {
 			let value = value.map(|v| {
 				let mut find_quote: bool = false;
@@ -451,11 +445,7 @@ impl IElementTrait for Dom {
 					}
 					content.push(ch);
 				}
-				AttrData {
-					content,
-					begin_at: pos,
-					end_at: pos,
-				}
+				AttrData { content }
 			});
 			// first, check if the attribute has exist.
 			for attr in &mut meta.borrow_mut().attrs {
@@ -472,8 +462,6 @@ impl IElementTrait for Dom {
 			meta.borrow_mut().attrs.push(Attr {
 				key: Some(AttrData {
 					content: name.into(),
-					begin_at: pos,
-					end_at: pos,
 				}),
 				value,
 				quote,
@@ -861,7 +849,7 @@ impl Vis {
 		let doc = Doc::parse(
 			html,
 			ParseOptions {
-				auto_remove_nostart_endtag: true,
+				auto_fix_unexpected_endtag: true,
 				..Default::default()
 			},
 		)?;

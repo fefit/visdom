@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2018"
 description = "A html document syntax and operation library, use APIs similar to jquery, easy to use for web scraping and confused html."
 keywords = ["html-parser", "dom", "jquery", "scrape", "crawl"]
@@ -14,7 +14,7 @@ exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "perfor
 
 [dependencies]
 mesdoc = "0.1.22"
-rphtml = "0.3.11"
+rphtml = "0.4.0"
 
 [dev-dependencies]
 crossbeam = "0.8.0"
