@@ -50,11 +50,30 @@ fn main()-> Result<(), Box<dyn Error>>{
 
 Static method：`load(html: &str) -> Result<Elements, Box<dyn Error>>`
 
-    Load the `html` string into a document `Elements`
+    Load the `html` string into an `Elements` collection.
 
 Static method：`load_catch(html: &str, handle: Box<dyn Fn(Box<dyn Error>)>) -> Elements`
 
-    Load the `html` string into a document `Elements`, and use the handle to do with the errors such as html parse error, wrong selectors, this is useful if you don't want the process paniced by the errors.
+    Load the `html` string into an `Elements` collection, and use the handle to do with the errors such as html parse error, wrong selectors, this is useful if you don't want the process is paniced by the errors.
+
+Static method：`load_options(html: &str, options: html::ParseOptions) -> Result<Elements, Box<dyn Error>>`
+
+    This method allowed you to define the parse options when parsing the `html` string into a document tree, the `load` method is just an alias method of this,  with the most compatible parse options parameter.
+
+```rust
+// the `load` and `load_catch` use the parse options as below
+// more about the `ParseOptions`, you can see the document of `rphtml` library.
+ParseOptions{
+  auto_fix_unclosed_tag: true,
+  auto_fix_unexpected_endtag: true,
+  auto_fix_unescaped_lt: true,
+  allow_self_closing: true,
+}
+```
+
+Static method：`load_options_catch(html: &str, options: html::ParseOptions, handle: Box<dyn Fn(Box<dyn Error>)>) -> Elements`
+
+    It's same as `load` and `load_options` methods, just exposed a parse options parameter so that you can define how to resolve errors when parsing html.
 
 Static method：`dom(ele: &BoxDynElement) -> Elements`
 

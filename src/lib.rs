@@ -9,23 +9,33 @@
 //! - Powerful text modification ability: `set_html`, `set_text`, `append_text`, `prepend_text` can used for text node.
 //! - Well-defined and easy to use apis.
 use mesdoc::interface::{
-	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IAttrValue, IDocumentTrait,
-	IElementTrait, IEnumTyped, IErrorHandle, INodeTrait, INodeType, ITextTrait, IUncareNodeTrait,
-	InsertPosition, MaybeDoc, MaybeElement, Texts,
+	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
+	IErrorHandle, INodeTrait, ITextTrait, IUncareNodeTrait, InsertPosition, MaybeDoc, MaybeElement,
+	Texts,
 };
-// re export `IAttrValue` `IEnumTyped` `INodeType`
-pub mod types {
-	pub use mesdoc::interface::{IAttrValue, IEnumTyped, INodeType};
-}
+
 use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
-	config::{ParseOptions, RenderOptions},
+	config::RenderOptions,
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
 	parser::{allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, Node, NodeType, RefNode},
 };
 use std::error::Error;
 use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
+
+// re export `IAttrValue` `IEnumTyped` `INodeType`
+pub mod types {
+	pub use mesdoc::interface::{IAttrValue, IEnumTyped, INodeType};
+}
+
+// re export `ParseOptions`
+pub mod html {
+	pub use rphtml::config::ParseOptions;
+}
+
+use crate::html::ParseOptions;
+use crate::types::{IAttrValue, IEnumTyped, INodeType};
 /// type implement INodeTrait with Node
 struct Dom {
 	node: Rc<RefCell<Node>>,
@@ -844,26 +854,33 @@ pub struct Vis;
 
 impl Vis {
 	// init the patterns and all
-	pub(crate) fn parse_doc(html: &str) -> Result<Document, Box<dyn Error>> {
+	pub(crate) fn options() -> ParseOptions {
+		// use the most compatible options
+		ParseOptions {
+			auto_fix_unclosed_tag: true,
+			auto_fix_unexpected_endtag: true,
+			auto_fix_unescaped_lt: true,
+			allow_self_closing: true,
+			..Default::default()
+		}
+	}
+	// parse a document with options
+	pub(crate) fn parse_doc_options(
+		html: &str,
+		options: ParseOptions,
+	) -> Result<Document, Box<dyn Error>> {
 		mesdoc::init();
-		let doc = Doc::parse(
-			html,
-			ParseOptions {
-				auto_fix_unexpected_endtag: true,
-				..Default::default()
-			},
-		)?;
+		let doc = Doc::parse(html, options)?;
 		Ok(Document { doc })
 	}
-	// load the html
-	pub fn load(html: &str) -> Result<Elements, Box<dyn Error>> {
-		// nodes
-		let doc = Vis::parse_doc(html)?;
+	/// load the html with options, get an elements collection
+	pub fn load_options(html: &str, options: ParseOptions) -> Result<Elements, Box<dyn Error>> {
+		let doc = Vis::parse_doc_options(html, options)?;
 		Ok(doc.list())
 	}
-	// load the html, and catch the errors
-	pub fn load_catch(html: &str, handle: IErrorHandle) -> Elements {
-		let doc = Vis::parse_doc(html);
+	/// load the html with options, and catch the errors
+	pub fn load_options_catch(html: &str, options: ParseOptions, handle: IErrorHandle) -> Elements {
+		let doc = Vis::parse_doc_options(html, options);
 		if let Ok(mut doc) = doc {
 			doc.bind_error(handle);
 			doc.list()
@@ -872,8 +889,16 @@ impl Vis {
 			Elements::new()
 		}
 	}
-	// return a Elements
-	pub fn dom<'b>(node: &BoxDynElement) -> Elements<'b> {
-		Elements::with_nodes(vec![node.cloned()])
+	/// load the html into elements
+	pub fn load(html: &str) -> Result<Elements, Box<dyn Error>> {
+		Vis::load_options(html, Vis::options())
+	}
+	/// load the html, and catch the errors
+	pub fn load_catch(html: &str, handle: IErrorHandle) -> Elements {
+		Vis::load_options_catch(html, Vis::options(), handle)
+	}
+	/// return an elements collection from an BoxDynElement
+	pub fn dom<'b>(ele: &BoxDynElement) -> Elements<'b> {
+		Elements::with_nodes(vec![ele.cloned()])
 	}
 }
