@@ -11,7 +11,7 @@ It's not only helpful for the working with web scraping, but also supported usef
 
 ## Usage
 
-[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)&nbsp;&nbsp;&nbsp;&nbsp;[CHANGELOG](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
+[中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)&nbsp;&nbsp;&nbsp;&nbsp;[CHANGELOG](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)&nbsp;&nbsp;&nbsp;&nbsp;[Live Demo](http://visdom.suchjs.com/#selector-id)
 
 main.rs
 
