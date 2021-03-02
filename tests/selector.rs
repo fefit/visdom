@@ -255,7 +255,7 @@ fn test_selector_is_all_by() -> Result {
 	});
 	assert_ne!(is_id, true);
 	// is #id
-	let is_id = id_divs.is_all_by(|_, node| node.tag_name() == "div");
+	let is_id = id_divs.is_all_by(|_, node| node.tag_name() == "DIV");
 	assert!(is_id);
 	Ok(())
 }
@@ -369,7 +369,7 @@ fn test_selector_closest() -> Result {
 	assert_eq!(abc.length(), 4);
 	let closest = abc.closest(".closest");
 	assert_eq!(closest.length(), 3);
-	assert_eq!(closest.eq(0).get(0).unwrap().tag_name(), "div");
+	assert_eq!(closest.eq(0).get(0).unwrap().tag_name(), "DIV");
 	Ok(())
 }
 
@@ -390,10 +390,10 @@ fn test_selector_siblings() -> Result {
 	let abc = root.find("a,b,c");
 	let siblings = abc.siblings("");
 	assert_eq!(siblings.length(), 4);
-	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "p");
+	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "P");
 	let siblings = abc.siblings(".closest");
 	assert_eq!(siblings.length(), 2);
-	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "a");
+	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "A");
 	Ok(())
 }
 
@@ -471,6 +471,27 @@ fn test_class_selector() -> Result {
 	assert_eq!(lang.find(".en").length(), 2);
 	assert_eq!(lang.find(".en.link").length(), 1);
 	assert_eq!(lang.find("a.link[class|='en']").length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_tagname_selector() -> Result {
+	// ignore tag name cases
+	let html = r##"
+    <Div></div>
+  "##;
+	let root = Vis::load(html)?;
+	let div = root.find("div");
+	assert_eq!(div.length(), 1);
+	assert_eq!(div.get(0).unwrap().tag_name(), "DIV");
+	// tagname with namespace
+	let html = r##"
+    <Form:Item></Form:Item>
+  "##;
+	let root = Vis::load(html)?;
+	let item = root.find("FORM\\:ITEM");
+	assert_eq!(item.length(), 1);
+	assert_eq!(item.get(0).unwrap().tag_name(), "FORM:ITEM");
 	Ok(())
 }
 

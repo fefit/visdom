@@ -6,23 +6,12 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	// const HTML: &str = r##"
-	// <html>
-	//   <head>
-	//     <link href="style.css" />
-	//   </head>
-	//   <body>
-	//     <div id="content">
-	//       <p>去年七月份才开始涉足短视频的逍遥，之前的主业是运营公众号。他向果酱妹坦言:“抖音和快手都没有抓住机会，因为感觉做视频的门槛比较高，自己以前只是弄图文，从来没接触过视频领域。”</p>
-	//       <p>直至被内测到了视频号入口，逍遥觉得，<strong>是时候逼自己一把了</strong>。但万事开头难，原本对剪辑一窍不通的他日复一日地找素材、剪辑，想文案。逍遥直言:“前面是最痛苦的，到后面产生兴趣了，遇到困难就愿意去找解决办法<strong>，归根结底，感兴趣是最重要的</strong>。”</p>
-	//       <script>var a = 1; var b = 2;</script>
-	//     </div>
-	//   </body>
-	// </html>
-	// "##;
-	// let root = Vis::load(HTML)?;
-	// let content = root.find("#content");
-	// println!("content:{}", content.length());
+	const HTML: &str = r##"<Form:Item><Form:Item>
+	"##;
+	let root = Vis::load(HTML)?;
+	let content = root.find("FORm\\:ITEM");
+	println!("content:{}", content.length());
+	println!("{:?}", content.attr("xmln:id"));
 	// let texts = content
 	// 	.texts(0)
 	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));

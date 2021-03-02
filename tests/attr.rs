@@ -24,6 +24,11 @@ fn test_normal_attr() -> Result {
 	let input = div.children("input");
 	let value = input.attr("type");
 	assert!(value.is_some() && value.unwrap().is_str("text"));
+	// ignore attribute cases: issue #2
+	let html: &str = r#"<input type="text" READONly /></div>"#;
+	let root = Vis::load(html)?;
+	let input = root.children("[readOnly]");
+	assert_eq!(input.length(), 1);
 	Ok(())
 }
 

@@ -18,7 +18,9 @@ use mesdoc::{self, error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::RenderOptions,
 	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
-	parser::{allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, Node, NodeType, RefNode},
+	parser::{
+		allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, NameCase, Node, NodeType, RefNode,
+	},
 };
 use std::error::Error;
 use std::rc::Rc;
@@ -26,7 +28,9 @@ use std::{any::Any, cell::RefCell};
 
 // re export `IAttrValue` `IEnumTyped` `INodeType`
 pub mod types {
-	pub use mesdoc::interface::{IAttrValue, IEnumTyped, INodeType};
+	pub use mesdoc::interface::{
+		BoxDynElement, BoxDynNode, BoxDynText, Elements, IAttrValue, IEnumTyped, INodeType, Texts,
+	};
 }
 
 // re export `ParseOptions`
@@ -269,9 +273,9 @@ impl INodeTrait for Dom {
 				.borrow()
 				.meta
 				.as_ref()
-				.map(|meta| meta.borrow().get_name(true))
+				.map(|meta| meta.borrow().get_name(None))
 				.expect("A tag use `set_html` must have a tag name.");
-			if is_content_tag(&tag_name) {
+			if is_content_tag(&tag_name.to_ascii_lowercase()) {
 				// content tag, just set html as content, no need encode
 				target.borrow_mut().content = Some(content.chars().collect::<Vec<char>>());
 			} else {
@@ -375,7 +379,7 @@ impl IElementTrait for Dom {
 		match self.node_type() {
 			INodeType::Element => {
 				if let Some(meta) = &self.node.borrow().meta {
-					let name = meta.borrow().get_name(true);
+					let name = meta.borrow().get_name(Some(NameCase::Upper));
 					return to_static_str(name);
 				}
 				self.halt("tag_name", "Html syntax error: not found a tag name.");
@@ -410,10 +414,13 @@ impl IElementTrait for Dom {
 	}
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
+		// use lowercase to get attribute: issue: #2
+		let name = name.to_ascii_lowercase();
 		if let Some(meta) = &self.node.borrow().meta {
 			for attr in &meta.borrow().attrs {
 				if let Some(key) = &attr.key {
-					if key.content == name {
+					// compare with lowercase
+					if key.content.to_ascii_lowercase() == name {
 						if let Some(value) = &attr.value {
 							let attr_value = value.content.clone();
 							return Some(IAttrValue::Value(attr_value, attr.quote));

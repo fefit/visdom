@@ -9,32 +9,66 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func main() {
-	loopNum := 200
-	nodeCount := 3000
-	htmlItems := strings.Repeat("<li></li>", nodeCount)
-	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+const (
+	// LOOPTIMES :loop times
+	LOOPTIMES = 200
+	// NODECOUNT :node count
+	NODECOUNT = 3000
+)
+
+func execSelector(html *string, selector *string, init func(*goquery.Document) func(selector *string)) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
 	if err != nil {
 		log.Fatal(err)
 	}
-	selector := ":nth-child(2n),:nth-child(3n),:nth-child(5n)"
-	ul := doc.Find("ul")
-	fmt.Printf("Html: <ul>{strings.Repeat('<li></li>', %d)}</ul>", nodeCount)
-	fmt.Println()
-	fmt.Printf("Query: ul.children('%s')", selector)
-	fmt.Println()
-	fmt.Printf("Find matched: %d", ul.ChildrenFiltered(selector).Length())
-	fmt.Println()
-	fmt.Printf("Execute %d times to get average time:", loopNum)
+	fmt.Println("<tr>")
+	fmt.Printf("<td>Execute selector: %s</td>", *selector)
+	cb := init(doc)
 	startTime := time.Now()
-	for i := 0; i < loopNum; i++ {
-		ul.ChildrenFiltered(selector)
+	for i := 0; i < LOOPTIMES; i++ {
+		cb(selector)
 	}
 	endTime := time.Now()
 	usedTime := float64(endTime.Sub(startTime).Nanoseconds())
-
 	fmt.Println()
-	fmt.Printf("Elapsed: %.6f s, Average Time: %.6f ms", usedTime/1.0e9, usedTime/1.0e6/float64(loopNum))
+	fmt.Printf("<td>Elapsed: %.6f s, Average Time: %.6f ms</td>", usedTime/1.0e9, usedTime/1.0e6/float64(LOOPTIMES))
+	fmt.Println()
+	fmt.Print("</tr>")
+}
+
+func nthChild() {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":nth-child(2n),:nth-child(3n),:nth-child(5n)"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("<td>Find: %d</td>", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	execSelector(&html, &selector, init)
+}
+
+func nthLastChild() {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":nth-last-child(2n),:nth-last-child(3n),:nth-last-child(5n)"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("<td>Find: %d</td>", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	execSelector(&html, &selector, init)
+}
+
+func main() {
+	nthChild()
+	nthLastChild()
 }
