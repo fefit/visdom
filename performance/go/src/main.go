@@ -31,7 +31,7 @@ func getFileContent(file string) string {
 	return string(content)
 }
 
-func loadHtml() TotalInfo {
+func loadHTML() TotalInfo {
 	content := getFileContent("../data/index.html")
 	startTime := time.Now()
 	for i := 0; i < LOOPTIMES; i++ {
@@ -215,16 +215,16 @@ func findName() TotalInfo {
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
-		loadHtml(),
-		nthChild(),
-		nthLastChild(),
-		nthOfType(),
-		nthLastOfType(),
-		nthChildFind(),
-		findID(),
-		findClass(),
+		// loadHTML(),
+		// nthChild(),
+		// nthLastChild(),
+		// nthOfType(),
+		// nthLastOfType(),
+		// nthChildFind(),
+		// findID(),
+		// findClass(),
 		findAttr(),
-		findName(),
+		// findName(),
 	)
 	fmt.Printf("%#v", totalInfos)
 }

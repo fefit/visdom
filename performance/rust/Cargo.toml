@@ -5,3 +5,6 @@ version = "0.0.1"
 
 [dependencies]
 visdom = { path = "../../../visdom"}
+
+[profile.release]
+debug = true

@@ -206,14 +206,14 @@ fn find_name() -> RunResult {
 
 fn main() -> UniResult {
 	let mut total_info: Vec<TotalInfo> = Vec::with_capacity(10);
-	total_info.push(load_html()?);
+	// total_info.push(load_html()?);
 	// total_info.push(nth_child()?);
 	// total_info.push(nth_last_child()?);
 	// total_info.push(nth_of_type()?);
 	// total_info.push(nth_last_of_type()?);
 	// total_info.push(nth_child_find()?);
 	// total_info.push(find_id()?);
-	// total_info.push(find_class()?);
+	total_info.push(find_class()?);
 	// total_info.push(find_attr()?);
 	// total_info.push(find_name()?);
 	println!("Total info: {:?}", total_info);

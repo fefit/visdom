@@ -415,17 +415,21 @@ impl IElementTrait for Dom {
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
 		// use lowercase to get attribute: issue: #2
-		let name = name.to_ascii_lowercase();
 		if let Some(meta) = &self.node.borrow().meta {
-			for attr in &meta.borrow().attrs {
-				if let Some(key) = &attr.key {
-					// compare with lowercase
-					if key.content.to_ascii_lowercase() == name {
-						if let Some(value) = &attr.value {
-							let attr_value = value.content.clone();
-							return Some(IAttrValue::Value(attr_value, attr.quote));
-						} else {
-							return Some(IAttrValue::True);
+			// if has meta, then compare with lowercase
+			let attrs = &meta.borrow().attrs;
+			if !attrs.is_empty() {
+				let name = name.to_ascii_lowercase();
+				for attr in attrs {
+					if let Some(key) = &attr.key {
+						// compare with lowercase
+						if key.content.to_ascii_lowercase() == name {
+							if let Some(value) = &attr.value {
+								let attr_value = value.content.clone();
+								return Some(IAttrValue::Value(attr_value, attr.quote));
+							} else {
+								return Some(IAttrValue::True);
+							}
 						}
 					}
 				}
