@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 	"time"
@@ -16,9 +17,35 @@ const (
 	NODECOUNT = 3000
 )
 
+// TotalInfo :total information
 type TotalInfo struct {
 	UsedTime float64
 	Selector string
+}
+
+func getFileContent(file string) string {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(content)
+}
+
+func loadHtml() TotalInfo {
+	content := getFileContent("../data/index.html")
+	startTime := time.Now()
+	for i := 0; i < LOOPTIMES; i++ {
+		_, err := goquery.NewDocumentFromReader(strings.NewReader(content))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	endTime := time.Now()
+	usedTime := float64(endTime.Sub(startTime).Nanoseconds())
+	return TotalInfo{
+		Selector: "",
+		UsedTime: (usedTime / 1.0e6 / float64(LOOPTIMES)),
+	}
 }
 
 func execSelector(html *string, selector *string, init func(*goquery.Document) func(selector *string)) TotalInfo {
@@ -121,7 +148,7 @@ func nthChildFind() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
-func findId() TotalInfo {
+func findID() TotalInfo {
 	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
 	html := fmt.Sprintf("<ul>%s%s</ul>", htmlItems, "<li id='target'></li>")
 	selector := "#target"
@@ -139,7 +166,7 @@ func findId() TotalInfo {
 
 func findClass() TotalInfo {
 	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
-	html := fmt.Sprintf("<ul>%s%s</ul>", htmlItems, "<li class='target'></li>")
+	html := fmt.Sprintf("<ul>%s%s</ul>", htmlItems, "<li CLASS='target'></li>")
 	selector := ".target"
 	init := func(doc *goquery.Document) func(*string) {
 		ul := doc.Find("ul")
@@ -169,17 +196,35 @@ func findAttr() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func findName() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := "dt"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.Find(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.Find(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
+		loadHtml(),
 		nthChild(),
 		nthLastChild(),
 		nthOfType(),
 		nthLastOfType(),
 		nthChildFind(),
-		findId(),
+		findID(),
 		findClass(),
 		findAttr(),
+		findName(),
 	)
 	fmt.Printf("%#v", totalInfos)
 }

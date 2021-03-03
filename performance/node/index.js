@@ -1,8 +1,24 @@
 const cheerio = require("cheerio");
+const fs = require("fs");
 const NODECOUNT = 3000;
 const LOOPTIMES = 200;
 
-function execTimesAvg(cb){
+
+function getFileContent(file) {
+  return fs.readFileSync(file, 'utf8').toString()
+}
+
+function loadHtml() {
+  const content = getFileContent("../data/index.html");
+  return {
+    selector: '',
+    usedTime: execTimesAvg(function () {
+      cheerio.load(content, null, false)
+    })
+  };
+}
+
+function execTimesAvg(cb) {
   const startTime = Date.now();
   for (let i = 0; i < LOOPTIMES; i++) {
     cb();
@@ -11,7 +27,7 @@ function execTimesAvg(cb){
   return elapsed / LOOPTIMES;
 }
 
-function nthChild(){
+function nthChild() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}</ul>`;
   const selector = ":nth-child(2n),:nth-child(3n),:nth-child(5n)";
   const $ = cheerio.load(html, null, false);
@@ -20,13 +36,13 @@ function nthChild(){
   console.log(`Find: ${ul.children(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       ul.children(selector);
     })
   };
 }
 
-function nthLastChild(){
+function nthLastChild() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}</ul>`;
   const selector = ":nth-last-child(2n),:nth-last-child(3n),:nth-last-child(5n)";
   const $ = cheerio.load(html, null, false);
@@ -35,14 +51,14 @@ function nthLastChild(){
   console.log(`Find: ${ul.children(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       ul.children(selector);
     })
   };
 }
 
-function nthOfType(){
-  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT/2)}</dl>`;
+function nthOfType() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
   const selector = ":nth-of-type(2n),:nth-of-type(3n)";
   const $ = cheerio.load(html, null, false);
   let dl = $("dl");
@@ -50,14 +66,14 @@ function nthOfType(){
   console.log(`Find: ${dl.children(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       dl.children(selector);
     })
   };
 }
 
-function nthLastOfType(){
-  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT/2)}</dl>`;
+function nthLastOfType() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
   const selector = ":nth-last-of-type(2n),:nth-last-of-type(3n)";
   const $ = cheerio.load(html, null, false);
   let dl = $("dl");
@@ -65,13 +81,13 @@ function nthLastOfType(){
   console.log(`Find: ${dl.children(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       dl.children(selector);
     })
   };
 }
 
-function nthChildFind(){
+function nthChildFind() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}</ul>`;
   const selector = ":nth-child(2n),:nth-child(3n),:nth-child(5n)";
   const $ = cheerio.load(html, null, false);
@@ -80,13 +96,13 @@ function nthChildFind(){
   console.log(`Find: ${ul.find(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       ul.find(selector);
     })
   };
 }
 
-function findId(){
+function findId() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}<li id='target'></li></ul>`;
   const selector = "#target";
   const $ = cheerio.load(html, null, false);
@@ -95,13 +111,13 @@ function findId(){
   console.log(`Find: ${ul.find(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       ul.find(selector);
     })
   };
 }
 
-function findClass(){
+function findClass() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}<li class='target'></li></ul>`;
   const selector = ".target";
   const $ = cheerio.load(html, null, false);
@@ -110,14 +126,14 @@ function findClass(){
   console.log(`Find: ${ul.find(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       ul.find(selector);
     })
   };
 }
 
-function findAttr(){
-  const html = `<dl>${"<dt></dt><dd contenteditable></dd>".repeat(NODECOUNT/2)}</dl>`;
+function findAttr() {
+  const html = `<dl>${"<dt></dt><dd contenteditable></dd>".repeat(NODECOUNT / 2)}</dl>`;
   const selector = "[contenteditable]";
   const $ = cheerio.load(html, null, false);
   let dl = $("dl");
@@ -125,15 +141,16 @@ function findAttr(){
   console.log(`Find: ${dl.find(selector).length}`);
   return {
     selector,
-    usedTime: execTimesAvg(function(){
+    usedTime: execTimesAvg(function () {
       dl.find(selector);
     })
   };
 }
 
 
-function main(){
+function main() {
   const result = [
+    loadHtml(),
     nthChild(),
     nthLastChild(),
     nthOfType(),
