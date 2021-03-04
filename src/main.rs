@@ -6,12 +6,12 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<Form:Item><Form:Item>
+	const HTML: &str = r##"<Form:Item xpath="\A\B\C"><Form:Item>
 	"##;
 	let root = Vis::load(HTML)?;
 	let content = root.find("FORm\\:ITEM");
 	println!("content:{}", content.length());
-	println!("{:?}", content.attr("xmln:id"));
+	println!("{:?}", content.attr("xpath"));
 	// let texts = content
 	// 	.texts(0)
 	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));
