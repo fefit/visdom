@@ -147,6 +147,21 @@ function findAttr() {
   };
 }
 
+function findName() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
+  const selector = "dt";
+  const $ = cheerio.load(html, null, false);
+  let dl = $("dl");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${dl.find(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      dl.find(selector);
+    })
+  };
+}
+
 
 function main() {
   const result = [
@@ -159,6 +174,7 @@ function main() {
     findId(),
     findClass(),
     findAttr(),
+    findName()
   ];
   console.log(result);
 }

@@ -531,3 +531,30 @@ fn test_content_text() -> Result {
 	// return
 	Ok(())
 }
+
+#[test]
+fn test_selector_header() -> Result {
+	let html = r#"<h1></h1><div></div>"#;
+	let root = Vis::load(html)?;
+	let hgroups = root.find(":header");
+	assert_eq!(hgroups.length(), 1);
+	let not_hgroups = root.find(":not(:header)");
+	assert_eq!(not_hgroups.length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_selector_contains() -> Result {
+	let html = r#"<h1>abc</h1><div>a&amp;</div>"#;
+	let root = Vis::load(html)?;
+	// has 'a'
+	let text_a = root.find(":contains('a')");
+	assert_eq!(text_a.length(), 2);
+	// 'b'
+	let text_b = root.find(":contains('b')");
+	assert_eq!(text_b.length(), 1);
+	// escape ;
+	let text_escape = root.find(":contains(\"&\")");
+	assert_eq!(text_escape.length(), 1);
+	Ok(())
+}

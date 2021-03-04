@@ -215,16 +215,16 @@ func findName() TotalInfo {
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
-		// loadHTML(),
-		// nthChild(),
-		// nthLastChild(),
-		// nthOfType(),
-		// nthLastOfType(),
-		// nthChildFind(),
-		// findID(),
-		// findClass(),
+		loadHTML(),
+		nthChild(),
+		nthLastChild(),
+		nthOfType(),
+		nthLastOfType(),
+		nthChildFind(),
+		findID(),
+		findClass(),
 		findAttr(),
-		// findName(),
+		findName(),
 	)
 	fmt.Printf("%#v", totalInfos)
 }
