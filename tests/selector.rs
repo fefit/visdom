@@ -533,7 +533,7 @@ fn test_content_text() -> Result {
 }
 
 #[test]
-fn test_selector_header() -> Result {
+fn test_selector_pseudo_header() -> Result {
 	let html = r#"<h1></h1><div></div>"#;
 	let root = Vis::load(html)?;
 	let hgroups = root.find(":header");
@@ -544,7 +544,7 @@ fn test_selector_header() -> Result {
 }
 
 #[test]
-fn test_selector_contains() -> Result {
+fn test_selector_pseudo_contains() -> Result {
 	let html = r#"<h1>abc</h1><div>a&amp;</div>"#;
 	let root = Vis::load(html)?;
 	// has 'a'
@@ -556,5 +556,15 @@ fn test_selector_contains() -> Result {
 	// escape ;
 	let text_escape = root.find(":contains(\"&\")");
 	assert_eq!(text_escape.length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_empty() -> Result {
+	let html = r#"<h1>abc</h1><div></div><p><!--comment--></p><b> </b>"#;
+	let root = Vis::load(html)?;
+	// empty
+	let empty = root.find(":empty");
+	assert_eq!(empty.length(), 2);
 	Ok(())
 }

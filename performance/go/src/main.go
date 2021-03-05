@@ -212,19 +212,87 @@ func findName() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func findPrev() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := "dd"
+	init := func(doc *goquery.Document) func(*string) {
+		dt := doc.Find("dl dt")
+		fmt.Println()
+		fmt.Printf("Find: %d", dt.PrevFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dt.PrevFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func findPrevAll() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := "dd"
+	init := func(doc *goquery.Document) func(*string) {
+		dt := doc.Find("dl dt")
+		fmt.Println()
+		fmt.Printf("Find: %d", dt.PrevAllFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dt.PrevAllFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func findNext() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := "dd"
+	init := func(doc *goquery.Document) func(*string) {
+		dt := doc.Find("dl dt")
+		fmt.Println()
+		fmt.Printf("Find: %d", dt.NextFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dt.NextFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func findNextAll() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := "dd"
+	init := func(doc *goquery.Document) func(*string) {
+		dt := doc.Find("dl dt")
+		fmt.Println()
+		fmt.Printf("Find: %d", dt.NextAllFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dt.NextAllFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
-		loadHTML(),
-		nthChild(),
-		nthLastChild(),
-		nthOfType(),
-		nthLastOfType(),
-		nthChildFind(),
-		findID(),
+		// loadHTML(),
+		// nthChild(),
+		// nthLastChild(),
+		// nthOfType(),
+		// nthLastOfType(),
+		// nthChildFind(),
+		// findID(),
 		findClass(),
-		findAttr(),
-		findName(),
+		// findAttr(),
+		// findName(),
+		// findPrev(),
+		// findPrevAll(),
+		// findNext(),
+		// findNextAll(),
 	)
 	fmt.Printf("%#v", totalInfos)
 }

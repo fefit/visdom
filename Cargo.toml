@@ -13,7 +13,7 @@ license = "MIT"
 exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "performance/*.*"]
 
 [dependencies]
-mesdoc = "0.2.0"
+mesdoc = "0.2.1"
 rphtml = "0.4.3"
 
 [dev-dependencies]

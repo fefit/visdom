@@ -162,19 +162,82 @@ function findName() {
   };
 }
 
+function findPrev() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
+  const selector = "dd";
+  const $ = cheerio.load(html, null, false);
+  let dt = $("dl dt");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${dt.prev(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      dt.prev(selector);
+    })
+  };
+}
+
+function findPrevAll() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
+  const selector = "dd";
+  const $ = cheerio.load(html, null, false);
+  let dt = $("dl dt");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${dt.prevAll(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      dt.prevAll(selector);
+    })
+  };
+}
+
+function findNext() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
+  const selector = "dd";
+  const $ = cheerio.load(html, null, false);
+  let dt = $("dl dt");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${dt.next(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      dt.next(selector);
+    })
+  };
+}
+
+function findNextAll() {
+  const html = `<dl>${"<dt></dt><dd></dd>".repeat(NODECOUNT / 2)}</dl>`;
+  const selector = "dd";
+  const $ = cheerio.load(html, null, false);
+  let dt = $("dl dt");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${dt.nextAll(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      dt.nextAll(selector);
+    })
+  };
+}
 
 function main() {
   const result = [
-    loadHtml(),
-    nthChild(),
-    nthLastChild(),
-    nthOfType(),
-    nthLastOfType(),
-    nthChildFind(),
-    findId(),
-    findClass(),
-    findAttr(),
-    findName()
+    // loadHtml(),
+    // nthChild(),
+    // nthLastChild(),
+    // nthOfType(),
+    // nthLastOfType(),
+    // nthChildFind(),
+    // findId(),
+    // findClass(),
+    // findAttr(),
+    // findName(),
+    // findPrev(),
+    findPrevAll(),
+    // findNext(),
+    // findNextAll(),
   ];
   console.log(result);
 }

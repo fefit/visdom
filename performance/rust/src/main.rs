@@ -204,18 +204,90 @@ fn find_name() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
+fn find_prev() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.prev(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.prev(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_prev_all() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.prev_all(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.prev_all(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_next() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.next(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.next(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_next_all() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.next_all(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.next_all(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
 fn main() -> UniResult {
 	let mut total_info: Vec<TotalInfo> = Vec::with_capacity(10);
-	total_info.push(load_html()?);
-	total_info.push(nth_child()?);
-	total_info.push(nth_last_child()?);
-	total_info.push(nth_of_type()?);
-	total_info.push(nth_last_of_type()?);
-	total_info.push(nth_child_find()?);
-	total_info.push(find_id()?);
+	// total_info.push(load_html()?);
+	// total_info.push(nth_child()?);
+	// total_info.push(nth_last_child()?);
+	// total_info.push(nth_of_type()?);
+	// total_info.push(nth_last_of_type()?);
+	// total_info.push(nth_child_find()?);
+	// total_info.push(find_id()?);
 	total_info.push(find_class()?);
-	total_info.push(find_attr()?);
-	total_info.push(find_name()?);
+	// total_info.push(find_attr()?);
+	// total_info.push(find_name()?);
+	// total_info.push(find_prev()?);
+	// total_info.push(find_prev_all()?);
+	// total_info.push(find_next()?);
+	// total_info.push(find_next_all()?);
 	println!("Total info: {:?}", total_info);
 	Ok(())
 }

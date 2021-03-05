@@ -6,7 +6,7 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<h1>abc</h1><div>a&amp;</div>
+	const HTML: &str = r##"<h1>abc</h1><div>a&amp;</div><a></a>
 	"##;
 	let root = Vis::load(HTML)?;
 	let content = root.find(":contains('a')");
