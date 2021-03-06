@@ -39,6 +39,148 @@ where
 	format!("{:?}", elapsed / LOOPTIMES)
 }
 
+fn find_id() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}{}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT),
+		"<li id='target'></li>"
+	);
+	const SELECTOR: &str = "#target";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.find(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.find(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_class() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}{}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT),
+		"<li class='target'></li>"
+	);
+	const SELECTOR: &str = ".target";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.find(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.find(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_name() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dt";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.find(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.find(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_attr() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd contenteditable></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "[contenteditable]";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.find(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.find(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_prev() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.prev(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.prev(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_prev_all() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.prev_all(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.prev_all(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_next() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.next(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.next(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn find_next_all() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = "dd";
+	let root = Vis::load(&html)?;
+	let dt = root.children("dl dt");
+	println!("Finded: {:?}", dt.next_all(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dt.next_all(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
 fn nth_child() -> RunResult {
 	let html: String = format!(
 		r##"
@@ -52,6 +194,28 @@ fn nth_child() -> RunResult {
 	let root = Vis::load(&html)?;
 	let ul = root.children("ul");
 	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn first_child() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
+	);
+	const SELECTOR: &str = ":nth-child(10)";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!(
+		"Finded: {:?}",
+		ul.children(SELECTOR).get(0).unwrap().index()
+	);
 	let used_time = exec_times_avg(|| {
 		ul.children(SELECTOR);
 	});
@@ -130,164 +294,23 @@ fn nth_child_find() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
-fn find_id() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <ul>
-	      {}{}
-	    </ul>
-	  "##,
-		String::from("<li></li>").repeat(NODECOUNT),
-		"<li id='target'></li>"
-	);
-	const SELECTOR: &str = "#target";
-	let root = Vis::load(&html)?;
-	let ul = root.children("ul");
-	println!("Finded: {:?}", ul.find(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		ul.find(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_class() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <ul>
-	      {}{}
-	    </ul>
-	  "##,
-		String::from("<li></li>").repeat(NODECOUNT),
-		"<li class='target'></li>"
-	);
-	const SELECTOR: &str = ".target";
-	let root = Vis::load(&html)?;
-	let ul = root.children("ul");
-	println!("Finded: {:?}", ul.find(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		ul.find(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_attr() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd contenteditable></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "[contenteditable]";
-	let root = Vis::load(&html)?;
-	let dl = root.children("dl");
-	println!("Finded: {:?}", dl.find(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dl.find(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_name() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "dt";
-	let root = Vis::load(&html)?;
-	let dl = root.children("dl");
-	println!("Finded: {:?}", dl.find(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dl.find(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_prev() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "dd";
-	let root = Vis::load(&html)?;
-	let dt = root.children("dl dt");
-	println!("Finded: {:?}", dt.prev(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dt.prev(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_prev_all() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "dd";
-	let root = Vis::load(&html)?;
-	let dt = root.children("dl dt");
-	println!("Finded: {:?}", dt.prev_all(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dt.prev_all(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_next() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "dd";
-	let root = Vis::load(&html)?;
-	let dt = root.children("dl dt");
-	println!("Finded: {:?}", dt.next(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dt.next(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
-fn find_next_all() -> RunResult {
-	let html: String = format!(
-		r##"
-	    <dl>{}</dl>
-	  "##,
-		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
-	);
-	const SELECTOR: &str = "dd";
-	let root = Vis::load(&html)?;
-	let dt = root.children("dl dt");
-	println!("Finded: {:?}", dt.next_all(SELECTOR).length());
-	let used_time = exec_times_avg(|| {
-		dt.next_all(SELECTOR);
-	});
-	Ok((SELECTOR, used_time))
-}
-
 fn main() -> UniResult {
 	let mut total_info: Vec<TotalInfo> = Vec::with_capacity(10);
 	// total_info.push(load_html()?);
-	// total_info.push(nth_child()?);
-	// total_info.push(nth_last_child()?);
-	// total_info.push(nth_of_type()?);
-	// total_info.push(nth_last_of_type()?);
-	// total_info.push(nth_child_find()?);
 	// total_info.push(find_id()?);
-	total_info.push(find_class()?);
-	// total_info.push(find_attr()?);
+	// total_info.push(find_class()?);
 	// total_info.push(find_name()?);
+	// total_info.push(find_attr()?);
 	// total_info.push(find_prev()?);
 	// total_info.push(find_prev_all()?);
 	// total_info.push(find_next()?);
 	// total_info.push(find_next_all()?);
+	// total_info.push(nth_child()?);
+	total_info.push(first_child()?);
+	// total_info.push(nth_last_child()?);
+	// total_info.push(nth_of_type()?);
+	// total_info.push(nth_last_of_type()?);
+	// total_info.push(nth_child_find()?);
 	println!("Total info: {:?}", total_info);
 	Ok(())
 }

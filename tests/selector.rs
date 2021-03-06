@@ -1,6 +1,6 @@
-use mesdoc::interface::{Elements, IAttrValue};
 use std::error::Error;
 use std::result::Result as StdResult;
+use visdom::types::{Elements, IAttrValue};
 use visdom::Vis;
 type Result = StdResult<(), Box<dyn Error>>;
 const HTML: &str = r##"

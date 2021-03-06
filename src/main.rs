@@ -1,7 +1,7 @@
-use mesdoc::interface::IDocumentTrait;
 use std::thread;
 use std::time::SystemTime;
 use std::{collections::VecDeque, error::Error};
+use visdom::types::IDocumentTrait;
 use visdom::types::INodeType;
 use visdom::Vis;
 
@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	const HTML: &str = r##"<h1>abc</h1><div>a&amp;</div><a></a>
 	"##;
 	let root = Vis::load(HTML)?;
-	let content = root.find(":contains('a')");
+	let content = root.find(":nth-child(10)");
 	println!("content:{}", content.length());
 	println!("{:?}", content.attr("xpath"));
 	// let texts = content
