@@ -270,7 +270,6 @@ container.append(&mut third_child);
 
 ## Depedencies
 
-- Elements API Library：[https://github.com/fefit/mesdoc](https://github.com/fefit/mesdoc)
 - Html Parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
 - Html Entity encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 

@@ -196,6 +196,38 @@ func findNextAll() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func empty() TotalInfo {
+	htmlItems := strings.Repeat("<li></li><li>a</li>", NODECOUNT/2)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":first-child"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func contains() TotalInfo {
+	htmlItems := strings.Repeat("<li></li><li>a</li>", NODECOUNT/2)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":contains('a')"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func firstChild() TotalInfo {
 	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
 	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
@@ -475,11 +507,13 @@ func main() {
 		// findID(),
 		// findClass(),
 		// findName(),
-		findAttr(),
+		// findAttr(),
 		// findPrev(),
 		// findPrevAll(),
 		// findNext(),
 		// findNextAll(),
+		// empty(),
+		contains(),
 		// firstChild(),
 		// lastChild(),
 		// firstOfType(),

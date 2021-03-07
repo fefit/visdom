@@ -181,6 +181,40 @@ fn find_next_all() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
+fn empty() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>{}</ul>
+	  "##,
+		String::from("<li></li><li>a</li>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":empty";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn contains() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>{}</ul>
+	  "##,
+		String::from("<li></li><li>a</li>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":contains('a')";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
 fn first_child() -> RunResult {
 	let html: String = format!(
 		r##"
@@ -487,12 +521,14 @@ fn main() -> UniResult {
 	// total_info.push(load_html()?);
 	// total_info.push(find_id()?);
 	// total_info.push(find_class()?);
-	total_info.push(find_name()?);
+	// total_info.push(find_name()?);
 	// total_info.push(find_attr()?);
 	// total_info.push(find_prev()?);
 	// total_info.push(find_prev_all()?);
 	// total_info.push(find_next()?);
 	// total_info.push(find_next_all()?);
+	// total_info.push(empty()?);
+	total_info.push(contains()?);
 	// total_info.push(first_child()?);
 	// total_info.push(last_child()?);
 	// total_info.push(first_of_type()?);

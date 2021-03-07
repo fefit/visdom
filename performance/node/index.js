@@ -147,6 +147,36 @@ function findNextAll() {
   };
 }
 
+function empty() {
+  const html = `<ul>${"<li></li><li>a</li>".repeat(NODECOUNT/2)}</ul>`;
+  const selector = ":empty";
+  const $ = cheerio.load(html, null, false);
+  let ul = $("ul");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${ul.children(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      ul.children(selector);
+    })
+  };
+}
+
+function contains() {
+  const html = `<ul>${"<li></li><li>a</li>".repeat(NODECOUNT/2)}</ul>`;
+  const selector = ":contains('a')";
+  const $ = cheerio.load(html, null, false);
+  let ul = $("ul");
+  console.log(`Execute: ${selector}`);
+  console.log(`Find: ${ul.children(selector).length}`);
+  return {
+    selector,
+    usedTime: execTimesAvg(function () {
+      ul.children(selector);
+    })
+  };
+}
+
 function firstChild() {
   const html = `<ul>${"<li></li>".repeat(NODECOUNT)}</ul>`;
   const selector = ":first-child";
@@ -408,32 +438,34 @@ function nthChildFind() {
 
 function main() {
   const result = [
-    loadHtml(),
-    findId(),
-    findClass(),
-    findName(),
-    findAttr(),
-    findPrev(),
+    // loadHtml(),
+    // findId(),
+    // findClass(),
+    // findName(),
+    // findAttr(),
+    // findPrev(),
     // findPrevAll(),
-    findNext(),
+    // findNext(),
     // findNextAll(),
-    firstChild(),
-    lastChild(),
-    firstOfType(),
-    lastOfType(),
-    nthChild(),
-    nthChild10(),
-    nthChild2n5(),
-    nthLastChild(),
-    nthLastChild10(),
-    nthLastChild2n5(),
-    nthOfType(),
-    nthOfType10(),
-    nthOfType2n5(),
-    nthLastOfType(),
-    nthLastOfType10(),
-    nthLastOfType2n5(),
-    nthChildFind(),
+    // empty(),
+    contains(),
+    // firstChild(),
+    // lastChild(),
+    // firstOfType(),
+    // lastOfType(),
+    // nthChild(),
+    // nthChild10(),
+    // nthChild2n5(),
+    // nthLastChild(),
+    // nthLastChild10(),
+    // nthLastChild2n5(),
+    // nthOfType(),
+    // nthOfType10(),
+    // nthOfType2n5(),
+    // nthLastOfType(),
+    // nthLastOfType10(),
+    // nthLastOfType2n5(),
+    // nthChildFind(),
   ];
   console.log(result);
 }

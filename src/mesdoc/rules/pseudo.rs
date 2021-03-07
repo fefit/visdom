@@ -779,12 +779,19 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 				.or_else(|| Rule::param(&data, ("regexp", 0, "2")))
 				.or_else(|| Rule::param(&data, ("regexp", 0, "3")))
 				.expect("The :contains selector must have a content");
+			let search_count = search.len();
 			Matcher {
 				one_handle: Some(Box::new(move |ele, _| {
-					if search.is_empty() {
+					if search_count == 0 {
 						return true;
 					}
-					ele.text().contains(search)
+					let text = ele.text();
+					let text_count = text.len();
+					match text_count.cmp(&search_count) {
+						Ordering::Greater => text.contains(search),
+						Ordering::Equal => text == search,
+						_ => false,
+					}
 				})),
 				..Default::default()
 			}
