@@ -6,10 +6,10 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<h1>abc</h1><div>a&amp;</div><a></a>
+	const HTML: &str = r##"<input type="text" READONly />
 	"##;
 	let root = Vis::load(HTML)?;
-	let content = root.find(":nth-child(10)");
+	let content = root.find("input[readoNLy]");
 	println!("content:{}", content.length());
 	println!("{:?}", content.attr("xpath"));
 	// let texts = content

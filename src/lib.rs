@@ -469,6 +469,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		}
 		None
 	}
+
 	/// impl `set_attribute`
 	fn set_attribute(&mut self, name: &str, value: Option<&str>) {
 		let mut need_quote = false;
@@ -501,16 +502,22 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				AttrData { content }
 			});
 			// first, check if the attribute has exist.
-			for attr in &mut meta.borrow_mut().attrs {
-				if let Some(key) = &attr.key {
-					if key.content == name {
-						// find the attribute
-						attr.value = value;
-						return;
-					}
-				}
+			let lc_name = name.to_ascii_lowercase();
+			let find_index = if let Some(&index) = meta.borrow().lc_name_map.get(&lc_name) {
+				Some(index)
+			} else {
+				None
+			};
+			// find the attribute, just set the value
+			if let Some(index) = find_index {
+				meta.borrow_mut().attrs[index].value = value;
+				return;
 			}
-			// new attribute, add it to queue.
+			// new attribute, add it to the attrs and add a lowercase name to lc_name_map
+			let index = meta.borrow().attrs.len();
+			// insert name and index into name map
+			meta.borrow_mut().lc_name_map.insert(lc_name, index);
+			// add to attrs
 			let quote = if value.is_some() { Some(quote) } else { None };
 			meta.borrow_mut().attrs.push(Attr {
 				key: Some(AttrData {
@@ -526,14 +533,18 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	/// impl `remove_attribute`
 	fn remove_attribute(&mut self, name: &str) {
 		if let Some(meta) = &self.borrow().meta {
-			let find_index = meta.borrow().attrs.iter().position(|attr| {
-				if let Some(key) = &attr.key {
-					return key.content == name;
+			let mut find_index: Option<usize> = None;
+			if !meta.borrow().lc_name_map.is_empty() {
+				let lc_name = name.to_ascii_lowercase();
+				if let Some(&index) = meta.borrow().lc_name_map.get(&lc_name) {
+					find_index = Some(index);
 				}
-				false
-			});
+			}
 			if let Some(index) = find_index {
-				meta.borrow_mut().attrs.remove(index);
+				// set attr data as null data
+				meta.borrow_mut().attrs[index] = Attr::default();
+				// remove name from names map
+				meta.borrow_mut().lc_name_map.remove(name);
 			}
 		}
 	}
