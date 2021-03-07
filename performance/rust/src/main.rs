@@ -203,13 +203,11 @@ fn nth_child() -> RunResult {
 fn first_child() -> RunResult {
 	let html: String = format!(
 		r##"
-	    <ul>
-	      {}
-	    </ul>
+	    <ul>{}</ul>
 	  "##,
-		String::from("<li></li>").repeat(NODECOUNT)
+		String::from("<li></li><a></a>").repeat(NODECOUNT / 2)
 	);
-	const SELECTOR: &str = ":nth-child(10)";
+	const SELECTOR: &str = ":last-of-type";
 	let root = Vis::load(&html)?;
 	let ul = root.children("ul");
 	println!(
