@@ -20,3 +20,8 @@ pub const NAME_SELECTOR_ATTR: &str = "attr";
 pub const NAME_SELECTOR_NAME: &str = "name";
 pub const NAME_SELECTOR_CLASS: &str = "class";
 pub const NAME_SELECTOR_ID: &str = "id";
+// alias selectors
+pub const SELECTOR_ALIAS_NAME_HEADER: (&str, &str) = (":header", "h1,h2,h3,h4,h5,h6");
+pub const SELECTOR_ALIAS_NAME_SUBMIT: (&str, &str) =
+	(":submit", "input[type='submit'],button[type='submit']");
+pub const SELECTOR_ALIAS_NAME_INPUT: (&str, &str) = (":input", "input,select,textarea,button");

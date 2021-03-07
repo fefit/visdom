@@ -16,12 +16,13 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 			let attr_value = Rule::param(&data, ("regexp", 0, "2"))
 				.or_else(|| Rule::param(&data, ("regexp", 0, "3")))
 				.or_else(|| Rule::param(&data, ("regexp", 0, "4")));
+			let match_mode = Rule::param(&data, ("regexp", 0, "1")).unwrap_or("");
 			let handle: Box<dyn Fn(&Option<IAttrValue>) -> bool> = if let Some(attr_value) = attr_value {
 				if attr_value.is_empty() {
 					// empty attribute value
 					Box::new(|_val: &Option<IAttrValue>| false)
 				} else {
-					match Rule::param(&data, ("regexp", 0, "1")).unwrap_or("") {
+					match match_mode {
 						// begin with value
 						"^" => Box::new(move |val: &Option<IAttrValue>| match val {
 							Some(IAttrValue::Value(v, _)) => v.starts_with(attr_value),

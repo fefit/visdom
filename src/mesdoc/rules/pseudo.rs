@@ -2,7 +2,10 @@ use crate::mesdoc::interface::{BoxDynElement, Elements, IElementTrait, INodeType
 use crate::mesdoc::selector::pattern::Nth;
 use crate::mesdoc::selector::rule::{Matcher, MatcherData, Rule, RuleDefItem, RuleItem};
 use crate::mesdoc::{
-	constants::{DEF_NODES_LEN, PRIORITY_PSEUDO_SELECTOR},
+	constants::{
+		DEF_NODES_LEN, PRIORITY_PSEUDO_SELECTOR, SELECTOR_ALIAS_NAME_HEADER, SELECTOR_ALIAS_NAME_INPUT,
+		SELECTOR_ALIAS_NAME_SUBMIT,
+	},
 	selector::rule::MatchSpecifiedHandle,
 };
 use std::cmp::Ordering;
@@ -10,7 +13,7 @@ use std::{collections::HashMap, ops::Range};
 
 const PRIORITY: u32 = PRIORITY_PSEUDO_SELECTOR;
 
-fn get_index(index: &Option<&str>) -> isize {
+fn nth_index_to_number(index: &Option<&str>) -> isize {
 	index
 		.expect("Nth's n and index must have one")
 		.parse::<isize>()
@@ -280,7 +283,7 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 			let index = Rule::param(&data, ("nth", 0, "index"));
 			let handle = make_asc_or_desc_nth_child_handle(asc);
 			let specified_handle = if n.is_none() {
-				let index = get_index(&index);
+				let index = nth_index_to_number(&index);
 				Some(make_asc_or_desc_nth_child_specified(asc, index))
 			} else {
 				None
@@ -514,7 +517,7 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 			let n = Rule::param(&data, ("nth", 0, "n"));
 			let index = Rule::param(&data, ("nth", 0, "index"));
 			let specified_handle = if n.is_none() {
-				let index = get_index(&index);
+				let index = nth_index_to_number(&index);
 				Some(make_asc_or_desc_nth_of_type_specified(asc, index))
 			} else {
 				None
@@ -794,42 +797,42 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 
 /// pseudo selector: `:header`
 fn pseudo_alias_header(rules: &mut Vec<RuleItem>) {
-	let selector = ":header";
+	let (selector, alias) = SELECTOR_ALIAS_NAME_HEADER;
 	let name = selector;
 	let rule = RuleDefItem(
 		name,
 		selector,
 		PRIORITY,
 		vec![],
-		Box::new(|_| Rule::make_alias("h1,h2,h3,h4,h5,h6")),
+		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());
 }
 
 /// pseudo selector: `:input`
 fn pseudo_alias_input(rules: &mut Vec<RuleItem>) {
-	let selector = ":input";
+	let (selector, alias) = SELECTOR_ALIAS_NAME_INPUT;
 	let name = selector;
 	let rule = RuleDefItem(
 		name,
 		selector,
 		PRIORITY,
 		vec![],
-		Box::new(|_| Rule::make_alias("input,select,textarea,button")),
+		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());
 }
 
 /// pseudo selector: `:submit`
 fn pseudo_alias_submit(rules: &mut Vec<RuleItem>) {
-	let selector = ":submit";
+	let (selector, alias) = SELECTOR_ALIAS_NAME_SUBMIT;
 	let name = selector;
 	let rule = RuleDefItem(
 		name,
 		selector,
 		PRIORITY,
 		vec![],
-		Box::new(|_| Rule::make_alias("input[type='submit'],button[type='submit']")),
+		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());
 }

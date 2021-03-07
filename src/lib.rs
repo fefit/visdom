@@ -1,13 +1,13 @@
 //! Visdom
 //!
 //! ### Description
-//! A library use jquery-like api to operate html document, well experienced for scraping and keep away from scraping.
+//! A fast library using jquery-like API for operating html document, useful for html scraping or keep away from scraping.
 //!
 //! ### Features
-//! - Most css selectors, e.g. `#id`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`, `:contains` and so on.
-//! - Most selector methods, such as `find`,`filter`,`has`, `not`, `add`, `closest`.
-//! - Powerful text modification ability: `set_html`, `set_text`, `append_text`, `prepend_text` can used for text node.
-//! - Well-defined and easy to use apis.
+//! - Standard css selectors: e.g. `#id`, `.class`, `p`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`,  and also some jquery like selectors such as `:contains`, `:header` and so on.
+//! - Useful selector methods: e.g. `find`,`filter`,`has`, `is`, `not`, `add`, `closest`.
+//! - Content modification: `set_html`, `set_text`, `append_text`, `prepend_text` can also used by text node.
+//! - Fast enough.
 mod mesdoc;
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
@@ -448,23 +448,22 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	/// impl `get_attribute`
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue> {
 		// use lowercase to get attribute: issue: #2
-		if let Some(meta) = &self.borrow().meta {
-			// if has meta, then compare with lowercase
-			let attrs = &meta.borrow().attrs;
-			if !attrs.is_empty() {
-				let name = name.to_ascii_lowercase();
-				for attr in attrs {
-					if let Some(key) = &attr.key {
-						// compare with lowercase
-						if key.content.to_ascii_lowercase() == name {
-							if let Some(value) = &attr.value {
-								let attr_value = value.content.clone();
-								return Some(IAttrValue::Value(attr_value, attr.quote));
-							} else {
-								return Some(IAttrValue::True);
-							}
-						}
-					}
+		let node = &self.borrow();
+		let meta = node
+			.meta
+			.as_ref()
+			.expect("Element node must have a meta field.");
+		// if has meta, then compare with lowercase
+		let lc_name_map = &meta.borrow().lc_name_map;
+		if !lc_name_map.is_empty() {
+			if let Some(&index) = lc_name_map.get(&name.to_ascii_lowercase()) {
+				let attrs = &meta.borrow().attrs;
+				let attr = &attrs[index];
+				if let Some(value) = &attr.value {
+					let attr_value = value.content.clone();
+					return Some(IAttrValue::Value(attr_value, attr.quote));
+				} else {
+					return Some(IAttrValue::True);
 				}
 			}
 		}

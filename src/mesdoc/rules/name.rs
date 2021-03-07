@@ -12,9 +12,7 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 				.expect("The 'name' selector must have a tag name")
 				.to_ascii_uppercase();
 			Matcher {
-				one_handle: Some(Box::new(move |ele, _| {
-					return ele.tag_name() == name;
-				})),
+				one_handle: Some(Box::new(move |ele, _| ele.tag_name() == name)),
 				..Default::default()
 			}
 		}),

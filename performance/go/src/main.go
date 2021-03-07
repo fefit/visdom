@@ -196,6 +196,70 @@ func findNextAll() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func firstChild() TotalInfo {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":first-child"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func lastChild() TotalInfo {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":last-child"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func firstOfType() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":first-of-type"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func lastOfType() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":last-of-type"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func nthChild() TotalInfo {
 	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
 	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
@@ -212,10 +276,26 @@ func nthChild() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
-func firstChild() TotalInfo {
+func nthChild10() TotalInfo {
 	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
 	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
-	selector := ":first-child"
+	selector := ":nth-child(10)"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func nthChild2n5() TotalInfo {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":nth-child(2n + 5)"
 	init := func(doc *goquery.Document) func(*string) {
 		ul := doc.Find("ul")
 		fmt.Println()
@@ -244,6 +324,38 @@ func nthLastChild() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func nthLastChild10() TotalInfo {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":nth-last-child(10)"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func nthLastChild2n5() TotalInfo {
+	htmlItems := strings.Repeat("<li></li>", NODECOUNT)
+	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
+	selector := ":nth-last-child(2n + 5)"
+	init := func(doc *goquery.Document) func(*string) {
+		ul := doc.Find("ul")
+		fmt.Println()
+		fmt.Printf("Find: %d", ul.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			ul.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func nthOfType() TotalInfo {
 	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
 	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
@@ -260,10 +372,74 @@ func nthOfType() TotalInfo {
 	return execSelector(&html, &selector, init)
 }
 
+func nthOfType10() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":nth-of-type(10)"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func nthOfType2n5() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":nth-of-type(2n + 5)"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
 func nthLastOfType() TotalInfo {
 	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
 	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
 	selector := ":nth-last-of-type(2n),:nth-last-of-type(3n)"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func nthLastOfType10() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":nth-last-of-type(10)"
+	init := func(doc *goquery.Document) func(*string) {
+		dl := doc.Find("dl")
+		fmt.Println()
+		fmt.Printf("Find: %d", dl.ChildrenFiltered(selector).Length())
+		fmt.Println()
+		return func(selector *string) {
+			dl.ChildrenFiltered(*selector)
+		}
+	}
+	return execSelector(&html, &selector, init)
+}
+
+func nthLastOfType2n5() TotalInfo {
+	htmlItems := strings.Repeat("<dt></dt><dd></dd>", NODECOUNT/2)
+	html := fmt.Sprintf("<dl>%s</dl>", htmlItems)
+	selector := ":nth-last-of-type(2n + 5)"
 	init := func(doc *goquery.Document) func(*string) {
 		dl := doc.Find("dl")
 		fmt.Println()
@@ -299,16 +475,27 @@ func main() {
 		// findID(),
 		// findClass(),
 		// findName(),
-		// findAttr(),
+		findAttr(),
 		// findPrev(),
 		// findPrevAll(),
 		// findNext(),
 		// findNextAll(),
+		// firstChild(),
+		// lastChild(),
+		// firstOfType(),
+		// lastOfType(),
 		// nthChild(),
-		firstChild(),
+		// nthChild10(),
+		// nthChild2n5(),
 		// nthLastChild(),
+		// nthLastChild10(),
+		// nthLastChild2n5(),
 		// nthOfType(),
+		// nthOfType10(),
+		// nthOfType2n5(),
 		// nthLastOfType(),
+		// nthLastOfType10(),
+		// nthLastOfType2n5(),
 		// nthChildFind(),
 	)
 	fmt.Printf("%#v", totalInfos)

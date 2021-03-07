@@ -181,6 +181,76 @@ fn find_next_all() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
+fn first_child() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>{}</ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
+	);
+	const SELECTOR: &str = ":first-child";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn last_child() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
+	);
+	const SELECTOR: &str = ":last-child";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn first_of_type() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":first-of-type";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn last_of_type() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":last-of-type";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
 fn nth_child() -> RunResult {
 	let html: String = format!(
 		r##"
@@ -200,20 +270,34 @@ fn nth_child() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
-fn first_child() -> RunResult {
+fn nth_child_10() -> RunResult {
 	let html: String = format!(
 		r##"
 	    <ul>{}</ul>
 	  "##,
-		String::from("<li></li><a></a>").repeat(NODECOUNT / 2)
+		String::from("<li></li>").repeat(NODECOUNT)
 	);
-	const SELECTOR: &str = ":last-of-type";
+	const SELECTOR: &str = ":nth-child(10)";
 	let root = Vis::load(&html)?;
 	let ul = root.children("ul");
-	println!(
-		"Finded: {:?}",
-		ul.children(SELECTOR).get(0).unwrap().index()
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_child_2n5() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>{}</ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
 	);
+	const SELECTOR: &str = ":nth-child(2n + 5)";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
 	let used_time = exec_times_avg(|| {
 		ul.children(SELECTOR);
 	});
@@ -230,6 +314,44 @@ fn nth_last_child() -> RunResult {
 		String::from("<li></li>").repeat(NODECOUNT)
 	);
 	const SELECTOR: &str = ":nth-last-child(2n),:nth-last-child(3n),:nth-last-child(5n)";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_last_child_10() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
+	);
+	const SELECTOR: &str = ":nth-last-child(10)";
+	let root = Vis::load(&html)?;
+	let ul = root.children("ul");
+	println!("Finded: {:?}", ul.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		ul.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_last_child_2n5() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <ul>
+	      {}
+	    </ul>
+	  "##,
+		String::from("<li></li>").repeat(NODECOUNT)
+	);
+	const SELECTOR: &str = ":nth-last-child(2n + 5)";
 	let root = Vis::load(&html)?;
 	let ul = root.children("ul");
 	println!("Finded: {:?}", ul.children(SELECTOR).length());
@@ -256,6 +378,40 @@ fn nth_of_type() -> RunResult {
 	Ok((SELECTOR, used_time))
 }
 
+fn nth_of_type_10() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":nth-of-type(10)";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_of_type_2n5() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":nth-of-type(2n+5)";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
 fn nth_last_of_type() -> RunResult {
 	let html: String = format!(
 		r##"
@@ -264,6 +420,40 @@ fn nth_last_of_type() -> RunResult {
 		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
 	);
 	const SELECTOR: &str = ":nth-last-of-type(2n),:nth-last-of-type(3n)";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_last_of_type_10() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":nth-last-of-type(10)";
+	let root = Vis::load(&html)?;
+	let dl = root.children("dl");
+	println!("Finded: {:?}", dl.children(SELECTOR).length());
+	let used_time = exec_times_avg(|| {
+		dl.children(SELECTOR);
+	});
+	Ok((SELECTOR, used_time))
+}
+
+fn nth_last_of_type_2n5() -> RunResult {
+	let html: String = format!(
+		r##"
+	    <dl>{}</dl>
+	  "##,
+		String::from("<dt></dt><dd></dd>").repeat(NODECOUNT / 2)
+	);
+	const SELECTOR: &str = ":nth-last-of-type(2n+5)";
 	let root = Vis::load(&html)?;
 	let dl = root.children("dl");
 	println!("Finded: {:?}", dl.children(SELECTOR).length());
@@ -297,17 +487,28 @@ fn main() -> UniResult {
 	// total_info.push(load_html()?);
 	// total_info.push(find_id()?);
 	// total_info.push(find_class()?);
-	// total_info.push(find_name()?);
+	total_info.push(find_name()?);
 	// total_info.push(find_attr()?);
 	// total_info.push(find_prev()?);
 	// total_info.push(find_prev_all()?);
 	// total_info.push(find_next()?);
 	// total_info.push(find_next_all()?);
+	// total_info.push(first_child()?);
+	// total_info.push(last_child()?);
+	// total_info.push(first_of_type()?);
+	// total_info.push(last_of_type()?);
 	// total_info.push(nth_child()?);
-	total_info.push(first_child()?);
+	// total_info.push(nth_child_10()?);
+	// total_info.push(nth_child_2n5()?);
 	// total_info.push(nth_last_child()?);
+	// total_info.push(nth_last_child_10()?);
+	// total_info.push(nth_last_child_2n5()?);
 	// total_info.push(nth_of_type()?);
+	// total_info.push(nth_of_type_10()?);
+	// total_info.push(nth_of_type_2n5()?);
 	// total_info.push(nth_last_of_type()?);
+	// total_info.push(nth_last_of_type_10()?);
+	// total_info.push(nth_last_of_type_2n5()?);
 	// total_info.push(nth_child_find()?);
 	println!("Total info: {:?}", total_info);
 	Ok(())
