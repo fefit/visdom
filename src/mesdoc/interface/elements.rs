@@ -11,7 +11,7 @@ use crate::mesdoc::{
 	selector::rule::MatchSpecifiedHandle,
 	utils::{get_class_list, retain_by_index, to_static_str},
 };
-use std::collections::HashSet;
+use std::{cell::Cell, collections::HashSet};
 use std::{
 	cmp::Ordering,
 	collections::VecDeque,
@@ -92,6 +92,7 @@ pub(crate) enum FilterType {
 #[derive(Default)]
 pub struct Elements<'a> {
 	nodes: Vec<BoxDynElement<'a>>,
+	filters: Cell<Option<Vec<usize>>>,
 }
 
 /*
@@ -136,17 +137,22 @@ impl<'a> Elements<'a> {
 	pub(crate) fn with_node(ele: &BoxDynElement) -> Self {
 		Elements {
 			nodes: vec![ele.cloned()],
+			filters: Cell::new(None),
 		}
 	}
 	// with nodes
 	pub fn with_nodes(nodes: Vec<BoxDynElement<'a>>) -> Self {
-		Elements { nodes }
+		Elements {
+			nodes,
+			filters: Cell::new(None),
+		}
 	}
 
 	// with capacity
 	pub fn with_capacity(size: usize) -> Self {
 		Elements {
 			nodes: Vec::with_capacity(size),
+			filters: Cell::new(None),
 		}
 	}
 	/*------------get/set element nodes---------------*/
@@ -2031,6 +2037,9 @@ impl<'a> IntoIterator for Elements<'a> {
 
 impl<'a> From<Vec<BoxDynElement<'a>>> for Elements<'a> {
 	fn from(nodes: Vec<BoxDynElement<'a>>) -> Self {
-		Elements { nodes }
+		Elements {
+			nodes,
+			filters: Cell::new(None),
+		}
 	}
 }
