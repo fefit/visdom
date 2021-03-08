@@ -233,20 +233,20 @@ impl<'a> Elements<'a> {
 	fn unique_sibling(&self, asc: bool) -> Elements<'a> {
 		let total = self.length();
 		let mut parents_indexs: HashSet<VecDeque<usize>> = HashSet::with_capacity(total);
-		let mut uniques = Elements::with_capacity(total);
+		let mut uniques: Vec<BoxDynElement> = Vec::with_capacity(total);
 		let mut prev_parent: Option<BoxDynElement> = None;
 		let mut has_root = false;
 		let mut handle = |ele: &BoxDynElement| {
-			if let Some(parent) = &ele.parent() {
+			if let Some(parent) = ele.parent() {
 				if let Some(prev_parent) = &prev_parent {
 					if parent.is(prev_parent) {
 						return;
 					}
 				}
-				// set prev parent
-				prev_parent = Some(parent.cloned());
 				// parents
-				let indexs = get_tree_indexs(parent);
+				let indexs = get_tree_indexs(&parent);
+				// set prev parent
+				prev_parent = Some(parent);
 				// new parent
 				if parents_indexs.get(&indexs).is_none() {
 					parents_indexs.insert(indexs);
@@ -266,8 +266,10 @@ impl<'a> Elements<'a> {
 			for ele in self.get_ref().iter().rev() {
 				handle(ele)
 			}
+			// reverse, keep the order
+			uniques.reverse();
 		}
-		uniques
+		Elements::with_nodes(uniques)
 	}
 	// keep first sibling
 	fn unique_sibling_first(&self) -> Elements<'a> {
@@ -288,13 +290,13 @@ impl<'a> Elements<'a> {
 		let mut continued = false;
 		// just keep one sibling node
 		for ele in self.get_ref() {
-			if let Some(parent) = &ele.parent() {
+			if let Some(parent) = ele.parent() {
 				if let Some(prev_parent) = &prev_parent {
 					if parent.is(prev_parent) {
 						if !continued {
 							// may first meet the sibling, set use all children
 							if let Some(pair) = uniques.last_mut() {
-								*pair = (parent.cloned(), true);
+								*pair = (parent, true);
 							}
 							continued = true;
 						}
@@ -306,12 +308,12 @@ impl<'a> Elements<'a> {
 				// set prev parent
 				prev_parent = Some(parent.cloned());
 				// parent indexs
-				let indexs = get_tree_indexs(parent);
+				let indexs = get_tree_indexs(&parent);
 				// new parent
 				if let Some((index, setted)) = parents_indexs.get_mut(&indexs) {
 					if !*setted {
 						if let Some(pair) = uniques.get_mut(*index) {
-							*pair = (parent.cloned(), true);
+							*pair = (parent, true);
 						}
 						*setted = true;
 					}

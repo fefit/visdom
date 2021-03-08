@@ -78,8 +78,8 @@ pub trait IElementTrait: INodeTrait {
 		loop {
 			if root.is_some() {
 				let parent = root.as_ref().unwrap().parent();
-				if let Some(parent) = &parent {
-					root = Some(parent.cloned());
+				if let Some(parent) = parent {
+					root = Some(parent);
 				} else {
 					break;
 				}

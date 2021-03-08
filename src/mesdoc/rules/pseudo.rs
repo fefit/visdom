@@ -95,8 +95,8 @@ where
 				// init the siblings, allow_index, prev_parent
 				data.range.start = index;
 				data.range.end = index + 1;
-				data.parent = Some(parent.cloned());
 				data.allow_indexs = allow_indexs_fn(parent.children().length());
+				data.parent = Some(parent);
 			}
 		}
 	}
@@ -644,13 +644,12 @@ fn pseudo_only_child(rules: &mut Vec<RuleItem>) {
 				let mut result = Elements::with_capacity(DEF_NODES_LEN);
 				let mut prev_parent: Option<BoxDynElement> = None;
 				for ele in eles.get_ref() {
-					if let Some(parent) = &ele.parent() {
+					if let Some(parent) = ele.parent() {
 						if let Some(prev_parent) = &prev_parent {
-							if prev_parent.is(parent) {
+							if prev_parent.is(&parent) {
 								continue;
 							}
 						}
-						prev_parent = Some(parent.cloned());
 						let child_nodes = parent.child_nodes();
 						let mut count = 0;
 						for node in &child_nodes {
@@ -664,6 +663,7 @@ fn pseudo_only_child(rules: &mut Vec<RuleItem>) {
 						if count == 1 {
 							result.push(ele.cloned());
 						}
+						prev_parent = Some(parent);
 					}
 				}
 				result
