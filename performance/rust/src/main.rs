@@ -21,7 +21,7 @@ fn load_html() -> RunResult {
 	let content = get_file_content("../data/index.html")?;
 	let start_time = SystemTime::now();
 	for _ in 0..LOOPTIMES {
-		Vis::load_options(&content, Default::default())?;
+		Vis::load(&content)?;
 	}
 	let elapsed = start_time.elapsed()?;
 	Ok(("", format!("{:?}", elapsed / LOOPTIMES)))
@@ -519,33 +519,33 @@ fn nth_child_find() -> RunResult {
 fn main() -> UniResult {
 	let mut total_info: Vec<TotalInfo> = Vec::with_capacity(10);
 	total_info.push(load_html()?);
-	total_info.push(find_id()?);
-	total_info.push(find_class()?);
-	total_info.push(find_name()?);
-	total_info.push(find_attr()?);
-	total_info.push(find_prev()?);
-	total_info.push(find_prev_all()?);
-	total_info.push(find_next()?);
-	total_info.push(find_next_all()?);
-	total_info.push(empty()?);
-	total_info.push(contains()?);
-	total_info.push(first_child()?);
-	total_info.push(last_child()?);
-	total_info.push(first_of_type()?);
-	total_info.push(last_of_type()?);
-	total_info.push(nth_child()?);
-	total_info.push(nth_child_10()?);
-	total_info.push(nth_child_2n5()?);
-	total_info.push(nth_last_child()?);
-	total_info.push(nth_last_child_10()?);
-	total_info.push(nth_last_child_2n5()?);
-	total_info.push(nth_of_type()?);
-	total_info.push(nth_of_type_10()?);
-	total_info.push(nth_of_type_2n5()?);
-	total_info.push(nth_last_of_type()?);
-	total_info.push(nth_last_of_type_10()?);
-	total_info.push(nth_last_of_type_2n5()?);
-	total_info.push(nth_child_find()?);
+	// total_info.push(find_id()?);
+	// total_info.push(find_class()?);
+	// total_info.push(find_name()?);
+	// total_info.push(find_attr()?);
+	// total_info.push(find_prev()?);
+	// total_info.push(find_prev_all()?);
+	// total_info.push(find_next()?);
+	// total_info.push(find_next_all()?);
+	// total_info.push(empty()?);
+	// total_info.push(contains()?);
+	// total_info.push(first_child()?);
+	// total_info.push(last_child()?);
+	// total_info.push(first_of_type()?);
+	// total_info.push(last_of_type()?);
+	// total_info.push(nth_child()?);
+	// total_info.push(nth_child_10()?);
+	// total_info.push(nth_child_2n5()?);
+	// total_info.push(nth_last_child()?);
+	// total_info.push(nth_last_child_10()?);
+	// total_info.push(nth_last_child_2n5()?);
+	// total_info.push(nth_of_type()?);
+	// total_info.push(nth_of_type_10()?);
+	// total_info.push(nth_of_type_2n5()?);
+	// total_info.push(nth_last_of_type()?);
+	// total_info.push(nth_last_of_type_10()?);
+	// total_info.push(nth_last_of_type_2n5()?);
+	// total_info.push(nth_child_find()?);
 	println!("Total info: {:?}", total_info);
 	Ok(())
 }

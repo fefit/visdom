@@ -503,7 +503,7 @@ func nthChildFind() TotalInfo {
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
-		// loadHTML(),
+		loadHTML(),
 		// findID(),
 		// findClass(),
 		// findName(),
@@ -513,7 +513,7 @@ func main() {
 		// findNext(),
 		// findNextAll(),
 		// empty(),
-		contains(),
+		// contains(),
 		// firstChild(),
 		// lastChild(),
 		// firstOfType(),

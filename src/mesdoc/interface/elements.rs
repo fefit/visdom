@@ -11,7 +11,7 @@ use crate::mesdoc::{
 	selector::rule::MatchSpecifiedHandle,
 	utils::{get_class_list, retain_by_index, to_static_str},
 };
-use std::{cell::Cell, collections::HashSet};
+use std::{cell::RefCell, collections::HashSet};
 use std::{
 	cmp::Ordering,
 	collections::VecDeque,
@@ -92,7 +92,27 @@ pub(crate) enum FilterType {
 #[derive(Default)]
 pub struct Elements<'a> {
 	nodes: Vec<BoxDynElement<'a>>,
-	filters: Cell<Option<Vec<usize>>>,
+	filters: RefCell<Option<Vec<usize>>>,
+}
+
+/*
+***  Loop handles
+*/
+impl<'a> Elements<'a> {
+	fn loop_nodes(&self, mut handle: Box<dyn FnMut(&BoxDynElement)>) {
+		if self.filters.borrow().is_none() {
+			for ele in self.get_ref() {
+				handle(ele);
+			}
+			return;
+		}
+		let filters = self.filters.borrow();
+		let filters = filters.as_ref().expect("Elements's filters is Some");
+		let eles = self.get_ref();
+		for &index in filters {
+			handle(&eles[index]);
+		}
+	}
 }
 
 /*
@@ -137,14 +157,14 @@ impl<'a> Elements<'a> {
 	pub(crate) fn with_node(ele: &BoxDynElement) -> Self {
 		Elements {
 			nodes: vec![ele.cloned()],
-			filters: Cell::new(None),
+			filters: RefCell::new(None),
 		}
 	}
 	// with nodes
 	pub fn with_nodes(nodes: Vec<BoxDynElement<'a>>) -> Self {
 		Elements {
 			nodes,
-			filters: Cell::new(None),
+			filters: RefCell::new(None),
 		}
 	}
 
@@ -152,7 +172,7 @@ impl<'a> Elements<'a> {
 	pub fn with_capacity(size: usize) -> Self {
 		Elements {
 			nodes: Vec::with_capacity(size),
-			filters: Cell::new(None),
+			filters: RefCell::new(None),
 		}
 	}
 	/*------------get/set element nodes---------------*/
@@ -2039,7 +2059,7 @@ impl<'a> From<Vec<BoxDynElement<'a>>> for Elements<'a> {
 	fn from(nodes: Vec<BoxDynElement<'a>>) -> Self {
 		Elements {
 			nodes,
-			filters: Cell::new(None),
+			filters: RefCell::new(None),
 		}
 	}
 }
