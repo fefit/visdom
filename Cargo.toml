@@ -13,7 +13,7 @@ license = "MIT"
 exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "performance/*.*"]
 
 [dependencies]
-rphtml = "0.4.4"
+rphtml = "0.5.1"
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.4.3"

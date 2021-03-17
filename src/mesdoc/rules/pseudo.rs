@@ -386,7 +386,7 @@ fn get_allowed_name_ele(
 	node_indexs: &mut Vec<usize>,
 ) -> bool {
 	let name = ele.tag_name();
-	if let Some(index) = names.get_mut(name) {
+	if let Some(index) = names.get_mut(&name) {
 		// increase index
 		*index += 1;
 		// use binary search is much faster than contains
@@ -725,7 +725,7 @@ fn pseudo_only_of_type(rules: &mut Vec<RuleItem>) {
 								let mut cur_index = 0;
 								for (name, _) in &only_names {
 									for (index, ele) in siblings[cur_index..].iter().enumerate() {
-										if ele.tag_name() == name {
+										if &ele.tag_name() == name {
 											cur_index += index + 1;
 											finded.push(ele.cloned());
 											break;

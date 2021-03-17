@@ -233,7 +233,14 @@ pub trait IElementTrait: INodeTrait {
 		Elements::new()
 	}
 	// tag name
-	fn tag_name(&self) -> &str;
+	fn tag_name(&self) -> String {
+		self
+			.tag_names()
+			.iter()
+			.map(|ch| ch.to_ascii_uppercase())
+			.collect::<String>()
+	}
+	fn tag_names(&self) -> Vec<char>;
 	// childs
 	fn child_nodes_length(&self) -> usize;
 	fn child_nodes_item<'b>(&self, index: usize) -> Option<BoxDynNode<'b>>;
@@ -289,11 +296,11 @@ pub trait IElementTrait: INodeTrait {
 		self.get_attribute(name).is_some()
 	}
 	// html
-	fn html(&self) -> &str {
+	fn html(&self) -> String {
 		self.inner_html()
 	}
-	fn inner_html(&self) -> &str;
-	fn outer_html(&self) -> &str;
+	fn inner_html(&self) -> String;
+	fn outer_html(&self) -> String;
 
 	// append child, insert before, remove child
 	fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);

@@ -62,10 +62,13 @@ pub trait INodeTrait {
 		None
 	}
 	// text
-	fn text_content(&self) -> &str;
-	fn text(&self) -> &str {
+	fn text_content(&self) -> String {
+		return self.text_contents().iter().collect::<String>();
+	}
+	fn text(&self) -> String {
 		self.text_content()
 	}
+	fn text_contents(&self) -> Vec<char>;
 	fn set_text(&mut self, content: &str);
 	// set html
 	fn set_html(&mut self, content: &str);

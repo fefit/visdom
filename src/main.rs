@@ -6,12 +6,12 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<input type="text" READONly />
-	"##;
+	const HTML: &str = r##"<div contenteditable><input type="text" type="file" /></div>"##;
 	let root = Vis::load(HTML)?;
-	let content = root.find("input[readoNLy]");
+	let content = root.find("div");
 	println!("content:{}", content.length());
-	println!("{:?}", content.attr("xpath"));
+	// println!("tag_name:{:?}", content.get(0).unwrap().tag_names());
+	println!("{:?}", content.attr("contenteditable"));
 	// let texts = content
 	// 	.texts(0)
 	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));

@@ -98,7 +98,7 @@ fn reset_next_siblings_index(start_index: usize, childs: &[RefNode]) {
 	}
 }
 
-fn remove_not_allowed_nodes(tag_name: &str, nodes: &mut Vec<RefNode>) -> bool {
+fn remove_not_allowed_nodes(tag_name: &[char], nodes: &mut Vec<RefNode>) -> bool {
 	let mut not_allowed_indexs: Vec<usize> = Vec::with_capacity(nodes.len());
 	let orig_len = nodes.len();
 	for (index, node) in nodes.iter().enumerate() {
@@ -111,6 +111,10 @@ fn remove_not_allowed_nodes(tag_name: &str, nodes: &mut Vec<RefNode>) -> bool {
 	}
 	let now_allowed_len = not_allowed_indexs.len();
 	now_allowed_len > 0 && now_allowed_len != orig_len
+}
+
+fn check_if_content_tag(name: &[char]) -> bool {
+	is_content_tag(name, &Some(NameCase::Lower))
 }
 
 impl INodeTrait for Rc<RefCell<Node>> {
@@ -190,15 +194,15 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		None
 	}
 
-	/// impl `text_content`
-	fn text_content(&self) -> &str {
-		to_static_str(self.borrow().build(
+	/// impl `contents`
+	fn text_contents(&self) -> Vec<char> {
+		self.borrow().build(
 			&RenderOptions {
 				decode_entity: true,
 				..Default::default()
 			},
 			matches!(self.node_type(), INodeType::Element),
-		))
+		)
 	}
 
 	/// impl `set_text`
@@ -206,14 +210,13 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		let node_type = self.node_type();
 		match node_type {
 			INodeType::Element => {
-				let tag_name = self.tag_name();
-				let no_content_tag = !is_content_tag(tag_name);
+				let no_content_tag = !check_if_content_tag(&self.tag_names());
 				let mut node = self.borrow_mut();
 				if !content.is_empty() {
 					if no_content_tag {
 						// encode content
 						let content = encode(content, SpecialChars, NamedOrDecimal);
-						let mut text_node = Node::create_text_node(&content, None);
+						let mut text_node = Node::create_text_node(content, None);
 						// set text node parent
 						text_node.parent = Some(Rc::downgrade(&self));
 						// set childs
@@ -266,13 +269,15 @@ impl INodeTrait for Rc<RefCell<Node>> {
 			_ => None,
 		};
 		if let Some(target) = &target {
-			let tag_name = target
-				.borrow()
-				.meta
-				.as_ref()
-				.map(|meta| meta.borrow().get_name(None))
-				.expect("A tag use `set_html` must have a tag name.");
-			if is_content_tag(&tag_name.to_ascii_lowercase()) {
+			if check_if_content_tag(
+				&target
+					.borrow()
+					.meta
+					.as_ref()
+					.expect("A tag use `set_html` must have a tag name.")
+					.borrow()
+					.name,
+			) {
 				// content tag, just set html as content, no need encode
 				target.borrow_mut().content = Some(content.chars().collect::<Vec<char>>());
 			} else {
@@ -287,7 +292,16 @@ impl INodeTrait for Rc<RefCell<Node>> {
 				.unwrap();
 				if let Some(nodes) = &mut doc_holder.get_root_node().borrow_mut().childs {
 					let mut nodes = nodes.split_off(0);
-					let has_not_allowed = remove_not_allowed_nodes(&tag_name, &mut nodes);
+					let has_not_allowed = remove_not_allowed_nodes(
+						&target
+							.borrow()
+							.meta
+							.as_ref()
+							.expect("A tag use `set_html` must have a tag name.")
+							.borrow()
+							.name,
+						&mut nodes,
+					);
 					let has_nodes = !nodes.is_empty();
 					if has_nodes {
 						// set nodes parent as target
@@ -371,13 +385,17 @@ impl ITextTrait for Rc<RefCell<Node>> {
 impl IUncareNodeTrait for Rc<RefCell<Node>> {}
 
 impl IElementTrait for Rc<RefCell<Node>> {
-	/// impl `tag_name`
-	fn tag_name(&self) -> &str {
+	/// impl `names`
+	fn tag_names(&self) -> Vec<char> {
 		match self.node_type() {
 			INodeType::Element => {
 				if let Some(meta) = &self.borrow().meta {
-					let name = meta.borrow().get_name(Some(NameCase::Upper));
-					return to_static_str(name);
+					return meta
+						.borrow()
+						.name
+						.iter()
+						.map(|ch| ch.to_ascii_lowercase())
+						.collect();
 				}
 				Dom::halt(self, "tag_name", "Html syntax error: not found a tag name.");
 			}
@@ -388,7 +406,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				&format!("The node type of '{:?}' doesn't have a tag name.", cur_type),
 			),
 		};
-		""
+		vec![]
 	}
 
 	/// impl `children`
@@ -461,7 +479,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				let attr = &attrs[index];
 				if let Some(value) = &attr.value {
 					let attr_value = value.content.clone();
-					return Some(IAttrValue::Value(attr_value, attr.quote));
+					return Some(IAttrValue::Value(attr_value.iter().collect(), attr.quote));
 				} else {
 					return Some(IAttrValue::True);
 				}
@@ -477,7 +495,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		if let Some(meta) = &self.borrow().meta {
 			let value = value.map(|v| {
 				let mut find_quote: bool = false;
-				let mut content = String::with_capacity(v.len());
+				let mut content = Vec::with_capacity(v.len());
 				// loop the chars
 				for ch in v.chars() {
 					if !need_quote {
@@ -521,7 +539,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 			let quote = if value.is_some() { Some(quote) } else { None };
 			meta.borrow_mut().attrs.push(Attr {
 				key: Some(AttrData {
-					content: name.into(),
+					content: name.chars().collect(),
 				}),
 				value,
 				quote,
@@ -550,26 +568,34 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	}
 
 	/// impl `inner_html`
-	fn inner_html(&self) -> &str {
-		to_static_str(self.borrow().build(
-			&RenderOptions {
-				inner_html: true,
-				encode_content: true,
-				..Default::default()
-			},
-			false,
-		))
+	fn inner_html(&self) -> String {
+		self
+			.borrow()
+			.build(
+				&RenderOptions {
+					inner_html: true,
+					encode_content: true,
+					..Default::default()
+				},
+				false,
+			)
+			.iter()
+			.collect::<String>()
 	}
 
 	/// impl `outer_html`
-	fn outer_html(&self) -> &str {
-		to_static_str(self.borrow().build(
-			&RenderOptions {
-				encode_content: true,
-				..Default::default()
-			},
-			false,
-		))
+	fn outer_html(&self) -> String {
+		self
+			.borrow()
+			.build(
+				&RenderOptions {
+					encode_content: true,
+					..Default::default()
+				},
+				false,
+			)
+			.iter()
+			.collect::<String>()
 	}
 
 	/// impl `remov_child`
@@ -620,9 +646,9 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				}
 			};
 			// filter the node allowed
-			let tag_name = self.tag_name();
+			let tag_name = self.tag_names();
 			// remove not allowed nodes
-			remove_not_allowed_nodes(tag_name, &mut nodes);
+			remove_not_allowed_nodes(&tag_name, &mut nodes);
 			// check if is empty
 			if nodes.is_empty() {
 				return;
@@ -744,7 +770,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 						_ => {}
 					}
 				}
-			} else if is_content_tag(node.tag_name()) {
+			} else if check_if_content_tag(&node.tag_names()) {
 				// content tag, change the element into text type
 				result.get_mut_ref().push(
 					node
@@ -763,7 +789,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 
 	/// impl `into_text`
 	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, Box<dyn Error>> {
-		if is_content_tag(self.tag_name()) {
+		if check_if_content_tag(&self.tag_names()) {
 			Ok(self as BoxDynText)
 		} else {
 			Err(Box::new(IError::InvalidTraitMethodCall {

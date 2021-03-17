@@ -1753,7 +1753,7 @@ impl<'a> Elements<'a> {
 	pub fn text(&self) -> &str {
 		let mut result = String::with_capacity(50);
 		for ele in self.get_ref() {
-			result.push_str(ele.text_content());
+			result.push_str(&ele.text_content());
 		}
 		to_static_str(result)
 	}
@@ -1769,11 +1769,11 @@ impl<'a> Elements<'a> {
 
 	/// pub fn `html`
 	/// get the first element's html
-	pub fn html(&self) -> &str {
+	pub fn html(&self) -> String {
 		if let Some(ele) = self.get(0) {
 			return ele.inner_html();
 		}
-		""
+		String::from("")
 	}
 
 	/// pub fn `set_html`
@@ -1787,11 +1787,11 @@ impl<'a> Elements<'a> {
 
 	/// pub fn `outer_html`
 	/// get the first element's outer html
-	pub fn outer_html(&self) -> &str {
+	pub fn outer_html(&self) -> String {
 		if let Some(ele) = self.get(0) {
 			return ele.outer_html();
 		}
-		""
+		String::from("")
 	}
 
 	/// pub fn `texts`

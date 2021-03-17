@@ -79,6 +79,7 @@ pub fn is_char_available_in_key(ch: &char) -> bool {
 	}
 	true
 }
+#[allow(dead_code)]
 pub enum RoundType {
 	Floor,
 	Ceil,
