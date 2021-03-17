@@ -1,11 +1,10 @@
-use super::pattern::{self, exec, to_pattern, BoxDynPattern, Matched, Pattern};
-use crate::mesdoc::utils::{to_static_str, vec_char_to_clean_str};
+use super::pattern::{self, exec, to_pattern, BoxDynPattern, MatchedQueue, Pattern};
+use crate::mesdoc::utils::vec_char_to_clean_str;
 use crate::mesdoc::{
 	constants::PRIORITY_PSEUDO_SELECTOR,
 	interface::{Elements, IElementTrait},
 };
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 lazy_static! {
@@ -16,10 +15,8 @@ pub type MatchAllHandle = Box<dyn (for<'a, 'r> Fn(&'a Elements<'r>, Option<bool>
 pub type MatchOneHandle = Box<dyn (Fn(&dyn IElementTrait, Option<bool>) -> bool)>;
 pub type MatchSpecifiedHandle =
 	Box<dyn for<'a> Fn(&'a dyn IElementTrait, Box<dyn FnMut(&dyn IElementTrait, bool) + 'a>)>;
-// matcher data
-pub type MatcherData = HashMap<SavedDataKey, &'static str>;
 // matcher factory
-pub type MatcherFactory = Box<dyn (Fn(MatcherData) -> Matcher) + Send + Sync>;
+pub type MatcherFactory = Box<dyn (Fn(MatchedQueue) -> Matcher) + Send + Sync>;
 
 #[derive(Default)]
 pub struct Matcher {
@@ -303,14 +300,14 @@ impl Rule {
 		queues
 	}
 
-	pub fn exec(&self, chars: &[char]) -> Option<(Vec<Matched>, usize, usize)> {
+	pub fn exec(&self, chars: &[char]) -> Option<(MatchedQueue, usize, usize)> {
 		Rule::exec_queues(&self.queues, chars)
 	}
 
 	pub fn exec_queues(
 		queues: &[BoxDynPattern],
 		chars: &[char],
-	) -> Option<(Vec<Matched>, usize, usize)> {
+	) -> Option<(MatchedQueue, usize, usize)> {
 		let (result, matched_len, matched_queue_item, _) = exec(&queues, chars);
 		if matched_len > 0 {
 			Some((result, matched_len, matched_queue_item))
@@ -319,9 +316,8 @@ impl Rule {
 		}
 	}
 	/// make a matcher
-	pub fn make(&self, data: &[Matched]) -> Matcher {
+	pub fn make(&self, data: MatchedQueue) -> Matcher {
 		let handle = &self.handle;
-		let data = self.data(data);
 		let mut matcher = handle(data);
 		matcher.priority = self.priority;
 		matcher.in_cache = self.in_cache;
@@ -340,48 +336,48 @@ impl Rule {
 		}
 	}
 
-	pub fn data(&self, data: &[Matched]) -> MatcherData {
-		let mut result: MatcherData = HashMap::with_capacity(5);
-		let mut indexs = HashMap::with_capacity(5);
-		let fields = &self.fields;
-		for item in data.iter() {
-			let Matched {
-				name,
-				data: hash_data,
-				chars,
-				..
-			} = item;
-			if !name.is_empty() {
-				let index = indexs.entry(name).or_insert(0);
-				let data_key = (*name, *index);
-				if fields.contains(&data_key) {
-					let count = hash_data.len();
-					if count == 0 {
-						let cur_key = (*name, *index);
-						result.insert(
-							cur_key.into(),
-							to_static_str(chars.iter().collect::<String>()),
-						);
-					} else {
-						for (&key, &val) in hash_data.iter() {
-							let cur_key = (*name, *index, key);
-							result.insert(cur_key.into(), val);
-						}
-					}
-				}
-			}
-		}
-		result
-	}
+	// pub fn data(&self, data: &[Matched]) -> MatcherData {
+	// 	let mut result: MatcherData = HashMap::with_capacity(5);
+	// 	let mut indexs = HashMap::with_capacity(5);
+	// 	let fields = &self.fields;
+	// 	for item in data.iter() {
+	// 		let Matched {
+	// 			name,
+	// 			data: hash_data,
+	// 			chars,
+	// 			..
+	// 		} = item;
+	// 		if !name.is_empty() {
+	// 			let index = indexs.entry(name).or_insert(0);
+	// 			let data_key = (*name, *index);
+	// 			if fields.contains(&data_key) {
+	// 				let count = hash_data.len();
+	// 				if count == 0 {
+	// 					let cur_key = (*name, *index);
+	// 					result.insert(
+	// 						cur_key.into(),
+	// 						to_static_str(chars.iter().collect::<String>()),
+	// 					);
+	// 				} else {
+	// 					for (&key, &val) in hash_data.iter() {
+	// 						let cur_key = (*name, *index, key);
+	// 						result.insert(cur_key.into(), val);
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	result
+	// }
 	// add a rule
 	pub fn add(context: &str, mut rule: Rule) -> Self {
 		rule.queues = Rule::get_queues(context);
 		rule
 	}
 	// quick method to get param
-	pub fn param<T: Into<SavedDataKey>>(params: &MatcherData, v: T) -> Option<&'static str> {
-		params.get(&v.into()).copied()
-	}
+	// pub fn param<T: Into<SavedDataKey>>(params: &MatcherData, v: T) -> Option<&'static str> {
+	// 	params.get(&v.into()).copied()
+	// }
 }
 
 pub struct RuleDefItem(

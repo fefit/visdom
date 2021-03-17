@@ -1,6 +1,8 @@
 use crate::mesdoc::interface::{BoxDynElement, Elements, IElementTrait, INodeType};
 use crate::mesdoc::selector::pattern::Nth;
-use crate::mesdoc::selector::rule::{Matcher, MatcherData, Rule, RuleDefItem, RuleItem};
+use crate::mesdoc::selector::rule::{Matcher, Rule, RuleDefItem, RuleItem};
+use crate::mesdoc::selector::MatchedQueue;
+use crate::mesdoc::utils::contains_chars;
 use crate::mesdoc::{
 	constants::{
 		DEF_NODES_LEN, PRIORITY_PSEUDO_SELECTOR, SELECTOR_ALIAS_NAME_HEADER, SELECTOR_ALIAS_NAME_INPUT,
@@ -10,7 +12,6 @@ use crate::mesdoc::{
 };
 use std::cmp::Ordering;
 use std::{collections::HashMap, ops::Range};
-
 const PRIORITY: u32 = PRIORITY_PSEUDO_SELECTOR;
 
 fn nth_index_to_number(index: &Option<&str>) -> isize {
@@ -30,7 +31,7 @@ fn pseudo_empty(rules: &mut Vec<RuleItem>) {
 		selector,
 		PRIORITY,
 		vec![],
-		Box::new(|_: MatcherData| Matcher {
+		Box::new(|_| Matcher {
 			one_handle: Some(Box::new(|ele, _| {
 				let child_nodes = ele.child_nodes();
 				if child_nodes.is_empty() {
@@ -278,9 +279,10 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 		selector,
 		PRIORITY,
 		vec![("nth", 0)],
-		Box::new(move |data: MatcherData| {
-			let n = Rule::param(&data, ("nth", 0, "n"));
-			let index = Rule::param(&data, ("nth", 0, "index"));
+		Box::new(move |data: MatchedQueue| {
+			let nth_data = &data[2].data;
+			let n = nth_data.get("n").copied();
+			let index = nth_data.get("index").copied();
 			let handle = make_asc_or_desc_nth_child_handle(asc);
 			let specified_handle = if n.is_none() {
 				let index = nth_index_to_number(&index);
@@ -294,7 +296,7 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 					if is_all.is_none() {
 						group_siblings_then_done(
 							eles,
-							|total: usize| Some(Nth::get_allowed_indexs(n, index, total)),
+							|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
 							|data: &mut SiblingsNodeData| {
 								handle_nth_child(data, eles, &mut result, &handle);
 							},
@@ -302,7 +304,7 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 					} else {
 						let total = eles.length();
 						let range = 0..total;
-						let allow_indexs = Nth::get_allowed_indexs(n, index, total);
+						let allow_indexs = Nth::get_allowed_indexs(&n, &index, total);
 						let finded = handle(&eles, &range, &allow_indexs, &eles);
 						result.get_mut_ref().extend(finded);
 					}
@@ -396,7 +398,7 @@ fn get_allowed_name_ele(
 		}
 	} else {
 		let index = 0;
-		names.insert(String::from(name), index);
+		names.insert(name, index);
 		// just check if first is 0
 		if allow_indexs[0] == 0 {
 			node_indexs.push(ele.index());
@@ -513,9 +515,10 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 		selector,
 		PRIORITY,
 		vec![("nth", 0)],
-		Box::new(move |data: MatcherData| {
-			let n = Rule::param(&data, ("nth", 0, "n"));
-			let index = Rule::param(&data, ("nth", 0, "index"));
+		Box::new(move |mut data: MatchedQueue| {
+			let nth_data = data.remove(2).data;
+			let n = nth_data.get("n").copied();
+			let index = nth_data.get("index").copied();
 			let specified_handle = if n.is_none() {
 				let index = nth_index_to_number(&index);
 				Some(make_asc_or_desc_nth_of_type_specified(asc, index))
@@ -528,14 +531,14 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 					if is_all.is_none() {
 						group_siblings_then_done(
 							eles,
-							|total: usize| Some(Nth::get_allowed_indexs(n, index, total)),
+							|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
 							|data: &mut SiblingsNodeData| {
 								handle_nth_of_type(asc, data, eles, &mut result);
 							},
 						);
 					} else {
 						let total = eles.length();
-						let allow_indexs = Some(Nth::get_allowed_indexs(n, index, total));
+						let allow_indexs = Some(Nth::get_allowed_indexs(&n, &index, total));
 						let parent = if total > 0 {
 							eles.get(0).expect("length > 0").parent()
 						} else {
@@ -580,7 +583,7 @@ fn make_first_or_last_of_type(selector: &'static str, asc: bool) -> RuleDefItem 
 		selector,
 		PRIORITY,
 		vec![("nth", 0)],
-		Box::new(move |_: MatcherData| {
+		Box::new(move |_| {
 			let specified_handle = Some(make_asc_or_desc_nth_of_type_specified(asc, 1));
 			Matcher {
 				all_handle: Some(Box::new(move |eles: &Elements, is_all| {
@@ -701,7 +704,7 @@ fn pseudo_only_of_type(rules: &mut Vec<RuleItem>) {
 						let mut only_names: Vec<(String, usize)> = Vec::with_capacity(DEF_NODES_LEN);
 						let mut repeated: Vec<String> = Vec::with_capacity(DEF_NODES_LEN);
 						for (index, child) in childs.get_ref().iter().enumerate() {
-							let name = String::from(child.tag_name());
+							let name = child.tag_name();
 							if !repeated.contains(&name) {
 								let find_index = only_names
 									.iter()
@@ -753,10 +756,10 @@ fn pseudo_not(rules: &mut Vec<RuleItem>) {
 		selector,
 		PRIORITY,
 		vec![("selector", 0)],
-		Box::new(|data: MatcherData| {
-			let selector = Rule::param(&data, "selector").expect("selector param must have.");
+		Box::new(|data: MatchedQueue| {
+			let selector = data[2].chars.iter().collect::<String>();
 			Matcher {
-				all_handle: Some(Box::new(move |eles: &Elements, _| eles.not(selector))),
+				all_handle: Some(Box::new(move |eles: &Elements, _| eles.not(&selector))),
 				..Default::default()
 			}
 		}),
@@ -767,33 +770,39 @@ fn pseudo_not(rules: &mut Vec<RuleItem>) {
 /// pseudo selector: `:contains`
 fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 	let name = ":contains";
-	let selector =
-		r##":contains({spaces}{regexp#(?:'((?:\\?+.)*?)'|"((?:\\?+.)*?)"|([^\s'"<>/=`]*))#}{spaces})"##;
+	let selector = r##":contains({spaces}{regexp#(?:'((?:\\?+.)*?)'|"((?:\\?+.)*?)"|([^)\s'"<>/=`]*))#}{spaces})"##;
 	let rule = RuleDefItem(
 		name,
 		selector,
 		PRIORITY,
 		vec![("regexp", 0)],
-		Box::new(|data: MatcherData| {
-			let search = Rule::param(&data, ("regexp", 0, "1"))
-				.or_else(|| Rule::param(&data, ("regexp", 0, "2")))
-				.or_else(|| Rule::param(&data, ("regexp", 0, "3")))
-				.expect("The :contains selector must have a content");
-			let search_count = search.len();
-			Matcher {
-				one_handle: Some(Box::new(move |ele, _| {
-					if search_count == 0 {
-						return true;
-					}
-					let text = ele.text();
-					let text_count = text.len();
-					match text_count.cmp(&search_count) {
-						Ordering::Greater => text.contains(search),
-						Ordering::Equal => text == search,
-						_ => false,
-					}
-				})),
-				..Default::default()
+		Box::new(|mut data: MatchedQueue| {
+			let mut find_chars = data.remove(2).chars;
+			if !find_chars.is_empty() {
+				let first = find_chars[0];
+				let search = if first == '"' || first == '\'' {
+					find_chars.pop();
+					find_chars.split_off(1)
+				} else {
+					find_chars
+				};
+				let search_count = search.len();
+				Matcher {
+					one_handle: Some(Box::new(move |ele, _| {
+						let contents = ele.text_contents();
+						let contents_count = contents.len();
+						match contents_count.cmp(&search_count) {
+							Ordering::Less => false,
+							_ => contains_chars(&contents, &&search),
+						}
+					})),
+					..Default::default()
+				}
+			} else {
+				Matcher {
+					one_handle: Some(Box::new(move |_, _| true)),
+					..Default::default()
+				}
 			}
 		}),
 	);

@@ -2,21 +2,24 @@
 
 use crate::mesdoc::constants::{NAME_SELECTOR_ATTR, PRIORITY_ATTR_SELECTOR};
 use crate::mesdoc::interface::IAttrValue;
-use crate::mesdoc::selector::rule::{Matcher, MatcherData};
-use crate::mesdoc::selector::rule::{Rule, RuleDefItem, RuleItem};
+use crate::mesdoc::selector::rule::Matcher;
+use crate::mesdoc::selector::rule::{RuleDefItem, RuleItem};
+use crate::mesdoc::selector::MatchedQueue;
 pub fn init(rules: &mut Vec<RuleItem>) {
 	let rule = RuleDefItem(
 		NAME_SELECTOR_ATTR,
 		r##"[{spaces}{attr_key}{spaces}{regexp#(?:([*^$~|!]?)=\s*(?:'((?:\\?+.)*?)'|([^\s\]'"<>/=`]+)|"((?:\\?+.)*?)"))?#}{spaces}]"##,
 		PRIORITY_ATTR_SELECTOR,
 		vec![("attr_key", 0), ("regexp", 0)],
-		Box::new(|data: MatcherData| {
-			let attr_key =
-				Rule::param(&data, "attr_key").expect("The attribute selector's key is not correct");
-			let attr_value = Rule::param(&data, ("regexp", 0, "2"))
-				.or_else(|| Rule::param(&data, ("regexp", 0, "3")))
-				.or_else(|| Rule::param(&data, ("regexp", 0, "4")));
-			let match_mode = Rule::param(&data, ("regexp", 0, "1")).unwrap_or("");
+		Box::new(|data: MatchedQueue| {
+			let attr_key = data[2].chars.iter().collect::<String>();
+			let value_data = &data[4].data;
+			let attr_value = value_data
+				.get("2")
+				.or_else(|| value_data.get("3"))
+				.or_else(|| value_data.get("4"))
+				.copied();
+			let match_mode = value_data.get("1").copied().unwrap_or("");
 			let handle: Box<dyn Fn(&Option<IAttrValue>) -> bool> = if let Some(attr_value) = attr_value {
 				if attr_value.is_empty() {
 					// empty attribute value
@@ -80,7 +83,7 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 			};
 			Matcher {
 				one_handle: Some(Box::new(move |ele, _| {
-					let val = ele.get_attribute(attr_key);
+					let val = ele.get_attribute(&attr_key);
 					handle(&val)
 				})),
 				..Default::default()

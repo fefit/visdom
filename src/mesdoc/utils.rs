@@ -144,6 +144,61 @@ pub fn get_class_list(v: &str) -> Vec<&str> {
 	}
 }
 
+pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
+	if target.len() != cmp.len() {
+		return false;
+	}
+	for (index, ch) in target.iter().enumerate() {
+		let cmp_ch = &cmp[index];
+		if cmp_ch == ch {
+			continue;
+		}
+		match cmp_ch {
+			'a'..='z' => {
+				if &cmp_ch.to_ascii_uppercase() != ch {
+					return false;
+				}
+			}
+			'A'..='Z' => {
+				if &cmp_ch.to_ascii_lowercase() != ch {
+					return false;
+				}
+			}
+			_ => {
+				// not equal
+				return false;
+			}
+		}
+	}
+	true
+}
+
+pub fn contains_chars(target: &[char], search: &[char]) -> bool {
+	let t_len = target.len();
+	let s_len = search.len();
+	// check length
+	if s_len > t_len {
+		return false;
+	}
+	// check if match
+	let max_start_index: usize = t_len - s_len;
+	let mut start_index: usize = 0;
+	while start_index <= max_start_index {
+		let mut move_one = false;
+		for (index, ch) in target[start_index..start_index + s_len].iter().enumerate() {
+			if ch == &search[index] {
+				continue;
+			}
+			move_one = true;
+		}
+		if !move_one {
+			return true;
+		}
+		start_index += 1;
+	}
+	false
+}
+
 #[cfg(test)]
 mod test {
 	use super::{divide_isize, RoundType};

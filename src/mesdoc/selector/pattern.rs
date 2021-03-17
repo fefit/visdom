@@ -26,6 +26,7 @@ fn no_implemented(name: &str) -> ! {
 }
 
 pub type MatchedData = HashMap<&'static str, &'static str>;
+pub type MatchedQueue = Vec<Matched>;
 #[derive(Debug, Default, Clone)]
 pub struct Matched {
 	pub chars: Vec<char>,
@@ -313,7 +314,7 @@ impl Nth {
 	fn get_number(data: &MatchedData, keys: (&str, &str), def: Option<&str>) -> Option<&'static str> {
 		const MINUS: &str = "-";
 		if let Some(&idx) = data.get(keys.0).or_else(|| def.as_ref()) {
-			let mut index = String::from(idx);
+			let mut index = idx.to_owned();
 			if let Some(&op) = data.get(keys.1) {
 				if op == MINUS {
 					index = String::from(op) + &index;
@@ -324,7 +325,7 @@ impl Nth {
 		None
 	}
 	// get indexs allowed
-	pub fn get_allowed_indexs(n: Option<&str>, index: Option<&str>, total: usize) -> Vec<usize> {
+	pub fn get_allowed_indexs(n: &Option<&str>, index: &Option<&str>, total: usize) -> Vec<usize> {
 		// has n
 		if let Some(n) = n {
 			let n = n.parse::<isize>().unwrap();
@@ -513,9 +514,9 @@ pub fn to_pattern(name: &str, s: &str, p: &str) -> Result<BoxDynPattern, String>
 	no_implemented(name);
 }
 
-pub fn exec(queues: &[BoxDynPattern], chars: &[char]) -> (Vec<Matched>, usize, usize, bool) {
+pub fn exec(queues: &[BoxDynPattern], chars: &[char]) -> (MatchedQueue, usize, usize, bool) {
 	let mut start_index = 0;
-	let mut result: Vec<Matched> = Vec::with_capacity(queues.len());
+	let mut result: MatchedQueue = Vec::with_capacity(queues.len());
 	let mut matched_num: usize = 0;
 	for item in queues {
 		if let Some(matched) = item.matched(&chars[start_index..]) {

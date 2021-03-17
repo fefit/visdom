@@ -1,4 +1,5 @@
-use crate::mesdoc::selector::rule::{Matcher, MatcherData, Rule, RuleItem};
+use crate::mesdoc::selector::rule::{Matcher, Rule, RuleItem};
+use crate::mesdoc::selector::MatchedQueue;
 use crate::mesdoc::{
 	constants::{NAME_SELECTOR_ID, PRIORITY_ID_SELECTOR},
 	interface::Elements,
@@ -12,8 +13,8 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 			priority: PRIORITY_ID_SELECTOR,
 			in_cache: true,
 			fields: vec![("identity", 0)],
-			handle: Box::new(|data: MatcherData| {
-				let id = Rule::param(&data, "identity").expect("The 'id' selector is not correct");
+			handle: Box::new(|data: MatchedQueue| {
+				let id = data[1].chars.iter().collect::<String>();
 				Matcher {
 					all_handle: Some(Box::new(move |eles: &Elements, use_cache: Option<bool>| {
 						let use_cache = use_cache.is_some();
@@ -24,7 +25,7 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 								.get(0)
 								.expect("The elements must have at least one element.");
 							if let Some(doc) = &first_ele.owner_document() {
-								if let Some(id_element) = doc.get_element_by_id(id) {
+								if let Some(id_element) = doc.get_element_by_id(&id) {
 									if use_cache {
 										// just add, will checked if the element contains the id element
 										result.push(id_element);

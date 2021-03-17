@@ -1,8 +1,9 @@
 use crate::mesdoc::constants::{NAME_SELECTOR_CLASS, PRIORITY_CLASS_SELECTOR};
 use crate::mesdoc::interface::IAttrValue;
-use crate::mesdoc::selector::rule::{Matcher, MatcherData};
-use crate::mesdoc::selector::rule::{Rule, RuleDefItem, RuleItem};
-use crate::mesdoc::utils::get_class_list;
+use crate::mesdoc::selector::rule::Matcher;
+use crate::mesdoc::selector::rule::{RuleDefItem, RuleItem};
+use crate::mesdoc::selector::MatchedQueue;
+use crate::mesdoc::utils::{get_class_list, to_static_str};
 
 pub fn init(rules: &mut Vec<RuleItem>) {
 	let rule = RuleDefItem(
@@ -10,9 +11,9 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 		".{identity}",
 		PRIORITY_CLASS_SELECTOR,
 		vec![("identity", 0)],
-		Box::new(|data: MatcherData| {
+		Box::new(|data: MatchedQueue| {
 			// class name parameter
-			let class_name = Rule::param(&data, "identity").expect("The 'class' selector is not correct");
+			let class_name = to_static_str(data[1].chars.iter().collect::<String>());
 			// matcher
 			Matcher {
 				one_handle: Some(Box::new(move |ele, _| -> bool {

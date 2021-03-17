@@ -1,16 +1,15 @@
 pub mod pattern;
 pub mod rule;
-
+use self::{pattern::BoxDynPattern, rule::Matcher};
 use crate::mesdoc::{constants::NAME_SELECTOR_ALL, error::Error};
 use lazy_static::lazy_static;
+pub use pattern::MatchedQueue;
 use pattern::{exec, Matched};
 use rule::{Rule, RULES};
 use std::{
 	str::FromStr,
 	sync::{Arc, Mutex},
 };
-
-use self::{pattern::BoxDynPattern, rule::Matcher};
 
 lazy_static! {
 	static ref SPLITTER: Mutex<Vec<BoxDynPattern>> =
@@ -161,7 +160,7 @@ impl Selector {
 						let queues = &r.queues;
 						if queue_num == queues.len() {
 							// push to selector
-							Selector::add_group_item(&mut groups, (r.make(&matched), comb), is_new_item);
+							Selector::add_group_item(&mut groups, (r.make(matched), comb), is_new_item);
 							finded = true;
 						} else if queues[queue_num].is_nested() {
 							// nested selector
@@ -174,7 +173,7 @@ impl Selector {
 							);
 							index += len;
 							matched.extend(nested_matched);
-							Selector::add_group_item(&mut groups, (r.make(&matched), comb), is_new_item);
+							Selector::add_group_item(&mut groups, (r.make(matched), comb), is_new_item);
 							finded = true;
 						}
 						break;
@@ -302,7 +301,7 @@ impl Selector {
 			}
 		}
 		let cur_rule = Arc::clone(all_rule.as_ref().expect("All rule must add to rules"));
-		let matcher = cur_rule.make(&[]);
+		let matcher = cur_rule.make(vec![]);
 		(matcher, comb)
 	}
 	// build a selector from a segment
@@ -322,10 +321,10 @@ impl Selector {
 		rules: &[(&str, Arc<Rule>)],
 		splitter: &[BoxDynPattern],
 		level: usize,
-	) -> (usize, Vec<Matched>) {
+	) -> (usize, MatchedQueue) {
 		let mut index = 0;
 		let total = chars.len();
-		let mut matched: Vec<Matched> = Vec::with_capacity(until.len() + 1);
+		let mut matched: MatchedQueue = Vec::with_capacity(until.len() + 1);
 		while index < total {
 			let next_chars = &chars[index..];
 			if let Some((_, len, _)) = Rule::exec_queues(splitter, next_chars) {

@@ -6,9 +6,14 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<div contenteditable><input type="text" type="file" /></div>"##;
-	let root = Vis::load(HTML)?;
-	let content = root.find("div");
+	const HTML: &str = r##"<div>abcd</div>"##;
+	let root = Vis::load_catch(
+		HTML,
+		Box::new(|e| {
+			println!("e:{:?}", e);
+		}),
+	);
+	let content = root.find(r#":contains(a)"#);
 	println!("content:{}", content.length());
 	// println!("tag_name:{:?}", content.get(0).unwrap().tag_names());
 	println!("{:?}", content.attr("contenteditable"));
