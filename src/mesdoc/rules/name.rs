@@ -8,7 +8,6 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 		NAME_SELECTOR_NAME,
 		"{identity}",
 		PRIORITY_NAME_SELECTOR,
-		vec![("identity", 0)],
 		Box::new(|mut data: MatchedQueue| {
 			let name = data.remove(0).chars;
 			Matcher {

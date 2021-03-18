@@ -3,17 +3,16 @@ use crate::mesdoc::interface::IAttrValue;
 use crate::mesdoc::selector::rule::Matcher;
 use crate::mesdoc::selector::rule::{RuleDefItem, RuleItem};
 use crate::mesdoc::selector::MatchedQueue;
-use crate::mesdoc::utils::{get_class_list, to_static_str};
+use crate::mesdoc::utils::get_class_list;
 
 pub fn init(rules: &mut Vec<RuleItem>) {
 	let rule = RuleDefItem(
 		NAME_SELECTOR_CLASS,
 		".{identity}",
 		PRIORITY_CLASS_SELECTOR,
-		vec![("identity", 0)],
-		Box::new(|data: MatchedQueue| {
+		Box::new(|mut data: MatchedQueue| {
 			// class name parameter
-			let class_name = to_static_str(data[1].chars.iter().collect::<String>());
+			let class_name = data.remove(1).chars;
 			// matcher
 			Matcher {
 				one_handle: Some(Box::new(move |ele, _| -> bool {

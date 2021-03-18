@@ -1,5 +1,5 @@
+use std::cmp::Ordering;
 use std::error::Error;
-
 pub fn to_static_str(content: String) -> &'static str {
 	Box::leak(content.into_boxed_str())
 }
@@ -135,12 +135,49 @@ pub fn retain_by_index<T>(v: &mut Vec<T>, indexs: &[usize]) {
 	}
 }
 
-pub fn get_class_list(v: &str) -> Vec<&str> {
-	let v = v.trim();
-	if v.is_empty() {
-		vec![]
-	} else {
-		v.split_ascii_whitespace().collect::<Vec<&str>>()
+// get a class list from class attribute
+pub fn get_class_list(attr_class: &str) -> Vec<Vec<char>> {
+	let mut class_list: Vec<Vec<char>> = Vec::with_capacity(2);
+	let mut class_name: Vec<char> = Vec::with_capacity(5);
+	let mut prev_is_whitespace = true;
+	for ch in attr_class.chars() {
+		if ch.is_ascii_whitespace() {
+			if prev_is_whitespace {
+				continue;
+			}
+			// end of class name
+			prev_is_whitespace = true;
+			class_list.push(class_name);
+			class_name = Vec::with_capacity(5);
+		} else {
+			// in class name
+			prev_is_whitespace = false;
+			class_name.push(ch);
+		}
+	}
+	// last class name
+	if !prev_is_whitespace {
+		class_list.push(class_name);
+	}
+	class_list
+}
+
+// get a string from class list
+pub fn class_list_to_string(class_list: &[Vec<char>]) -> String {
+	let total = class_list.len();
+	match total.cmp(&1) {
+		Ordering::Equal => class_list[0].iter().collect::<String>(),
+		Ordering::Greater => {
+			let mut attr_class: Vec<char> = Vec::with_capacity(total * 5);
+			let last_index = total - 1;
+			for name in &class_list[..last_index] {
+				attr_class.extend_from_slice(&name);
+				attr_class.push(' ');
+			}
+			attr_class.extend_from_slice(&class_list[last_index]);
+			attr_class.iter().collect::<String>()
+		}
+		Ordering::Less => String::new(),
 	}
 }
 
@@ -173,13 +210,7 @@ pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
 	true
 }
 
-pub fn contains_chars(target: &[char], search: &[char]) -> bool {
-	let t_len = target.len();
-	let s_len = search.len();
-	// check length
-	if s_len > t_len {
-		return false;
-	}
+fn contains_chars_nocheck(target: &[char], search: &[char], t_len: usize, s_len: usize) -> bool {
 	// check if match
 	let max_start_index: usize = t_len - s_len;
 	let mut start_index: usize = 0;
@@ -197,6 +228,15 @@ pub fn contains_chars(target: &[char], search: &[char]) -> bool {
 		start_index += 1;
 	}
 	false
+}
+
+pub fn contains_chars(target: &[char], search: &[char]) -> bool {
+	let t_len = target.len();
+	let s_len = search.len();
+	if t_len < s_len {
+		return false;
+	}
+	contains_chars_nocheck(target, search, t_len, s_len)
 }
 
 #[cfg(test)]

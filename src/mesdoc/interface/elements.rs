@@ -1,5 +1,5 @@
 use super::{BoxDynElement, IAttrValue, IElementTrait, InsertPosition, MaybeDoc, Texts};
-use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError};
+use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
 	constants::DEF_NODES_LEN,
 	selector::{
@@ -194,9 +194,9 @@ impl<'a> Elements<'a> {
 		self.for_each(handle)
 	}
 	// pub fn `map`
-	pub fn map<F, T: Sized>(&self, handle: F) -> Vec<T>
+	pub fn map<F, T: Sized>(&self, mut handle: F) -> Vec<T>
 	where
-		F: Fn(usize, &BoxDynElement) -> T,
+		F: FnMut(usize, &BoxDynElement) -> T,
 	{
 		let mut result: Vec<T> = Vec::with_capacity(self.length());
 		for (index, ele) in self.get_ref().iter().enumerate() {
@@ -1863,19 +1863,21 @@ impl<'a> Elements<'a> {
 
 	/// pub fn `add_class`
 	pub fn add_class(&mut self, class_name: &str) -> &mut Self {
-		let class_name = class_name.trim();
-		if !class_name.is_empty() {
-			let class_list = get_class_list(class_name);
+		let class_list = get_class_list(class_name);
+		if !class_list.is_empty() {
 			for ele in self.get_mut_ref() {
 				let class_value = ele.get_attribute(ATTR_CLASS);
 				if let Some(IAttrValue::Value(cls, _)) = class_value {
 					let mut orig_class_list = get_class_list(&cls);
 					for class_name in &class_list {
 						if !orig_class_list.contains(class_name) {
-							orig_class_list.push(class_name);
+							orig_class_list.push(class_name.clone());
 						}
 					}
-					ele.set_attribute(ATTR_CLASS, Some(orig_class_list.join(" ").as_str()));
+					ele.set_attribute(
+						ATTR_CLASS,
+						Some(class_list_to_string(&orig_class_list).as_str()),
+					);
 					continue;
 				}
 				ele.set_attribute(ATTR_CLASS, Some(class_name));
@@ -1900,7 +1902,10 @@ impl<'a> Elements<'a> {
 					}
 					if !removed_indexs.is_empty() {
 						retain_by_index(&mut orig_class_list, &removed_indexs);
-						ele.set_attribute(ATTR_CLASS, Some(orig_class_list.join(" ").as_str()));
+						ele.set_attribute(
+							ATTR_CLASS,
+							Some(class_list_to_string(&orig_class_list).as_str()),
+						);
 					}
 				}
 			}
@@ -1918,12 +1923,12 @@ impl<'a> Elements<'a> {
 				if let Some(IAttrValue::Value(cls, _)) = class_value {
 					let mut orig_class_list = get_class_list(&cls);
 					let mut removed_indexs: Vec<usize> = Vec::with_capacity(total);
-					let mut added_class_list: Vec<&str> = Vec::with_capacity(total);
+					let mut added_class_list: Vec<Vec<char>> = Vec::with_capacity(total);
 					for class_name in &class_list {
 						if let Some(index) = orig_class_list.iter().position(|name| name == class_name) {
 							removed_indexs.push(index);
 						} else {
-							added_class_list.push(class_name);
+							added_class_list.push(class_name.clone());
 						}
 					}
 					let mut need_set = false;
@@ -1936,7 +1941,10 @@ impl<'a> Elements<'a> {
 						need_set = true;
 					}
 					if need_set {
-						ele.set_attribute(ATTR_CLASS, Some(orig_class_list.join(" ").as_str()));
+						ele.set_attribute(
+							ATTR_CLASS,
+							Some(class_list_to_string(&orig_class_list).as_str()),
+						);
 					}
 					continue;
 				}

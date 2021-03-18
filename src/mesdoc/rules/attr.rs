@@ -10,7 +10,6 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 		NAME_SELECTOR_ATTR,
 		r##"[{spaces}{attr_key}{spaces}{regexp#(?:([*^$~|!]?)=\s*(?:'((?:\\?+.)*?)'|([^\s\]'"<>/=`]+)|"((?:\\?+.)*?)"))?#}{spaces}]"##,
 		PRIORITY_ATTR_SELECTOR,
-		vec![("attr_key", 0), ("regexp", 0)],
 		Box::new(|data: MatchedQueue| {
 			let attr_key = data[2].chars.iter().collect::<String>();
 			let value_data = &data[4].data;

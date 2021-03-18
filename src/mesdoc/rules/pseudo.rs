@@ -30,7 +30,6 @@ fn pseudo_empty(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(|_| Matcher {
 			one_handle: Some(Box::new(|ele, _| {
 				let child_nodes = ele.child_nodes();
@@ -278,7 +277,6 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 		name,
 		selector,
 		PRIORITY,
-		vec![("nth", 0)],
 		Box::new(move |data: MatchedQueue| {
 			let nth_data = &data[2].data;
 			let n = nth_data.get("n").copied();
@@ -335,7 +333,6 @@ fn make_first_or_last_child(selector: &'static str, asc: bool) -> RuleDefItem {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| {
 			let handle = make_asc_or_desc_nth_child_handle(asc);
 			let specified_handle = Some(make_asc_or_desc_nth_child_specified(asc, 1));
@@ -514,7 +511,6 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 		name,
 		selector,
 		PRIORITY,
-		vec![("nth", 0)],
 		Box::new(move |mut data: MatchedQueue| {
 			let nth_data = data.remove(2).data;
 			let n = nth_data.get("n").copied();
@@ -582,7 +578,6 @@ fn make_first_or_last_of_type(selector: &'static str, asc: bool) -> RuleDefItem 
 		name,
 		selector,
 		PRIORITY,
-		vec![("nth", 0)],
 		Box::new(move |_| {
 			let specified_handle = Some(make_asc_or_desc_nth_of_type_specified(asc, 1));
 			Matcher {
@@ -641,7 +636,6 @@ fn pseudo_only_child(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| Matcher {
 			all_handle: Some(Box::new(|eles: &Elements, _| {
 				let mut result = Elements::with_capacity(DEF_NODES_LEN);
@@ -685,7 +679,6 @@ fn pseudo_only_of_type(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| Matcher {
 			all_handle: Some(Box::new(|eles: &Elements, _| {
 				let mut result = Elements::with_capacity(DEF_NODES_LEN);
@@ -755,7 +748,6 @@ fn pseudo_not(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![("selector", 0)],
 		Box::new(|data: MatchedQueue| {
 			let selector = data[2].chars.iter().collect::<String>();
 			Matcher {
@@ -775,7 +767,6 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![("regexp", 0)],
 		Box::new(|mut data: MatchedQueue| {
 			let mut find_chars = data.remove(2).chars;
 			if !find_chars.is_empty() {
@@ -819,7 +810,6 @@ fn pseudo_alias_header(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());
@@ -833,7 +823,6 @@ fn pseudo_alias_input(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());
@@ -847,7 +836,6 @@ fn pseudo_alias_submit(rules: &mut Vec<RuleItem>) {
 		name,
 		selector,
 		PRIORITY,
-		vec![],
 		Box::new(move |_| Rule::make_alias(alias)),
 	);
 	rules.push(rule.into());

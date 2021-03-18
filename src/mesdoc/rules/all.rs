@@ -7,7 +7,6 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 		NAME_SELECTOR_ALL,
 		"*",
 		PRIORITY_ALL_SELECTOR,
-		vec![],
 		Box::new(|_| Matcher {
 			all_handle: Some(Box::new(|eles: &Elements, _| eles.cloned())),
 			..Default::default()

@@ -62,34 +62,6 @@ impl Matcher {
 	}
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct SavedDataKey(&'static str, usize, &'static str);
-pub type DataKey = (&'static str, usize);
-
-impl From<(&'static str,)> for SavedDataKey {
-	fn from(t: (&'static str,)) -> Self {
-		SavedDataKey(t.0, 0, "_")
-	}
-}
-
-impl From<(&'static str, usize)> for SavedDataKey {
-	fn from(t: (&'static str, usize)) -> Self {
-		SavedDataKey(t.0, t.1, "_")
-	}
-}
-
-impl From<(&'static str, usize, &'static str)> for SavedDataKey {
-	fn from(t: (&'static str, usize, &'static str)) -> Self {
-		SavedDataKey(t.0, t.1, t.2)
-	}
-}
-
-impl From<&'static str> for SavedDataKey {
-	fn from(s: &'static str) -> Self {
-		(s,).into()
-	}
-}
-
 // get char vec
 const DEF_SIZE: usize = 2;
 fn get_char_vec() -> Vec<char> {
@@ -142,7 +114,6 @@ pub struct Rule {
 	pub in_cache: bool,
 	pub priority: u32,
 	pub(crate) queues: Vec<Box<dyn Pattern>>,
-	pub fields: Vec<DataKey>,
 	pub handle: MatcherFactory,
 }
 
@@ -323,6 +294,7 @@ impl Rule {
 		matcher.in_cache = self.in_cache;
 		matcher
 	}
+
 	/// make a matcher by alias
 	pub fn make_alias(selector: &'static str) -> Matcher {
 		// if parse the selector string into Selector and save to the closure
@@ -336,55 +308,17 @@ impl Rule {
 		}
 	}
 
-	// pub fn data(&self, data: &[Matched]) -> MatcherData {
-	// 	let mut result: MatcherData = HashMap::with_capacity(5);
-	// 	let mut indexs = HashMap::with_capacity(5);
-	// 	let fields = &self.fields;
-	// 	for item in data.iter() {
-	// 		let Matched {
-	// 			name,
-	// 			data: hash_data,
-	// 			chars,
-	// 			..
-	// 		} = item;
-	// 		if !name.is_empty() {
-	// 			let index = indexs.entry(name).or_insert(0);
-	// 			let data_key = (*name, *index);
-	// 			if fields.contains(&data_key) {
-	// 				let count = hash_data.len();
-	// 				if count == 0 {
-	// 					let cur_key = (*name, *index);
-	// 					result.insert(
-	// 						cur_key.into(),
-	// 						to_static_str(chars.iter().collect::<String>()),
-	// 					);
-	// 				} else {
-	// 					for (&key, &val) in hash_data.iter() {
-	// 						let cur_key = (*name, *index, key);
-	// 						result.insert(cur_key.into(), val);
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	result
-	// }
-	// add a rule
+	/// add a rule
 	pub fn add(context: &str, mut rule: Rule) -> Self {
 		rule.queues = Rule::get_queues(context);
 		rule
 	}
-	// quick method to get param
-	// pub fn param<T: Into<SavedDataKey>>(params: &MatcherData, v: T) -> Option<&'static str> {
-	// 	params.get(&v.into()).copied()
-	// }
 }
 
 pub struct RuleDefItem(
 	pub &'static str,
 	pub &'static str,
 	pub u32,
-	pub Vec<DataKey>,
 	pub MatcherFactory,
 );
 
@@ -402,8 +336,7 @@ impl From<RuleDefItem> for RuleItem {
 			rule: Rule {
 				priority: item.2,
 				in_cache: false,
-				fields: item.3,
-				handle: item.4,
+				handle: item.3,
 				queues: Vec::new(),
 			},
 		}

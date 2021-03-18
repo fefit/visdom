@@ -12,7 +12,6 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 		rule: Rule {
 			priority: PRIORITY_ID_SELECTOR,
 			in_cache: true,
-			fields: vec![("identity", 0)],
 			handle: Box::new(|data: MatchedQueue| {
 				let id = data[1].chars.iter().collect::<String>();
 				Matcher {
