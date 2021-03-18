@@ -14,6 +14,7 @@ exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "perfor
 
 [dependencies]
 rphtml = "0.5.1"
+# rphtml = { path = "../rphtml" }
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.4.3"

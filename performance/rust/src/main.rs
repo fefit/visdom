@@ -203,9 +203,10 @@ fn contains() -> RunResult {
 		r##"
 	    <ul>{}</ul>
 	  "##,
-		String::from("<li></li><li>a</li>").repeat(NODECOUNT / 2)
+		String::from("<li></li><li>abcdefghijklmnopqrstuvwxyz&amp;abcdefghijklmnopqrstuvwxy</li>")
+			.repeat(NODECOUNT / 2)
 	);
-	const SELECTOR: &str = ":contains('a')";
+	const SELECTOR: &str = ":contains('z&a')";
 	let root = Vis::load(&html)?;
 	let ul = root.children("ul");
 	println!("Finded: {:?}", ul.children(SELECTOR).length());
@@ -518,34 +519,34 @@ fn nth_child_find() -> RunResult {
 
 fn main() -> UniResult {
 	let mut total_info: Vec<TotalInfo> = Vec::with_capacity(10);
-	total_info.push(load_html()?);
-	total_info.push(find_id()?);
-	total_info.push(find_class()?);
-	total_info.push(find_name()?);
-	total_info.push(find_attr()?);
-	total_info.push(find_prev()?);
-	total_info.push(find_prev_all()?);
-	total_info.push(find_next()?);
-	total_info.push(find_next_all()?);
-	total_info.push(empty()?);
+	// total_info.push(load_html()?);
+	// total_info.push(find_id()?);
+	// total_info.push(find_class()?);
+	// total_info.push(find_name()?);
+	// total_info.push(find_attr()?);
+	// total_info.push(find_prev()?);
+	// total_info.push(find_prev_all()?);
+	// total_info.push(find_next()?);
+	// total_info.push(find_next_all()?);
+	// total_info.push(empty()?);
 	total_info.push(contains()?);
-	total_info.push(first_child()?);
-	total_info.push(last_child()?);
-	total_info.push(first_of_type()?);
-	total_info.push(last_of_type()?);
-	total_info.push(nth_child()?);
-	total_info.push(nth_child_10()?);
-	total_info.push(nth_child_2n5()?);
-	total_info.push(nth_last_child()?);
-	total_info.push(nth_last_child_10()?);
-	total_info.push(nth_last_child_2n5()?);
-	total_info.push(nth_of_type()?);
-	total_info.push(nth_of_type_10()?);
-	total_info.push(nth_of_type_2n5()?);
-	total_info.push(nth_last_of_type()?);
-	total_info.push(nth_last_of_type_10()?);
-	total_info.push(nth_last_of_type_2n5()?);
-	total_info.push(nth_child_find()?);
+	// total_info.push(first_child()?);
+	// total_info.push(last_child()?);
+	// total_info.push(first_of_type()?);
+	// total_info.push(last_of_type()?);
+	// total_info.push(nth_child()?);
+	// total_info.push(nth_child_10()?);
+	// total_info.push(nth_child_2n5()?);
+	// total_info.push(nth_last_child()?);
+	// total_info.push(nth_last_child_10()?);
+	// total_info.push(nth_last_child_2n5()?);
+	// total_info.push(nth_of_type()?);
+	// total_info.push(nth_of_type_10()?);
+	// total_info.push(nth_of_type_2n5()?);
+	// total_info.push(nth_last_of_type()?);
+	// total_info.push(nth_last_of_type_10()?);
+	// total_info.push(nth_last_of_type_2n5()?);
+	// total_info.push(nth_child_find()?);
 	println!("Total info: {:?}", total_info);
 	Ok(())
 }

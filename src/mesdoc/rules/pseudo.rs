@@ -777,15 +777,16 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 				} else {
 					find_chars
 				};
-				let search_count = search.len();
 				Matcher {
 					one_handle: Some(Box::new(move |ele, _| {
 						let contents = ele.text_contents();
-						let contents_count = contents.len();
-						match contents_count.cmp(&search_count) {
-							Ordering::Less => false,
-							_ => contains_chars(&contents, &&search),
-						}
+						// let contents = vec!['b'];
+						// let contents_count = contents.len();
+						contains_chars(&contents, &&search)
+						// match contents_count.cmp(&search_count) {
+						// 	Ordering::Less => false,
+						// 	_ => ,
+						// }
 					})),
 					..Default::default()
 				}
