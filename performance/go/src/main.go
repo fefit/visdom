@@ -199,7 +199,7 @@ func findNextAll() TotalInfo {
 func empty() TotalInfo {
 	htmlItems := strings.Repeat("<li></li><li>a</li>", NODECOUNT/2)
 	html := fmt.Sprintf("<ul>%s</ul>", htmlItems)
-	selector := ":first-child"
+	selector := ":empty"
 	init := func(doc *goquery.Document) func(*string) {
 		ul := doc.Find("ul")
 		fmt.Println()
@@ -503,34 +503,34 @@ func nthChildFind() TotalInfo {
 func main() {
 	var totalInfos []TotalInfo
 	totalInfos = append(totalInfos,
-		// loadHTML(),
-		// findID(),
-		// findClass(),
-		// findName(),
-		// findAttr(),
-		// findPrev(),
-		// findPrevAll(),
-		// findNext(),
-		// findNextAll(),
-		// empty(),
+		loadHTML(),
+		findID(),
+		findClass(),
+		findName(),
+		findAttr(),
+		findPrev(),
+		findPrevAll(),
+		findNext(),
+		findNextAll(),
+		empty(),
 		contains(),
-		// firstChild(),
-		// lastChild(),
-		// firstOfType(),
-		// lastOfType(),
-		// nthChild(),
-		// nthChild10(),
-		// nthChild2n5(),
-		// nthLastChild(),
-		// nthLastChild10(),
-		// nthLastChild2n5(),
-		// nthOfType(),
-		// nthOfType10(),
-		// nthOfType2n5(),
-		// nthLastOfType(),
-		// nthLastOfType10(),
-		// nthLastOfType2n5(),
-		// nthChildFind(),
+		firstChild(),
+		lastChild(),
+		firstOfType(),
+		lastOfType(),
+		nthChild(),
+		nthChild10(),
+		nthChild2n5(),
+		nthLastChild(),
+		nthLastChild10(),
+		nthLastChild2n5(),
+		nthOfType(),
+		nthOfType10(),
+		nthOfType2n5(),
+		nthLastOfType(),
+		nthLastOfType10(),
+		nthLastOfType2n5(),
+		nthChildFind(),
 	)
 	fmt.Printf("%#v", totalInfos)
 }
