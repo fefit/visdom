@@ -1,6 +1,6 @@
-<h1 style="text-align:center">
+<h1 align="center">
 
-  <strong>Visdom</strong>
+  <strong>:sparkling_heart: Visdom</strong>
 
   [![Build Status](https://travis-ci.org/fefit/visdom.svg?branch=main)](https://travis-ci.com/github/fefit/visdom)
   [![crates.io](https://img.shields.io/crates/v/visdom.svg)](https://crates.io/crates/visdom)
@@ -9,15 +9,15 @@
 
   
 </h1>
-<h4 style="text-align:center">
+<p align="center">
 
 [API Document](https://github.com/fefit/visdom/wiki/API-Document)&nbsp;&nbsp;&nbsp;&nbsp;
 [Online Demos](http://visdom.suchjs.com/#selector-id)&nbsp;&nbsp;&nbsp;&nbsp;
 [中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)&nbsp;&nbsp;&nbsp;&nbsp;
 [更新文档](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
 
-</h4>
-<h4>
+</p>
+<hr>
 <p>
 :house: A server-side html document syntax and operation library written in Rust, using apis similar to [jQuery](https://jquery.com), left off the parts thoes only worked in the browser(e.g. render and event related methods).
 
@@ -35,7 +35,7 @@ Memory: 8 GB 2133 MHz LPDDR3
 
 Run 200 Times / Avg Time
 
-| HTML Fragement                                        | Operation                                                                              | Find Nodes | Node14.15.3 + cheerio(1.0.0-rc.5) | Golang1.15.5 + goquery(v1.6.1)  | rust1.50.0+visdom<0.4.0> |
+| HTML Fragement                                        | Operation                                                                              | Find Nodes | Node14.15.3 <br> cheerio(1.0.0-rc.5) | Golang1.15.5 <br> goquery(v1.6.1)  | rust1.50.0<br>visdom(0.4.0) |
 |-------------------------------------------------------|----------------------------------------------------------------------------------------|------------|-----------------------------------|---------------------------------|--------------------------|
 | About 370,000 characters                              | Load Html                                                                              |            | 34ms                              | 2.4ms                           | 3.42ms                   |
 | `<ul>(<li></li>) * 3000 <li id='target'></li></ul>`     | ID Selector: find("#target")                                                           | 1          | 28ms                              | 0.062ms                         | 0.006ms                  |
