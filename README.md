@@ -28,9 +28,7 @@ It's not only helpful for the working with web scraping, but also supported usef
 
 Run in my Macbook Pro:
 
-CPU: 2.4 GHz / 4 Cores / Intel Core i5
-
-Memory: 8 GB 2133 MHz LPDDR3
+:computer: CPU: 2.4 GHz / 4 Cores / Intel Core i5 & Memory: 8 GB 2133 MHz LPDDR3
 
 Run 200 Times / Avg Time
 
