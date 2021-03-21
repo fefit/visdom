@@ -1,3 +1,4 @@
+#![allow(clippy::unnecessary_wraps)]
 use std::thread;
 use std::time::SystemTime;
 use std::{collections::VecDeque, error::Error};
@@ -6,17 +7,66 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<div>abcd</div>"##;
+	const HTML: &str = r##"<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>:nth-last-of-type</title>
+    </head>
+  <body>
+    <dl>
+      <dt>dt1</dt>
+        <dd>dd1</dd>
+        <dd>dd2</dd>
+        <dd>dd3</dd>
+      <dt>dt2</dt>
+        <dd>dd4</dd>
+      <dt>dt3</dt>
+        <dd>dd5</dd>
+        <dd>dd6</dd>
+    </dl>
+  </body>
+  </html>"##;
 	let root = Vis::load_catch(
 		HTML,
 		Box::new(|e| {
 			println!("e:{:?}", e);
 		}),
 	);
-	let content = root.find(r#":contains(a)"#);
+	let content = root.find(r#"dl :nth-last-of-type(1)"#);
 	println!("content:{}", content.length());
 	// println!("tag_name:{:?}", content.get(0).unwrap().tag_names());
-	println!("{:?}", content.attr("contenteditable"));
+	println!("{:?}", content.text());
+
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:last-of-type</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// :last-of-type
+	println!("---------------:last-of-type-------------");
+	let last_type_child = dl.children(":last-of-type");
+	println!("last_type_child.length() = {}", last_type_child.length());
+	println!("last_type_child.text() = {:?}", last_type_child.text());
 	// let texts = content
 	// 	.texts(0)
 	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));

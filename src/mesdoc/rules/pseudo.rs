@@ -10,7 +10,7 @@ use crate::mesdoc::{
 	},
 	selector::rule::MatchSpecifiedHandle,
 };
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::VecDeque};
 use std::{collections::HashMap, ops::Range};
 const PRIORITY: u32 = PRIORITY_PSEUDO_SELECTOR;
 
@@ -110,34 +110,51 @@ where
 fn make_asc_or_desc_nth_child_specified(asc: bool, index: isize) -> MatchSpecifiedHandle {
 	if index > 0 {
 		let index = (index - 1) as usize;
-		Box::new(move |ele, mut callback| {
-			let mut find_index: Option<usize> = Some(0);
-			let (node_index, reverse) = if asc {
-				(0, false)
-			} else {
-				(ele.child_nodes_length() - 1, true)
-			};
-			// loop from first node to last node
-			ele.child_nodes_item_since_by(
-				node_index,
-				reverse,
-				Box::new(|child| {
-					let is_matched = if let Some(orig_index) = find_index {
-						if orig_index == index {
-							find_index = None;
-							true
-						} else {
-							find_index = Some(orig_index + 1);
-							false
-						}
-					} else {
-						false
-					};
-					callback(child, is_matched);
-					true
-				}),
-			)
-		})
+		if asc {
+			Box::new(move |ele, mut callback| {
+				let mut cur_index: usize = 0;
+				// loop from first node to last node
+				ele.child_nodes_item_since_by(
+					0,
+					false,
+					Box::new(|child| {
+						let is_matched = cur_index == index;
+						cur_index += 1;
+						callback(child, is_matched);
+						true
+					}),
+				);
+			})
+		} else {
+			Box::new(move |ele, mut callback| {
+				let total = ele.child_nodes_length();
+				let mut matched: VecDeque<bool> = VecDeque::with_capacity(total);
+				// loop from last node to first node
+				// gather the matched info
+				let mut cur_index: usize = 0;
+				ele.child_nodes_item_since_by(
+					total - 1,
+					true,
+					Box::new(|_| {
+						let is_matched = cur_index == index;
+						cur_index += 1;
+						matched.push_front(is_matched);
+						true
+					}),
+				);
+				// loop then execute the callback
+				let mut loop_index: usize = 0;
+				ele.child_nodes_item_since_by(
+					0,
+					false,
+					Box::new(|child| {
+						callback(child, matched[loop_index]);
+						loop_index += 1;
+						true
+					}),
+				);
+			})
+		}
 	} else {
 		// match nothing, do nothing
 		Box::new(move |_, _| {})
@@ -443,25 +460,54 @@ fn collect_avail_name_eles(
 fn make_asc_or_desc_nth_of_type_specified(asc: bool, index: isize) -> MatchSpecifiedHandle {
 	if index > 0 {
 		let allow_indexs = vec![(index - 1) as usize];
-		Box::new(move |ele, mut callback| {
-			let mut names: NameCounterHashMap = HashMap::with_capacity(DEF_NODES_LEN);
-			let mut node_indexs: Vec<usize> = Vec::with_capacity(DEF_NODES_LEN);
-			let (node_index, reverse) = if asc {
-				(0, false)
-			} else {
-				(ele.child_nodes_length() - 1, true)
-			};
-			// loop from first node to last node
-			ele.child_nodes_item_since_by(
-				node_index,
-				reverse,
-				Box::new(|child| {
-					let is_matched = get_allowed_name_ele(child, &mut names, &allow_indexs, &mut node_indexs);
-					callback(child, is_matched);
-					true
-				}),
-			)
-		})
+		if asc {
+			Box::new(move |ele, mut callback| {
+				let mut names: NameCounterHashMap = HashMap::with_capacity(DEF_NODES_LEN);
+				let mut node_indexs: Vec<usize> = Vec::with_capacity(DEF_NODES_LEN);
+				// loop from first node to last node
+				ele.child_nodes_item_since_by(
+					0,
+					false,
+					Box::new(|child| {
+						let is_matched =
+							get_allowed_name_ele(child, &mut names, &allow_indexs, &mut node_indexs);
+						callback(child, is_matched);
+						true
+					}),
+				);
+			})
+		} else {
+			Box::new(move |ele, mut callback| {
+				let mut names: NameCounterHashMap = HashMap::with_capacity(DEF_NODES_LEN);
+				let mut node_indexs: Vec<usize> = Vec::with_capacity(DEF_NODES_LEN);
+				// total
+				let total = ele.child_nodes_length();
+				let mut matched: VecDeque<bool> = VecDeque::with_capacity(total);
+				// loop from last node to first node
+				// gather the matched info
+				ele.child_nodes_item_since_by(
+					total - 1,
+					true,
+					Box::new(|child| {
+						let is_matched =
+							get_allowed_name_ele(child, &mut names, &allow_indexs, &mut node_indexs);
+						matched.push_front(is_matched);
+						true
+					}),
+				);
+				// loop then execute the callback
+				let mut loop_index: usize = 0;
+				ele.child_nodes_item_since_by(
+					0,
+					false,
+					Box::new(|child| {
+						callback(child, matched[loop_index]);
+						loop_index += 1;
+						true
+					}),
+				);
+			})
+		}
 	} else {
 		// match nothing and do nothing
 		Box::new(|_, _| {})

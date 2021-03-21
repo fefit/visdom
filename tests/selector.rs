@@ -496,27 +496,6 @@ fn test_tagname_selector() -> Result {
 }
 
 #[test]
-fn test_pseudo_selectors() -> Result {
-	let html = r##"
-  <div id="content">
-    <p>Visdom</p>
-    <p>
-      Vis<span>dom</span>!
-    </p>
-    <p>
-      Vis&nbsp;<span>dom</span>!
-    </p>
-  </div>
-  "##;
-	let root = Vis::load(&html)?;
-	let content = root.find("#content");
-	assert_eq!(content.find("p:contains('Visdom')").length(), 2);
-	// npsp; &#160; space: &#32;
-	assert_eq!(content.find("p:contains('Vis dom')").length(), 0);
-	Ok(())
-}
-
-#[test]
 fn test_content_text() -> Result {
 	let root = Vis::load(HTML)?;
 	// inner div 1-1
@@ -556,6 +535,23 @@ fn test_selector_pseudo_contains() -> Result {
 	// escape ;
 	let text_escape = root.find(":contains(\"&\")");
 	assert_eq!(text_escape.length(), 1);
+	// more
+	let html = r##"
+  <div id="content">
+    <p>Visdom</p>
+    <p>
+      Vis<span>dom</span>!
+    </p>
+    <p>
+      Vis&nbsp;<span>dom</span>!
+    </p>
+  </div>
+  "##;
+	let root = Vis::load(&html)?;
+	let content = root.find("#content");
+	assert_eq!(content.find("p:contains('Visdom')").length(), 2);
+	// npsp; &#160; space: &#32;
+	assert_eq!(content.find("p:contains('Vis dom')").length(), 0);
 	Ok(())
 }
 
@@ -566,5 +562,46 @@ fn test_selector_pseudo_empty() -> Result {
 	// empty
 	let empty = root.find(":empty");
 	assert_eq!(empty.length(), 2);
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_nth_last_of_type() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:nth-last-of-type</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// :nth-last-of-type(1)
+	let last_type_child = dl.children(":nth-last-of-type(1)");
+	assert_eq!(last_type_child.length(), 2);
+	assert_eq!(last_type_child.text(), "dt3dd6");
+	// :nth-last-of-type(odd)
+	let last_odd_type_childs = dl.children(":nth-last-of-type(odd)");
+	assert_eq!(last_odd_type_childs.length(), 5);
+	assert_eq!(last_odd_type_childs.text(), "dt1dd2dd4dt3dd6",);
+	// :nth-last-of-type(3n)
+	let childs_type_last_3n = dl.children(":nth-last-of-type(3n)");
+	assert_eq!(childs_type_last_3n.length(), 3);
+	assert_eq!(childs_type_last_3n.text(), "dt1dd1dd4");
 	Ok(())
 }
