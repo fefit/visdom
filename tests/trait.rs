@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::result::Result as StdResult;
-use visdom::{types::INodeType, Vis};
+use visdom::Vis;
 type Result = StdResult<(), Box<dyn Error>>;
 
 #[test]
