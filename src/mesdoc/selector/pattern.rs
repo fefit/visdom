@@ -384,6 +384,9 @@ impl Nth {
 				// last index need -1 for real list index
 				allow_indexs.push(cur_index - 1);
 			}
+			if n < 0 {
+				allow_indexs.reverse();
+			}
 			return allow_indexs;
 		}
 		// only index
@@ -398,6 +401,27 @@ impl Nth {
 	}
 }
 
+#[cfg(test)]
+mod tests {
+	use super::Nth;
+	#[test]
+	fn test_allow_indexs() {
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("-2"), &Some("3"), 9),
+			vec![0, 2]
+		);
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("2"), &Some("3"), 9),
+			vec![2, 4, 6, 8]
+		);
+		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("2"), &None, 9),
+			vec![1, 3, 5, 7]
+		);
+		assert_eq!(Nth::get_allowed_indexs(&Some("-2"), &None, 9), vec![]);
+	}
+}
 /// RegExp
 #[derive(Debug)]
 pub struct RegExp<'a> {
