@@ -50,6 +50,10 @@ fn test_attribute_selector() -> Result {
 	assert_eq!(lang.find("a[lang$='']").length(), 0);
 	assert_eq!(lang.find("a[lang*='']").length(), 0);
 	assert_eq!(lang.find("a[lang~='']").length(), 0);
+	assert_eq!(lang.find("a[lang^='a']").length(), 0);
+	assert_eq!(lang.find("a[lang$='b']").length(), 0);
+	assert_eq!(lang.find("a[lang*='c']").length(), 0);
+	assert_eq!(lang.find("a[lang~='d']").length(), 0);
 	assert_eq!(lang.find("a[lang!='']").length(), 0);
 	assert_eq!(lang.find("a[lang!='anything']").length(), 2);
 	assert_eq!(lang.find("a[lang='']").length(), 2);
@@ -71,6 +75,7 @@ fn test_id_selector() -> Result {
 	// link
 	let link = root.find("#link");
 	assert_eq!(link.length(), 1);
+	assert_eq!(link.filter("#lang #link").length(), 1);
 	// nested
 	let link = root.find("#lang #link");
 	assert_eq!(link.length(), 1);
@@ -90,6 +95,7 @@ fn test_class_selector() -> Result {
     <a class="en link"></a>
     <a class="en-US link"></a>
     <span class="en"></span>
+    <em>no class selector</em>
   </nav>
   "##;
 	let root = Vis::load(&html)?;

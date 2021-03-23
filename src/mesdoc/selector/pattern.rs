@@ -5,9 +5,7 @@
 * class: .{identity}
 * attribute: [{identity}{rule##"(^|*~$)?=('")"##}]
 */
-use crate::mesdoc::utils::{
-	chars_to_int, divide_isize, is_char_available_in_key, to_static_str, RoundType,
-};
+use crate::mesdoc::utils::{divide_isize, is_char_available_in_key, to_static_str, RoundType};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::sync::{Arc, Mutex};
@@ -95,7 +93,7 @@ impl Pattern for Vec<char> {
 
 /// Identity
 #[derive(Debug, Default)]
-pub struct Identity(bool);
+pub struct Identity;
 
 impl Pattern for Identity {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
@@ -103,13 +101,6 @@ impl Pattern for Identity {
 		let first = chars[0];
 		let name: &str = "identity";
 		if !(first.is_ascii_alphabetic() || first == '_') {
-			if self.0 {
-				// optional
-				return Some(Matched {
-					name,
-					..Default::default()
-				});
-			}
 			return None;
 		}
 		// allow translate character '\': fix issue #2
@@ -144,11 +135,7 @@ impl Pattern for Identity {
 	}
 	// from_str
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		if s == "?" {
-			Ok(Box::new(Identity(true)))
-		} else {
-			check_params_return(&[p], || Box::new(Identity::default()))
-		}
+		check_params_return(&[s, p], || Box::new(Identity::default()))
 	}
 }
 /// AttrKey
@@ -181,7 +168,7 @@ impl Pattern for AttrKey {
 }
 /// Spaces
 #[derive(Debug, Default)]
-pub struct Spaces(usize);
+pub struct Spaces;
 
 impl Pattern for Spaces {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
@@ -193,61 +180,15 @@ impl Pattern for Spaces {
 				break;
 			}
 		}
-		if result.len() >= self.0 {
-			return Some(Matched {
-				chars: result,
-				name: "spaces",
-				..Default::default()
-			});
-		}
-		None
+		Some(Matched {
+			chars: result,
+			name: "spaces",
+			..Default::default()
+		})
 	}
+	// from params
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		let mut min_count = 0;
-		if !p.is_empty() {
-			return Err(format!("Spaces not support param '{}'", p));
-		}
-		if !s.trim().is_empty() {
-			let rule: [BoxDynPattern; 3] = [Box::new('('), Box::new(Index::default()), Box::new(')')];
-			let chars: Vec<char> = s.chars().collect();
-			let (result, _, _, match_all) = exec(&rule, &chars);
-			if !match_all {
-				return Err(format!("Wrong 'Spaces{}'", s));
-			}
-			min_count = chars_to_int(&result[1].chars).map_err(|e| e.to_string())?;
-		}
-		Ok(Box::new(Spaces(min_count)))
-	}
-}
-
-/// Index
-#[derive(Debug, Default)]
-pub struct Index;
-
-impl Pattern for Index {
-	fn matched(&self, chars: &[char]) -> Option<Matched> {
-		let first = chars[0];
-		let mut result = Vec::with_capacity(2);
-		let numbers = '0'..'9';
-		if numbers.contains(&first) {
-			result.push(first);
-			if first != '0' {
-				for ch in &chars[1..] {
-					if numbers.contains(ch) {
-						result.push(*ch);
-					}
-				}
-			}
-			return Some(Matched {
-				chars: result,
-				name: "index",
-				..Default::default()
-			});
-		}
-		None
-	}
-	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(Index::default()))
+		check_params_return(&[s, p], || Box::new(Spaces::default()))
 	}
 }
 
@@ -524,7 +465,6 @@ pub(crate) fn init() {
 	add_pattern("identity", Box::new(Identity::from_params));
 	add_pattern("spaces", Box::new(Spaces::from_params));
 	add_pattern("attr_key", Box::new(AttrKey::from_params));
-	add_pattern("index", Box::new(Index::from_params));
 	add_pattern("nth", Box::new(Nth::from_params));
 	add_pattern("regexp", Box::new(RegExp::from_params));
 	add_pattern("selector", Box::new(NestedSelector::from_params));

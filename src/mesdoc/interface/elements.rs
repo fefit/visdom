@@ -1591,7 +1591,7 @@ impl<'a> Elements<'a> {
 			first_indexs
 				.entry(index)
 				.or_insert_with(|| get_tree_indexs(&first[index]))
-		};
+		}
 		while fir_left_index <= fir_right_index && sec_left_index <= sec_right_index {
 			// the second left
 			let sec_left = &second[sec_left_index];

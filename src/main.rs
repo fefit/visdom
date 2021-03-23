@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 			println!("e:{:?}", e);
 		}),
 	);
-	let content = root.find(r#"dl :nth-last-of-type(1)"#);
+	let content = root.find(r#"dl :nth-child(1)"#);
 	println!("content:{}", content.length());
 	// println!("tag_name:{:?}", content.get(0).unwrap().tag_names());
 	println!("{:?}", content.text());
@@ -60,13 +60,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
-	let dl = root.find("dl");
-	// :last-of-type
-	println!("---------------:last-of-type-------------");
-	let last_type_child = dl.children(":last-of-type");
-	println!("last_type_child.length() = {}", last_type_child.length());
-	println!("last_type_child.text() = {:?}", last_type_child.text());
+	// let root = Vis::load(&html)?;
+	// let dl = root.find("dl");
+	// // :last-of-type
+	// println!("---------------:last-of-type-------------");
+	// let last_type_child = dl.children(":last-of-type");
+	// println!("last_type_child.length() = {}", last_type_child.length());
+	// println!("last_type_child.text() = {:?}", last_type_child.text());
+	// let html: &str = r#"<input type="text" READONly /></div>"#;
+	// let root = Vis::load(html)?;
+	// let input = root.children("[readOnly]");
+	// println!("input:{}", input.length());
 	// let texts = content
 	// 	.texts(0)
 	// 	.filter_by(|_, e| !matches!(e.node_type(), INodeType::Element));
