@@ -20,8 +20,8 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 				.copied();
 			let match_mode = value_data.get("1").copied().unwrap_or("");
 			let handle: Box<dyn Fn(&Option<IAttrValue>) -> bool> = if let Some(attr_value) = attr_value {
-				if attr_value.is_empty() {
-					// empty attribute value
+				if attr_value.is_empty() && !matches!(match_mode, "" | "!" | "|") {
+					// empty attribute value, ^$*
 					Box::new(|_val: &Option<IAttrValue>| false)
 				} else {
 					match match_mode {
@@ -49,7 +49,7 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 								let attr_value: String = format!("{}-", attr_value);
 								v.starts_with(&attr_value)
 							}
-							_ => false,
+							_ => attr_value.is_empty(),
 						}),
 						// in a value list that splitted by whitespaces
 						"~" => Box::new(move |val: &Option<IAttrValue>| match val {
@@ -67,12 +67,12 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 						// has a attribute and who's value not equal to setted value
 						"!" => Box::new(move |val: &Option<IAttrValue>| match val {
 							Some(IAttrValue::Value(v, _)) => attr_value != v,
-							_ => false,
+							_ => !attr_value.is_empty(),
 						}),
 						// equal to value
 						_ => Box::new(move |val: &Option<IAttrValue>| match val {
 							Some(IAttrValue::Value(v, _)) => v == attr_value,
-							_ => false,
+							_ => attr_value.is_empty(),
 						}),
 					}
 				}

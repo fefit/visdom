@@ -37,6 +37,24 @@ fn test_attribute_selector() -> Result {
 	// split list en
 	let ws_en = links.filter("[lang~='en']");
 	assert_eq!(ws_en.length(), 2);
+	// special cases
+	let html = r##"
+  <nav id="lang">
+    <a href="#" lang>boolean lang</a>
+    <a href="#" lang="">empty lang</a>
+  </nav>
+  "##;
+	let root = Vis::load(&html)?;
+	let lang = root.find("#lang");
+	assert_eq!(lang.find("a[lang^='']").length(), 0);
+	assert_eq!(lang.find("a[lang$='']").length(), 0);
+	assert_eq!(lang.find("a[lang*='']").length(), 0);
+	assert_eq!(lang.find("a[lang~='']").length(), 0);
+	assert_eq!(lang.find("a[lang!='']").length(), 0);
+	assert_eq!(lang.find("a[lang!='anything']").length(), 2);
+	assert_eq!(lang.find("a[lang='']").length(), 2);
+	assert_eq!(lang.find("a[lang]").length(), 2);
+	assert_eq!(lang.find("a[lang|='']").length(), 2);
 	Ok(())
 }
 
@@ -230,7 +248,7 @@ fn test_selector_pseudo_last_child() -> Result {
     <html lang="en">
       <head>
         <meta charset="utf-8">
-        <title>:first-child</title>
+        <title>:last-child</title>
       </head>
     <body>
       <ul>
@@ -383,7 +401,7 @@ fn test_selector_pseudo_first_of_type() -> Result {
     <html lang="en">
       <head>
         <meta charset="utf-8">
-        <title>:nth-of-type</title>
+        <title>:first-of-type</title>
       </head>
     <body>
       <dl>
@@ -416,7 +434,7 @@ fn test_selector_pseudo_last_of_type() -> Result {
     <html lang="en">
       <head>
         <meta charset="utf-8">
-        <title>:nth-of-type</title>
+        <title>:last-of-type</title>
       </head>
     <body>
       <dl>
@@ -532,5 +550,41 @@ fn test_selector_pseudo_nth_last_of_type() -> Result {
 	let childs_type_last_3n_2n = childs_type_last_3n.filter(":nth-last-of-type(2n)");
 	assert_eq!(childs_type_last_3n_2n.length(), 1);
 	assert_eq!(childs_type_last_3n_2n.text(), "dd1");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_not() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:not</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// not dt
+	let not_dt = dl.children(":not(dt)");
+	assert_eq!(not_dt.length(), 6);
+	// not dt
+	let not_dt_first = dl.children(":not(dt:nth-child(-n + 1))");
+	assert_eq!(not_dt_first.length(), 8);
+	assert_eq!(not_dt_first.eq(0).text(), "dd1");
 	Ok(())
 }
