@@ -56,6 +56,9 @@ fn test_id_selector() -> Result {
 	// nested
 	let link = root.find("#lang #link");
 	assert_eq!(link.length(), 1);
+	// limit parent
+	let link = root.find("nav #link");
+	assert_eq!(link.length(), 1);
 	// not found
 	let link = root.find("#none #link");
 	assert_eq!(link.length(), 0);
@@ -113,6 +116,16 @@ fn test_selector_pseudo_header() -> Result {
 }
 
 #[test]
+fn test_selector_pseudo_empty() -> Result {
+	let html = r#"<h1>abc</h1><div></div><p><!--comment--></p><b> </b>"#;
+	let root = Vis::load(html)?;
+	// empty
+	let empty = root.find(":empty");
+	assert_eq!(empty.length(), 2);
+	Ok(())
+}
+
+#[test]
 fn test_selector_pseudo_contains() -> Result {
 	let html = r#"<h1>abc</h1><div>a&amp;</div>"#;
 	let root = Vis::load(html)?;
@@ -146,12 +159,312 @@ fn test_selector_pseudo_contains() -> Result {
 }
 
 #[test]
-fn test_selector_pseudo_empty() -> Result {
-	let html = r#"<h1>abc</h1><div></div><p><!--comment--></p><b> </b>"#;
-	let root = Vis::load(html)?;
-	// empty
-	let empty = root.find(":empty");
-	assert_eq!(empty.length(), 2);
+fn test_selector_pseudo_only_child() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:only-child</title>
+      </head>
+    <body>
+      <ul class="list1">
+        <li>list1-item1</li>
+      </ul>
+      <ul class="list2">
+        <li>list2-item1</li>
+        <li>list2-item2</li>
+      </ul>
+      <ul class="list3">
+        lists-text!
+        <li>list3-item1</li>
+      </ul>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	// :only-child
+	let only_child = root.find("li:only-child");
+	assert_eq!(only_child.length(), 2);
+	assert_eq!(only_child.eq(0).parent("").is(".list1"), true);
+	assert_eq!(only_child.eq(1).parent("").is(".list3"), true);
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_first_child() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:first-child</title>
+      </head>
+    <body>
+      <ul>
+        <li>item1</li>
+        <li>item2</li>
+        <li>item3</li>
+        <li>item4</li>
+        <li>item5</li>
+        <li>item6</li>
+        <li>item7</li>
+        <li>item8</li>
+        <li>item9</li>
+      </ul>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	// :first-child
+	let first_child = root.find("li:first-child");
+	assert_eq!(first_child.length(), 1);
+	assert_eq!(first_child.text(), "item1");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_last_child() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:first-child</title>
+      </head>
+    <body>
+      <ul>
+        <li>item1</li>
+        <li>item2</li>
+        <li>item3</li>
+        <li>item4</li>
+        <li>item5</li>
+        <li>item6</li>
+        <li>item7</li>
+        <li>item8</li>
+        <li>item9</li>
+      </ul>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	// :last-child
+	let first_child = root.find("li:last-child");
+	assert_eq!(first_child.length(), 1);
+	assert_eq!(first_child.text(), "item9");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_nth_child() -> Result {
+	let html = r#"
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>:nth-child</title>
+    </head>
+  <body>
+    <ul>
+      <li>item1</li>
+      <li>item2</li>
+      <li>item3</li>
+      <li>item4</li>
+      <li>item5</li>
+      <li>item6</li>
+      <li>item7</li>
+      <li>item8</li>
+      <li>item9</li>
+    </ul>
+  </body>
+  </html>
+"#;
+	let root = Vis::load(&html)?;
+	// :nth-child(1)
+	let child = root.find("li:nth-child(1)");
+	assert_eq!(child.length(), 1);
+	assert_eq!(child.text(), "item1");
+	// :nth-child(odd)
+	let odd_childs = root.find("li:nth-child(odd)");
+	assert_eq!(odd_childs.length(), 5);
+	assert_eq!(odd_childs.text(), "item1item3item5item7item9");
+	// :nth-child(3n)
+	let childs_3n = root.find("li:nth-child(3n)");
+	assert_eq!(childs_3n.length(), 3);
+	assert_eq!(childs_3n.text(), "item3item6item9");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_nth_last_child() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:nth-last-child</title>
+      </head>
+    <body>
+      <ul>
+        <li>item1</li>
+        <li>item2</li>
+        <li>item3</li>
+        <li>item4</li>
+        <li>item5</li>
+        <li>item6</li>
+        <li>item7</li>
+        <li>item8</li>
+        <li>item9</li>
+      </ul>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	// :nth-last-child(1)
+	let child = root.find("li:nth-last-child(1)");
+	assert_eq!(child.length(), 1);
+	assert_eq!(child.text(), "item9");
+	// :nth-last-child(odd)
+	let odd_last_childs = root.find("li:nth-last-child(odd)");
+	assert_eq!(odd_last_childs.length(), 5);
+	assert_eq!(odd_last_childs.text(), "item1item3item5item7item9");
+	// :nth-last-child(3n)
+	let childs_last_3n = root.find("li:nth-last-child(3n)");
+	assert_eq!(childs_last_3n.length(), 3);
+	assert_eq!(childs_last_3n.text(), "item1item4item7");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_only_of_type() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:only-of-type</title>
+      </head>
+    <body>
+      <div id="content">
+        <strong>only strong</strong>
+        This is <span>span1</span>, this is a <b>only b</b>, this is another <span>span2</span>
+      </div>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let content = root.find("#content");
+	// :only-of-type
+	let only_of_type = content.children(":only-of-type");
+	assert_eq!(only_of_type.length(), 2);
+	assert_eq!(only_of_type.text(), "only strongonly b");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_first_of_type() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:nth-of-type</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// :first-of-type
+	let type_child = dl.children(":first-of-type");
+	assert_eq!(type_child.length(), 2);
+	assert_eq!(type_child.text(), "dt1dd1");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_last_of_type() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:nth-of-type</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// :last-of-type
+	let type_child = dl.children(":last-of-type");
+	assert_eq!(type_child.length(), 2);
+	assert_eq!(type_child.text(), "dt3dd6");
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_nth_of_type() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>:nth-of-type</title>
+      </head>
+    <body>
+      <dl>
+        <dt>dt1</dt>
+          <dd>dd1</dd>
+          <dd>dd2</dd>
+          <dd>dd3</dd>
+        <dt>dt2</dt>
+          <dd>dd4</dd>
+        <dt>dt3</dt>
+          <dd>dd5</dd>
+          <dd>dd6</dd>
+      </dl>
+    </body>
+    </html>
+  "#;
+	let root = Vis::load(&html)?;
+	let dl = root.find("dl");
+	// :nth-of-type(1)
+	let type_child = dl.children(":nth-of-type(1)");
+	assert_eq!(type_child.length(), 2);
+	assert_eq!(type_child.text(), "dt1dd1");
+	// :nth-of-type(odd)
+	let odd_type_childs = dl.children(":nth-of-type(odd)");
+	assert_eq!(odd_type_childs.length(), 5);
+	assert_eq!(odd_type_childs.text(), "dt1dd1dd3dt3dd5");
+	// :nth-of-type(3n)
+	let childs_type_3n = dl.children(":nth-of-type(3n)");
+	assert_eq!(childs_type_3n.length(), 3);
+	assert_eq!(childs_type_3n.text(), "dd3dt3dd6");
 	Ok(())
 }
 
