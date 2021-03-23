@@ -627,7 +627,11 @@ impl<'a> Elements<'a> {
 							.expect("Elements must have one node")
 							.parent()
 						{
-							cur_eles = Elements::with_node(parent);
+							if !parent.is_root_element() {
+								cur_eles = Elements::with_node(parent);
+							} else {
+								break;
+							}
 						} else {
 							break;
 						}
@@ -886,7 +890,7 @@ impl<'a> Elements<'a> {
 				if let Some(handle) = &matcher.one_handle {
 					for ele in uniques.get_ref() {
 						if let Some(parent) = ele.parent() {
-							if handle(&*parent, None) {
+							if !parent.is_root_element() && handle(&*parent, None) {
 								result.get_mut_ref().push(parent);
 							}
 						}
@@ -896,7 +900,9 @@ impl<'a> Elements<'a> {
 					let mut parents = Elements::with_capacity(uniques.length());
 					for ele in uniques.get_ref() {
 						if let Some(parent) = ele.parent() {
-							parents.push(parent);
+							if !parent.is_root_element() {
+								parents.push(parent);
+							}
 						}
 					}
 					let matched_parents = handle(&parents, None);
@@ -910,12 +916,14 @@ impl<'a> Elements<'a> {
 					let exec = |ele: &BoxDynElement, result: &mut Elements| {
 						fn loop_handle(ele: &BoxDynElement, result: &mut Elements, handle: &MatchOneHandle) {
 							if let Some(parent) = ele.parent() {
-								// try to find ancestor first
-								// because ancestor appear early than parent, keep the order
-								loop_handle(&parent, result, handle);
-								// check parent
-								if handle(&*parent, None) {
-									result.get_mut_ref().push(parent);
+								if !parent.is_root_element() {
+									// try to find ancestor first
+									// because ancestor appear early than parent, keep the order
+									loop_handle(&parent, result, handle);
+									// check parent
+									if handle(&*parent, None) {
+										result.get_mut_ref().push(parent);
+									}
 								}
 							}
 						}
@@ -931,10 +939,12 @@ impl<'a> Elements<'a> {
 					// gather all parents
 					fn loop_handle(ele: &BoxDynElement, parents: &mut Elements) {
 						if let Some(parent) = ele.parent() {
-							// add ancestor first
-							loop_handle(&parent, parents);
-							// add parent
-							parents.push(parent);
+							if !parent.is_root_element() {
+								// add ancestor first
+								loop_handle(&parent, parents);
+								// add parent
+								parents.push(parent);
+							}
 						}
 					}
 					let mut all_parents = Elements::with_capacity(10);
@@ -1203,10 +1213,10 @@ impl<'a> Elements<'a> {
 				if !filtered.is_empty() && query_num > 1 {
 					// set root first
 					root = root.or_else(|| {
-						let root_element = filtered
-							.get(0)
-							.expect("Filtered length greater than 0")
-							.root();
+						let cur_first = filtered.get(0).expect("Filtered length greater than 0");
+						let root_element = cur_first
+							.root_element()
+							.unwrap_or_else(|| cur_first.cloned());
 						Some(Elements::with_node(&root_element))
 					});
 					// get root elements

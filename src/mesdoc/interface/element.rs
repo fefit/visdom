@@ -64,31 +64,8 @@ impl InsertPosition {
 }
 
 pub trait IElementTrait: INodeTrait {
-	fn is(&self, ele: &BoxDynElement) -> bool {
-		if let Some(uuid) = self.uuid() {
-			if let Some(o_uuid) = ele.uuid() {
-				return uuid == o_uuid;
-			}
-		}
-		false
-	}
-	// root element
-	fn root<'b>(&self) -> BoxDynElement<'b> {
-		let mut root = self.parent();
-		loop {
-			if root.is_some() {
-				let parent = root.as_ref().unwrap().parent();
-				if let Some(parent) = parent {
-					root = Some(parent);
-				} else {
-					break;
-				}
-			} else {
-				break;
-			}
-		}
-		root.unwrap_or_else(|| self.cloned())
-	}
+	fn is(&self, ele: &BoxDynElement) -> bool;
+	fn is_root_element(&self) -> bool;
 	// cloned
 	fn cloned<'b>(&self) -> BoxDynElement<'b> {
 		let ele = self.clone_node();
@@ -241,7 +218,7 @@ pub trait IElementTrait: INodeTrait {
 			.collect::<String>()
 	}
 	fn tag_names(&self) -> Vec<char>;
-	// childs
+	// element child nodes
 	fn child_nodes_length(&self) -> usize;
 	fn child_nodes_item<'b>(&self, index: usize) -> Option<BoxDynNode<'b>>;
 	fn child_nodes_item_since_by<'a>(
@@ -262,6 +239,7 @@ pub trait IElementTrait: INodeTrait {
 		}
 		result
 	}
+	// children
 	fn children<'b>(&self) -> Elements<'b> {
 		let child_nodes = self.child_nodes();
 		let mut result = Elements::with_capacity(child_nodes.len());

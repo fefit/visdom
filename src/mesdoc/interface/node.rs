@@ -49,8 +49,7 @@ pub trait INodeTrait {
 	fn node_type(&self) -> INodeType;
 	// find parents
 	fn parent<'b>(&self) -> MaybeElement<'b>;
-	// check if two ele are the same
-	fn uuid(&self) -> Option<&str>;
+
 	// owner document
 	fn owner_document(&self) -> MaybeDoc;
 	// root element
@@ -69,9 +68,10 @@ pub trait INodeTrait {
 		self.text_content()
 	}
 	fn text_contents(&self) -> Vec<char>;
+	// set text
 	fn set_text(&mut self, content: &str);
 	// set html
 	fn set_html(&mut self, content: &str);
-	// ele index
+	// node index
 	fn index(&self) -> usize;
 }

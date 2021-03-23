@@ -103,7 +103,7 @@ fn test_node_trait() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	// get root
-	let root_element = root.get(0).unwrap().root();
-	assert_eq!(root_element.is(&root_element.root()), true);
+	let root_element = root.get(0).unwrap().root_element().unwrap();
+	assert_eq!(root_element.is(&root_element.root_element().unwrap()), true);
 	Ok(())
 }

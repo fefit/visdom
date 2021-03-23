@@ -175,11 +175,6 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		None
 	}
 
-	/// impl `uuid`
-	fn uuid(&self) -> Option<&str> {
-		None
-	}
-
 	/// impl `owner_document`
 	fn owner_document(&self) -> MaybeDoc {
 		if let Some(root) = &self.borrow().root {
@@ -799,13 +794,18 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		}
 	}
 
-	/// impl `is`, is much faster than compare the `uuid`
+	/// impl `is`
 	fn is(&self, ele: &BoxDynElement) -> bool {
 		let specified: Box<dyn Any> = ele.cloned().to_node();
 		if let Ok(dom) = specified.downcast::<RefNode>() {
 			return Node::is_same(&self, &dom);
 		}
 		false
+	}
+
+	/// impl `is_root_element`
+	fn is_root_element(&self) -> bool {
+		matches!(self.borrow().node_type, NodeType::AbstractRoot)
 	}
 }
 
@@ -835,7 +835,7 @@ impl IDocumentTrait for Document {
 	fn source_code(&self) -> &'static str {
 		to_static_str(self.doc.render(&Default::default()))
 	}
-	// get root node
+	// get root node, in rphtml is abstract root node
 	fn get_root_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(Rc::clone(&self.doc.borrow().root))
 	}
