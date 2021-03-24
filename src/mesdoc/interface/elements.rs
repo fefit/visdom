@@ -1576,10 +1576,7 @@ impl<'a> Elements<'a> {
 		// compare first and second
 		let first_count = first_eles.length();
 		let second_count = second_eles.length();
-		let avg = second_count / 3;
-		let mut prevs: Vec<usize> = Vec::with_capacity(avg);
-		let mut mids: Vec<(usize, usize)> = Vec::with_capacity(avg);
-		let mut afters: Vec<usize> = Vec::with_capacity(avg);
+		let mut mids: Vec<(usize, usize)> = Vec::with_capacity(second_count);
 		let mut sec_left_index = 0;
 		let sec_right_index = second_count - 1;
 		let mut first_indexs: HashMap<usize, VecDeque<usize>> = HashMap::with_capacity(first_count);
@@ -1615,8 +1612,11 @@ impl<'a> Elements<'a> {
 					let fir_right_level = get_first_index_cached(&mut first_indexs, &first, fir_right_index);
 					match compare_indexs(&sec_left_level, &fir_right_level) {
 						Ordering::Greater => {
-							// now second is all after first
-							afters.extend(sec_left_index..=sec_right_index);
+							// now second is all after first right
+							let cur_fir_index = fir_right_index + 1;
+							for index in sec_left_index..=sec_right_index {
+								mids.push((index, cur_fir_index));
+							}
 							break;
 						}
 						Ordering::Less => {
@@ -1655,8 +1655,11 @@ impl<'a> Elements<'a> {
 							sec_left_index += 1;
 						}
 						Ordering::Equal => {
-							// equal to first right, now all the second after current is behind first
-							afters.extend(sec_left_index + 1..=sec_right_index);
+							// equal to first right, now all the second after current is behind first right
+							let cur_fir_index = sec_right_index + 1;
+							for index in sec_left_index + 1..sec_right_index {
+								mids.push((index, cur_fir_index));
+							}
 							break;
 						}
 					}
@@ -1666,36 +1669,31 @@ impl<'a> Elements<'a> {
 					let sec_right_level = get_tree_indexs(sec_right);
 					match compare_indexs(&sec_right_level, &fir_left_level) {
 						Ordering::Less => {
-							// now second is all before first
-							prevs.extend(sec_left_index..=sec_right_index);
+							// now second is all before current first left
+							for index in sec_left_index..=sec_left_index {
+								mids.push((index, fir_left_index));
+							}
 							break;
 						}
 						Ordering::Greater => {
 							// second contains first or second right is in first
 							// just move second left
-							prevs.push(sec_left_index);
+							mids.push((sec_left_index, fir_left_index));
 							sec_left_index += 1;
 						}
 						Ordering::Equal => {
-							// equal to first left, now all the second are before first left
-							prevs.extend(sec_left_index..sec_right_index);
+							// equal to first left, now all the second are before current first left
+							for index in sec_left_index..sec_right_index {
+								mids.push((index, fir_left_index));
+							}
 							break;
 						}
 					}
 				}
 			}
 		}
-		let prevs_count = prevs.len();
 		let mids_count = mids.len();
-		let afters_count = afters.len();
-		let mut result = Elements::with_capacity(first_count + prevs_count + mids_count + afters_count);
-		if prevs_count > 0 {
-			// add prevs
-			for index in prevs {
-				let ele = &second[index];
-				result.push(ele.cloned());
-			}
-		}
+		let mut result = Elements::with_capacity(first_count + mids_count);
 		// add first and mids
 		let mut mid_loop = 0;
 		for (index, ele) in first_eles.get_ref().iter().enumerate() {
@@ -1714,12 +1712,11 @@ impl<'a> Elements<'a> {
 			}
 			result.push(ele.cloned());
 		}
-		// add afters
-		if afters_count > 0 {
-			// add afters
-			for index in afters {
-				let ele = &second[index];
-				result.push(ele.cloned());
+		// the second elements after first
+		if mid_loop < mids_count {
+			for (sec_index, _) in &mids[mid_loop..] {
+				let mid_ele = &second[*sec_index];
+				result.push(mid_ele.cloned());
 			}
 		}
 		result
