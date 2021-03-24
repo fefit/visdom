@@ -7,6 +7,17 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
+	let html = format!("<ul>{}</ul>", "<li></li>".repeat(12));
+	let root = Vis::load(&html)?;
+	let ul = root.find("ul");
+	let nth_2n_child = ul.find(":nth-child(6n),:nth-child(3n),:nth-child(2n)");
+	// println!("2n:{}", ul.find(":nth-child(2n)").length());
+	// println!(
+	// 	"{}",
+	// 	ul.find(":nth-child(3n),:nth-child(2n),:nth-child(6n)")
+	// 		.length()
+	// );
+	println!("{:?}", nth_2n_child.length());
 	// 	let html = format!(
 	// 		r##"<!doctype html>
 	//   <html lang="en">

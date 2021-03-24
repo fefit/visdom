@@ -325,26 +325,26 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
 	// :nth-child(0)
-	let child = ul.children(":nth-child(0)");
+	let child = ul.find(":nth-child(0)");
 	assert_eq!(child.length(), 0);
 	// :nth-child(-2n + 3)
-	let child = ul.children(":nth-child(-2n + 3)");
+	let child = ul.find(":nth-child(-2n + 3)");
 	assert_eq!(child.length(), 2);
 	assert_eq!(child.text(), "item1item3");
 	// :nth-child(1)
-	let child = ul.children(":nth-child(1)");
+	let child = ul.find(":nth-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item1");
 	// :nth-child(odd)
-	let odd_childs = ul.children(":nth-child(odd)");
+	let odd_childs = ul.find(":nth-child(odd)");
 	assert_eq!(odd_childs.length(), 5);
 	assert_eq!(odd_childs.text(), "item1item3item5item7item9");
 	// :nth-child(even)
-	let even_childs = ul.children(":nth-child( even )");
+	let even_childs = ul.find(":nth-child( even )");
 	assert_eq!(even_childs.length(), 4);
 	assert_eq!(even_childs.text(), "item2item4item6item8");
 	// :nth-child(3n)
-	let childs_3n = ul.children(":nth-child(3n)");
+	let childs_3n = ul.find(":nth-child(3n)");
 	assert_eq!(childs_3n.length(), 3);
 	assert_eq!(childs_3n.text(), "item3item6item9");
 	// filter
@@ -355,7 +355,7 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let html = format!("<ul>{}</ul>", "<li></li>".repeat(3000));
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
-	let nth_2n_child = ul.find(":nth-child(2n),:nth-child(3n),:nth-child(6n)");
+	let nth_2n_child = ul.find(":nth-child(6n),:nth-child(3n),:nth-child(2n)");
 	assert_eq!(
 		nth_2n_child.length(),
 		ul.find(":nth-child(2n),:nth-child(3n)").length()
@@ -390,15 +390,15 @@ fn test_selector_pseudo_nth_last_child() -> Result {
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
 	// :nth-last-child(1)
-	let child = ul.children(":nth-last-child(1)");
+	let child = ul.find(":nth-last-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item9");
 	// :nth-last-child(odd)
-	let odd_last_childs = ul.children(":nth-last-child(odd)");
+	let odd_last_childs = ul.find(":nth-last-child(odd)");
 	assert_eq!(odd_last_childs.length(), 5);
 	assert_eq!(odd_last_childs.text(), "item1item3item5item7item9");
 	// :nth-last-child(3n)
-	let childs_last_3n = ul.children(":nth-last-child(3n)");
+	let childs_last_3n = ul.find(":nth-last-child(3n)");
 	assert_eq!(childs_last_3n.length(), 3);
 	assert_eq!(childs_last_3n.text(), "item1item4item7");
 	// :nth-last-child(3n):nth-last-child(2n)
@@ -428,7 +428,7 @@ fn test_selector_pseudo_only_of_type() -> Result {
 	let root = Vis::load(&html)?;
 	let content = root.find("#content");
 	// :only-of-type
-	let only_of_type = content.children(":only-of-type");
+	let only_of_type = content.find(":only-of-type");
 	assert_eq!(only_of_type.length(), 2);
 	assert_eq!(only_of_type.text(), "only strongonly b");
 	// prev_all
@@ -465,7 +465,7 @@ fn test_selector_pseudo_first_of_type() -> Result {
 	let root = Vis::load(&html)?;
 	let dl = root.find("dl");
 	// :first-of-type
-	let type_child = dl.children(":first-of-type");
+	let type_child = dl.find(":first-of-type");
 	assert_eq!(type_child.length(), 2);
 	assert_eq!(type_child.text(), "dt1dd1");
 	// prevs
@@ -506,7 +506,7 @@ fn test_selector_pseudo_last_of_type() -> Result {
 	let root = Vis::load(&html)?;
 	let dl = root.find("dl");
 	// :last-of-type
-	let type_child = dl.children(":last-of-type");
+	let type_child = dl.find(":last-of-type");
 	assert_eq!(type_child.length(), 2);
 	assert_eq!(type_child.text(), "dt3dd6");
 	// prevs
@@ -550,15 +550,15 @@ fn test_selector_pseudo_nth_of_type() -> Result {
 	let type_child = dl.children(":nth-of-type(0)");
 	assert_eq!(type_child.length(), 0);
 	// :nth-of-type(1)
-	let type_child = dl.children(":nth-of-type(1)");
+	let type_child = dl.find(":nth-of-type(1)");
 	assert_eq!(type_child.length(), 2);
 	assert_eq!(type_child.text(), "dt1dd1");
 	// :nth-of-type(odd)
-	let odd_type_childs = dl.children(":nth-of-type(odd)");
+	let odd_type_childs = dl.find(":nth-of-type(odd)");
 	assert_eq!(odd_type_childs.length(), 5);
 	assert_eq!(odd_type_childs.text(), "dt1dd1dd3dt3dd5");
 	// :nth-of-type(3n)
-	let childs_type_3n = dl.children(":nth-of-type(3n)");
+	let childs_type_3n = dl.find(":nth-of-type(3n)");
 	assert_eq!(childs_type_3n.length(), 3);
 	assert_eq!(childs_type_3n.text(), "dd3dt3dd6");
 	// :nth-of-type(3n):nth-of-type(2n)
@@ -599,15 +599,15 @@ fn test_selector_pseudo_nth_last_of_type() -> Result {
 	let root = Vis::load(&html)?;
 	let dl = root.find("dl");
 	// :nth-last-of-type(1)
-	let last_type_child = dl.children(":nth-last-of-type(1)");
+	let last_type_child = dl.find(":nth-last-of-type(1)");
 	assert_eq!(last_type_child.length(), 2);
 	assert_eq!(last_type_child.text(), "dt3dd6");
 	// :nth-last-of-type(odd)
-	let last_odd_type_childs = dl.children(":nth-last-of-type(odd)");
+	let last_odd_type_childs = dl.find(":nth-last-of-type(odd)");
 	assert_eq!(last_odd_type_childs.length(), 5);
 	assert_eq!(last_odd_type_childs.text(), "dt1dd2dd4dt3dd6",);
 	// :nth-last-of-type(3n)
-	let childs_type_last_3n = dl.children(":nth-last-of-type(3n)");
+	let childs_type_last_3n = dl.find(":nth-last-of-type(3n)");
 	assert_eq!(childs_type_last_3n.length(), 3);
 	assert_eq!(childs_type_last_3n.text(), "dt1dd1dd4");
 	// :nth-last-of-type(3n):nth-last-of-type(2n)
