@@ -200,7 +200,6 @@ impl Selector {
 			// optimize groups to query process
 			selector.optimize(groups, use_lookup);
 		}
-
 		Ok(selector)
 	}
 	// add a selector group, splitted by ','
@@ -237,7 +236,6 @@ impl Selector {
 							n.1 = Combinator::Chain;
 							total_priority += n.0.priority;
 						}
-						continue;
 					}
 				}
 				if use_lookup {

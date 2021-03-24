@@ -7,7 +7,8 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	const HTML: &str = r##"<!doctype html>
+	let html = format!(
+		r##"<!doctype html>
   <html lang="en">
     <head>
       <meta charset="utf-8">
@@ -15,30 +16,35 @@ fn main() -> Result<(), Box<dyn Error>> {
     </head>
   <body>
     <dl>
+      {}
       <dt>dt1</dt>
         <dd>dd1</dd>
         <dd>dd2</dd>
         <dd>dd3</dd>
-      <dt>dt2</dt>
+      <dt id="dt2">dt2</dt>
         <dd>dd4</dd>
       <dt>dt3</dt>
         <dd>dd5</dd>
         <dd>dd6</dd>
     </dl>
   </body>
-  </html>"##;
+  </html>"##,
+		"<dt></dt>".repeat(3000)
+	);
 	let root = Vis::load_catch(
-		HTML,
+		&html,
 		Box::new(|e| {
 			println!("e:{:?}", e);
 		}),
 	);
-	let last_child = root.find(r#"dl"#).children(":nth-last-child(5n)");
-	println!("content:{}", last_child.length());
-	println!("content:{}", last_child.text());
-	println!("prev_all:{}", last_child.prev_all("").length());
-	let prev_last_child = last_child.prev_all(":last-child");
-	println!("prev_last_child: {}", prev_last_child.length());
+	let start_time = SystemTime::now();
+	for _ in 0..500 {
+		let last_child = root.find("dl dd#dt2");
+	}
+	println!(
+		"消耗时间：{:?}",
+		SystemTime::now().duration_since(start_time)? / 500
+	);
 
 	let html = r#"
     <!doctype html>
@@ -53,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
           <dd>dd1</dd>
           <dd>dd2</dd>
           <dd>dd3</dd>
-        <dt>dt2</dt>
+        <dt id="dt2">dt2</dt>
           <dd>dd4</dd>
         <dt>dt3</dt>
           <dd>dd5</dd>

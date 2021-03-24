@@ -443,6 +443,10 @@ fn test_method_closest() -> Result {
 	)?;
 	let abc = root.find("a,b,c");
 	assert_eq!(abc.length(), 4);
+	// wrong selector :first
+	assert_eq!(abc.closest(":first").length(), 0);
+	// empty selector, always return empty elements
+	assert_eq!(abc.closest("").length(), 0);
 	let closest = abc.closest(".closest");
 	assert_eq!(closest.length(), 3);
 	assert_eq!(closest.eq(0).get(0).unwrap().tag_name(), "DIV");
@@ -464,9 +468,13 @@ fn test_method_siblings() -> Result {
 	"#,
 	)?;
 	let abc = root.find("a,b,c");
+	// empty selector
 	let siblings = abc.siblings("");
 	assert_eq!(siblings.length(), 4);
 	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "P");
+	// wrong siblings selecotr
+	assert_eq!(abc.siblings(":nono").length(), 0);
+	// siblings
 	let siblings = abc.siblings(".closest");
 	assert_eq!(siblings.length(), 2);
 	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "A");

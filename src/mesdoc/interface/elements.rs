@@ -742,9 +742,14 @@ impl<'a> Elements<'a> {
 	}
 
 	/// pub fn `find`
-	/// get elements by selector, support most of css selectors
+	/// get elements by selector, support standard css selectors
 	pub fn find(&self, selector: &str) -> Elements<'a> {
-		self.trigger_method("find", selector, |selector| self.find_selector(selector))
+		let s = Selector::from_str(selector, true);
+		if let Ok(selector) = &s {
+			return self.find_selector(selector);
+		}
+		self.trigger_method_throw_error("find", Box::new(s.unwrap_err()));
+		Elements::new()
 	}
 	// select one rule
 	// the rule must not in cache
