@@ -251,21 +251,6 @@ pub trait IElementTrait: INodeTrait {
 		result
 	}
 	fn children_by<'a>(&'a self, matcher: Box<dyn FnMut(&dyn IElementTrait) + 'a>);
-	// get all childrens
-	fn childrens<'b>(&self) -> Elements<'b> {
-		let childs = self.children();
-		let count = childs.length();
-		if count > 0 {
-			let mut result = Elements::with_capacity(DEF_NODES_LEN);
-			let all_nodes = result.get_mut_ref();
-			for c in childs.get_ref() {
-				all_nodes.push(c.cloned());
-				all_nodes.extend(c.childrens());
-			}
-			return result;
-		}
-		Elements::new()
-	}
 	// attribute
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue>;
 	fn set_attribute(&mut self, name: &str, value: Option<&str>);

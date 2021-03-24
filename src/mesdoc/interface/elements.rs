@@ -1838,6 +1838,17 @@ impl<'a> Elements<'a> {
 		None
 	}
 
+	/// pub fn `has_attr`
+	/// check if any element has an attribute
+	pub fn has_attr(&self, attr_name: &str) -> bool {
+		for ele in self.get_ref() {
+			if ele.has_attribute(attr_name) {
+				return true;
+			}
+		}
+		false
+	}
+
 	/// pub fn `set_attr`
 	/// set each element's attribute to `key` = attr_name, `value` = value.  
 	pub fn set_attr(&mut self, attr_name: &str, value: Option<&str>) -> &mut Self {

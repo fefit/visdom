@@ -196,3 +196,12 @@ fn test_dom_set_text() -> Result {
 	assert!(parent.text().is_empty());
 	Ok(())
 }
+
+#[test]
+fn test_inner_html() -> Result {
+	let inner_html = "abc<span>def</span>ghj";
+	let code = format!("<div>{}</div>", inner_html);
+	let root = Vis::load(&code)?;
+	assert_eq!(root.html(), inner_html);
+	Ok(())
+}
