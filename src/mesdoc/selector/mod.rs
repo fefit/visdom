@@ -390,3 +390,33 @@ impl FromStr for Selector {
 		Selector::from_str(selector, true)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::{Combinator, QueryProcess, Selector};
+	#[test]
+	fn test_default() {
+		let def_selector = Selector::default();
+		assert!(def_selector.process.is_empty());
+		let def_process = QueryProcess::default();
+		assert!(def_process.should_in.is_none());
+		assert!(def_process.query.is_empty());
+	}
+	#[test]
+	fn test_combinator() {
+		let comb: Combinator = ">".into();
+		assert_eq!(comb, Combinator::Children);
+		assert_eq!(comb.reverse(), Combinator::Parent);
+	}
+
+	#[test]
+	fn test_combinator_reverse() {
+		assert_eq!(Combinator::Chain.reverse(), Combinator::Chain);
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_combinator_unable_reverse() {
+		let _ = Combinator::Parent.reverse();
+	}
+}

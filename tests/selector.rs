@@ -660,3 +660,51 @@ fn test_selector_pseudo_not() -> Result {
 	assert_eq!(not_dt_first.eq(0).text(), "dd1");
 	Ok(())
 }
+
+#[test]
+#[should_panic]
+fn test_wrong_selector_splitter() {
+	let root = Vis::load_catch(
+		"<b>anything</b>",
+		Box::new(|e| {
+			panic!("should panic:{:?}", e);
+		}),
+	);
+	root.find(">,");
+}
+
+#[test]
+#[should_panic]
+fn test_wrong_selector_empty_start() {
+	let root = Vis::load_catch(
+		"<b>anything</b>",
+		Box::new(|e| {
+			panic!("should panic:{:?}", e);
+		}),
+	);
+	root.find(",abc");
+}
+
+#[test]
+#[should_panic]
+fn test_wrong_selector_empty_end() {
+	let root = Vis::load_catch(
+		"<b>anything</b>",
+		Box::new(|e| {
+			panic!("should panic:{:?}", e);
+		}),
+	);
+	root.find("abc,");
+}
+
+#[test]
+#[should_panic]
+fn test_wrong_selector_wrong_nested() {
+	let root = Vis::load_catch(
+		"<b>anything</b>",
+		Box::new(|e| {
+			panic!("should panic:{:?}", e);
+		}),
+	);
+	root.find(":not(:not(:a))");
+}
