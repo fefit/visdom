@@ -178,7 +178,14 @@ fn test_selector_pseudo_contains() -> Result {
 	let content = root.find("#content");
 	assert_eq!(content.find("p:contains('Visdom')").length(), 2);
 	// npsp; &#160; space: &#32;
-	assert_eq!(content.find("p:contains('Vis dom')").length(), 0);
+	assert_eq!(content.find("p:contains(\"Vis dom\")").length(), 0);
+	// no quote
+	assert_eq!(content.find("p:contains(Visdom)").length(), 2);
+	// contains empty
+	assert_eq!(
+		content.find("p:contains()").length(),
+		content.find("p").length()
+	);
 	Ok(())
 }
 
@@ -244,6 +251,12 @@ fn test_selector_pseudo_first_child() -> Result {
 	let first_child = root.find("li:first-child");
 	assert_eq!(first_child.length(), 1);
 	assert_eq!(first_child.text(), "item1");
+	// prev :first-child
+	let prev_first_child = first_child.prev_all(":first-child");
+	assert_eq!(prev_first_child.length(), 0);
+	// next :first-child
+	let next_first_child = first_child.next_all(":first-child");
+	assert_eq!(next_first_child.length(), 0);
 	Ok(())
 }
 
@@ -273,9 +286,15 @@ fn test_selector_pseudo_last_child() -> Result {
   "#;
 	let root = Vis::load(&html)?;
 	// :last-child
-	let first_child = root.find("li:last-child");
-	assert_eq!(first_child.length(), 1);
-	assert_eq!(first_child.text(), "item9");
+	let last_child = root.find("li:last-child");
+	assert_eq!(last_child.length(), 1);
+	assert_eq!(last_child.text(), "item9");
+	// prev :first-child
+	let prev_last_child = last_child.prev_all(":last-child");
+	assert_eq!(prev_last_child.length(), 0);
+	// next :first-child
+	let next_last_child = last_child.next_all(":last-child");
+	assert_eq!(next_last_child.length(), 0);
 	Ok(())
 }
 
@@ -304,23 +323,24 @@ fn test_selector_pseudo_nth_child() -> Result {
   </html>
 "#;
 	let root = Vis::load(&html)?;
+	let ul = root.find("ul");
 	// :nth-child(0)
-	let child = root.find("li:nth-child(0)");
+	let child = ul.children("li:nth-child(0)");
 	assert_eq!(child.length(), 0);
 	// :nth-child(-2n + 3)
-	let child = root.find("li:nth-child(-2n + 3)");
+	let child = ul.children("li:nth-child(-2n + 3)");
 	assert_eq!(child.length(), 2);
 	assert_eq!(child.text(), "item1item3");
 	// :nth-child(1)
-	let child = root.find("li:nth-child(1)");
+	let child = ul.children("li:nth-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item1");
 	// :nth-child(odd)
-	let odd_childs = root.find("li:nth-child(odd)");
+	let odd_childs = ul.children("li:nth-child(odd)");
 	assert_eq!(odd_childs.length(), 5);
 	assert_eq!(odd_childs.text(), "item1item3item5item7item9");
 	// :nth-child(3n)
-	let childs_3n = root.find("li:nth-child(3n)");
+	let childs_3n = ul.children("li:nth-child(3n)");
 	assert_eq!(childs_3n.length(), 3);
 	assert_eq!(childs_3n.text(), "item3item6item9");
 	// filter
@@ -355,16 +375,17 @@ fn test_selector_pseudo_nth_last_child() -> Result {
     </html>
   "#;
 	let root = Vis::load(&html)?;
+	let ul = root.find("ul");
 	// :nth-last-child(1)
-	let child = root.find("li:nth-last-child(1)");
+	let child = ul.children("li:nth-last-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item9");
 	// :nth-last-child(odd)
-	let odd_last_childs = root.find("li:nth-last-child(odd)");
+	let odd_last_childs = ul.children("li:nth-last-child(odd)");
 	assert_eq!(odd_last_childs.length(), 5);
 	assert_eq!(odd_last_childs.text(), "item1item3item5item7item9");
 	// :nth-last-child(3n)
-	let childs_last_3n = root.find("li:nth-last-child(3n)");
+	let childs_last_3n = ul.children("li:nth-last-child(3n)");
 	assert_eq!(childs_last_3n.length(), 3);
 	assert_eq!(childs_last_3n.text(), "item1item4item7");
 	// :nth-last-child(3n):nth-last-child(2n)
@@ -397,6 +418,10 @@ fn test_selector_pseudo_only_of_type() -> Result {
 	let only_of_type = content.children(":only-of-type");
 	assert_eq!(only_of_type.length(), 2);
 	assert_eq!(only_of_type.text(), "only strongonly b");
+	// prev_all
+	let prevs_only_of_type = content.find("b").prev_all(":only-of-type");
+	assert_eq!(prevs_only_of_type.length(), 1);
+	assert_eq!(prevs_only_of_type.text(), "only strong");
 	Ok(())
 }
 
@@ -430,6 +455,14 @@ fn test_selector_pseudo_first_of_type() -> Result {
 	let type_child = dl.children(":first-of-type");
 	assert_eq!(type_child.length(), 2);
 	assert_eq!(type_child.text(), "dt1dd1");
+	// prevs
+	let type_child_prevs = type_child.prev_all(":first-of-type");
+	assert_eq!(type_child_prevs.length(), 1);
+	assert_eq!(type_child_prevs.text(), "dt1");
+	// nexts
+	let type_child_nexts = type_child.next_all(":first-of-type");
+	assert_eq!(type_child_nexts.length(), 1);
+	assert_eq!(type_child_nexts.text(), "dd1");
 	Ok(())
 }
 
@@ -463,6 +496,14 @@ fn test_selector_pseudo_last_of_type() -> Result {
 	let type_child = dl.children(":last-of-type");
 	assert_eq!(type_child.length(), 2);
 	assert_eq!(type_child.text(), "dt3dd6");
+	// prevs
+	let type_child_prevs = type_child.prev_all(":last-of-type");
+	assert_eq!(type_child_prevs.length(), 1);
+	assert_eq!(type_child_prevs.text(), "dt3");
+	// nexts
+	let type_child_nexts = type_child.next_all(":last-of-type");
+	assert_eq!(type_child_nexts.length(), 1);
+	assert_eq!(type_child_nexts.text(), "dd6");
 	Ok(())
 }
 
@@ -511,6 +552,10 @@ fn test_selector_pseudo_nth_of_type() -> Result {
 	let childs_type_3n_2n = childs_type_3n.filter(":nth-of-type(2n)");
 	assert_eq!(childs_type_3n_2n.length(), 1);
 	assert_eq!(childs_type_3n_2n.text(), "dd6");
+	// prevs
+	let childs_type_3n_2n_prevs = childs_type_3n_2n.prev_all(":nth-of-type(3n)");
+	assert_eq!(childs_type_3n_2n_prevs.length(), 2);
+	assert_eq!(childs_type_3n_2n_prevs.text(), "dd3dt3");
 	Ok(())
 }
 
@@ -556,6 +601,14 @@ fn test_selector_pseudo_nth_last_of_type() -> Result {
 	let childs_type_last_3n_2n = childs_type_last_3n.filter(":nth-last-of-type(2n)");
 	assert_eq!(childs_type_last_3n_2n.length(), 1);
 	assert_eq!(childs_type_last_3n_2n.text(), "dd1");
+	// prevs
+	let childs_type_last_3n_2n_prevs = childs_type_last_3n_2n.prev_all(":nth-last-of-type(3n)");
+	assert_eq!(childs_type_last_3n_2n_prevs.length(), 1);
+	assert_eq!(childs_type_last_3n_2n_prevs.text(), "dt1");
+	// nexts
+	let childs_type_last_3n_2n_nests = childs_type_last_3n_2n.next_all(":nth-last-of-type(3n)");
+	assert_eq!(childs_type_last_3n_2n_nests.length(), 1);
+	assert_eq!(childs_type_last_3n_2n_nests.text(), "dd4");
 	Ok(())
 }
 

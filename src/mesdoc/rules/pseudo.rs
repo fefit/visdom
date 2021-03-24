@@ -235,6 +235,8 @@ fn make_asc_or_desc_nth_child_handle(asc: bool) -> NthChildHandle {
 				let mut finded: Vec<BoxDynElement> = Vec::with_capacity(allow_indexs.len());
 				// optimize when loop all the childrens
 				if range.len() == total {
+					// becareful the index in allow_indexs is calc from the end
+					// so the index 0 is the last child
 					for &index in allow_indexs.iter().rev() {
 						finded.push(childs[total - index - 1].cloned());
 					}
@@ -243,9 +245,9 @@ fn make_asc_or_desc_nth_child_handle(asc: bool) -> NthChildHandle {
 					let siblings = &eles[range.start..range.end];
 					let mut cur_end = range.len();
 					for (index, child) in childs.iter().rev().enumerate() {
-						let last_index = total - index - 1;
 						// use binary search for faster speed
-						if allow_indexs.binary_search(&last_index).is_err() {
+						// now the index has reversed, so it's same as the index in allow_indexs
+						if allow_indexs.binary_search(&index).is_err() {
 							continue;
 						}
 						for (i, ele) in siblings[..cur_end].iter().rev().enumerate() {

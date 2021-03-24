@@ -33,10 +33,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 			println!("e:{:?}", e);
 		}),
 	);
-	let content = root.find(r#"dl :nth-child(1)"#);
-	println!("content:{}", content.length());
-	// println!("tag_name:{:?}", content.get(0).unwrap().tag_names());
-	println!("{:?}", content.text());
+	let last_child = root.find(r#"dl"#).children(":nth-last-child(5n)");
+	println!("content:{}", last_child.length());
+	println!("content:{}", last_child.text());
+	println!("prev_all:{}", last_child.prev_all("").length());
+	let prev_last_child = last_child.prev_all(":last-child");
+	println!("prev_last_child: {}", prev_last_child.length());
 
 	let html = r#"
     <!doctype html>

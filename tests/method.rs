@@ -368,9 +368,6 @@ fn test_method_parents() -> Result {
 	// parent
 	let body = childs.parents("body");
 	assert_eq!(body.length(), 1);
-	// parents to html
-	// let parents = childs.parents("");
-	// assert_eq!(parents.length(), 3);
 	Ok(())
 }
 
