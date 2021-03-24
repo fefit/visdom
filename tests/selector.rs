@@ -325,26 +325,26 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
 	// :nth-child(0)
-	let child = ul.children("li:nth-child(0)");
+	let child = ul.children(":nth-child(0)");
 	assert_eq!(child.length(), 0);
 	// :nth-child(-2n + 3)
-	let child = ul.children("li:nth-child(-2n + 3)");
+	let child = ul.children(":nth-child(-2n + 3)");
 	assert_eq!(child.length(), 2);
 	assert_eq!(child.text(), "item1item3");
 	// :nth-child(1)
-	let child = ul.children("li:nth-child(1)");
+	let child = ul.children(":nth-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item1");
 	// :nth-child(odd)
-	let odd_childs = ul.children("li:nth-child(odd)");
+	let odd_childs = ul.children(":nth-child(odd)");
 	assert_eq!(odd_childs.length(), 5);
 	assert_eq!(odd_childs.text(), "item1item3item5item7item9");
 	// :nth-child(even)
-	let even_childs = ul.children("li:nth-child( even )");
+	let even_childs = ul.children(":nth-child( even )");
 	assert_eq!(even_childs.length(), 4);
 	assert_eq!(even_childs.text(), "item2item4item6item8");
 	// :nth-child(3n)
-	let childs_3n = ul.children("li:nth-child(3n)");
+	let childs_3n = ul.children(":nth-child(3n)");
 	assert_eq!(childs_3n.length(), 3);
 	assert_eq!(childs_3n.text(), "item3item6item9");
 	// filter
@@ -390,15 +390,15 @@ fn test_selector_pseudo_nth_last_child() -> Result {
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
 	// :nth-last-child(1)
-	let child = ul.children("li:nth-last-child(1)");
+	let child = ul.children(":nth-last-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item9");
 	// :nth-last-child(odd)
-	let odd_last_childs = ul.children("li:nth-last-child(odd)");
+	let odd_last_childs = ul.children(":nth-last-child(odd)");
 	assert_eq!(odd_last_childs.length(), 5);
 	assert_eq!(odd_last_childs.text(), "item1item3item5item7item9");
 	// :nth-last-child(3n)
-	let childs_last_3n = ul.children("li:nth-last-child(3n)");
+	let childs_last_3n = ul.children(":nth-last-child(3n)");
 	assert_eq!(childs_last_3n.length(), 3);
 	assert_eq!(childs_last_3n.text(), "item1item4item7");
 	// :nth-last-child(3n):nth-last-child(2n)
@@ -662,49 +662,28 @@ fn test_selector_pseudo_not() -> Result {
 }
 
 #[test]
-#[should_panic]
-fn test_wrong_selector_splitter() {
-	let root = Vis::load_catch(
-		"<b>anything</b>",
-		Box::new(|e| {
-			panic!("should panic:{:?}", e);
-		}),
-	);
-	root.find(">,");
+fn test_wrong_selector_splitter() -> Result {
+	let root = Vis::load("<b>anything</b>")?;
+	assert!(root.find(">,").is_empty());
+	Ok(())
 }
 
 #[test]
-#[should_panic]
-fn test_wrong_selector_empty_start() {
-	let root = Vis::load_catch(
-		"<b>anything</b>",
-		Box::new(|e| {
-			panic!("should panic:{:?}", e);
-		}),
-	);
-	root.find(",abc");
+fn test_wrong_selector_empty_start() -> Result {
+	let root = Vis::load("<b>anything</b>")?;
+	assert!(root.find(",b").is_empty());
+	Ok(())
 }
 
 #[test]
-#[should_panic]
-fn test_wrong_selector_empty_end() {
-	let root = Vis::load_catch(
-		"<b>anything</b>",
-		Box::new(|e| {
-			panic!("should panic:{:?}", e);
-		}),
-	);
-	root.find("abc,");
+fn test_wrong_selector_empty_end() -> Result {
+	let root = Vis::load("<b>anything</b>")?;
+	assert!(root.find("b,").is_empty());
+	Ok(())
 }
 
 #[test]
-#[should_panic]
 fn test_wrong_selector_wrong_nested() {
-	let root = Vis::load_catch(
-		"<b>anything</b>",
-		Box::new(|e| {
-			panic!("should panic:{:?}", e);
-		}),
-	);
-	root.find(":not(:not(:a))");
+	let root = Vis::load("<b>anything</b>").unwrap();
+	assert!(root.find(":not(:not(:a)").is_empty());
 }

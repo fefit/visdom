@@ -170,7 +170,7 @@ impl Selector {
 								&rules,
 								&splitter,
 								0,
-							);
+							)?;
 							index += len;
 							matched.extend(nested_matched);
 							Selector::add_group_item(&mut groups, (r.make(matched), comb), is_new_item);
@@ -319,7 +319,7 @@ impl Selector {
 		rules: &[(&str, Arc<Rule>)],
 		splitter: &[BoxDynPattern],
 		level: usize,
-	) -> (usize, MatchedQueue) {
+	) -> Result<(usize, MatchedQueue), Error> {
 		let mut index = 0;
 		let total = chars.len();
 		let mut matched: MatchedQueue = Vec::with_capacity(until.len() + 1);
@@ -345,7 +345,7 @@ impl Selector {
 							rules,
 							splitter,
 							level + 1,
-						);
+						)?;
 						index += nest_count;
 					}
 					break;
@@ -362,7 +362,11 @@ impl Selector {
 				if !until.is_empty() {
 					let (util_matched, count, queue_num, _) = exec(until, &chars[index..]);
 					if queue_num != until.len() {
-						panic!("nested selector parse error");
+						let context = chars[index..].iter().collect::<String>();
+						return Err(Error::InvalidSelector {
+							context,
+							reason: format!("Nested selector parse error at index {}", index),
+						});
 					} else {
 						index += count;
 						if level == 0 {
@@ -373,7 +377,7 @@ impl Selector {
 				break;
 			}
 		}
-		(index, matched)
+		Ok((index, matched))
 	}
 }
 

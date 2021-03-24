@@ -7,67 +7,44 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	let html = format!(
-		r##"<!doctype html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <title>:nth-last-of-type</title>
-    </head>
-  <body>
-    <dl>
-      {}
-      <dt>dt1</dt>
-        <dd>dd1</dd>
-        <dd>dd2</dd>
-        <dd>dd3</dd>
-      <dt id="dt2">dt2</dt>
-        <dd>dd4</dd>
-      <dt>dt3</dt>
-        <dd>dd5</dd>
-        <dd>dd6</dd>
-    </dl>
-  </body>
-  </html>"##,
-		"<dt></dt>".repeat(3000)
-	);
-	let root = Vis::load_catch(
-		&html,
-		Box::new(|e| {
-			println!("e:{:?}", e);
-		}),
-	);
-	let start_time = SystemTime::now();
-	for _ in 0..500 {
-		let last_child = root.find("dl dd#dt2");
-	}
-	println!(
-		"消耗时间：{:?}",
-		SystemTime::now().duration_since(start_time)? / 500
-	);
-
-	let html = r#"
-    <!doctype html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <title>:last-of-type</title>
-      </head>
-    <body>
-      <dl>
-        <dt>dt1</dt>
-          <dd>dd1</dd>
-          <dd>dd2</dd>
-          <dd>dd3</dd>
-        <dt id="dt2">dt2</dt>
-          <dd>dd4</dd>
-        <dt>dt3</dt>
-          <dd>dd5</dd>
-          <dd>dd6</dd>
-      </dl>
-    </body>
-    </html>
-  "#;
+	// 	let html = format!(
+	// 		r##"<!doctype html>
+	//   <html lang="en">
+	//     <head>
+	//       <meta charset="utf-8">
+	//       <title>:nth-last-of-type</title>
+	//     </head>
+	//   <body>
+	//     <dl>
+	//       {}
+	//       <dt>dt1</dt>
+	//         <dd>dd1</dd>
+	//         <dd>dd2</dd>
+	//         <dd>dd3</dd>
+	//       <dt id="dt2">dt2</dt>
+	//         <dd>dd4</dd>
+	//       <dt>dt3</dt>
+	//         <dd>dd5</dd>
+	//         <dd>dd6</dd>
+	//     </dl>
+	//   </body>
+	//   </html>"##,
+	// 		"<dt></dt>".repeat(3000)
+	// 	);
+	// 	let root = Vis::load_catch(
+	// 		&html,
+	// 		Box::new(|e| {
+	// 			println!("e:{:?}", e);
+	// 		}),
+	// 	);
+	// 	let start_time = SystemTime::now();
+	// 	let dl = root.find("dl");
+	// 	let child = dl.find(":nth-child(5)");
+	// 	println!("child.length():{}", child.length());
+	// 	println!(
+	// 		"消耗时间：{:?}",
+	// 		SystemTime::now().duration_since(start_time)? / 1
+	// 	);
 	// let root = Vis::load(&html)?;
 	// let dl = root.find("dl");
 	// // :last-of-type
