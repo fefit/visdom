@@ -351,6 +351,15 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let childs_3n_2n = childs_3n.filter(":nth-child(2n)");
 	assert_eq!(childs_3n_2n.length(), 1);
 	assert_eq!(childs_3n_2n.text(), "item6");
+	// group selector
+	let html = format!("<ul>{}</ul>", "<li></li>".repeat(3000));
+	let root = Vis::load(&html)?;
+	let ul = root.find("ul");
+	let nth_2n_child = ul.find(":nth-child(2n),:nth-child(3n),:nth-child(6n)");
+	assert_eq!(
+		nth_2n_child.length(),
+		ul.find(":nth-child(2n),:nth-child(3n)").length()
+	);
 	Ok(())
 }
 

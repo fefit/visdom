@@ -58,6 +58,15 @@ fn test_method_find() -> Result {
 	let outer_and_inner = nested.find("[class|='outer'],[class|='inner']");
 	assert_eq!(outer_and_inner.length(), 6);
 	assert!(is_attr(&outer_and_inner.eq(1), "class", "inner-div-1-1"));
+	// find
+	let inner_div = root.find("div .inner-div-2-2");
+	assert_eq!(inner_div.length(), 1);
+	// find
+	let inner_div = root.find("div+.inner-div-2-2");
+	assert_eq!(inner_div.length(), 1);
+	// find
+	let inner_div = root.find("div~.inner-div-2-2");
+	assert_eq!(inner_div.length(), 1);
 	Ok(())
 }
 
@@ -680,6 +689,12 @@ fn test_method_siblings() -> Result {
 	let siblings = abc.siblings(".closest");
 	assert_eq!(siblings.length(), 2);
 	assert_eq!(siblings.eq(0).get(0).unwrap().tag_name(), "A");
+	// big count childs
+	let html = format!("<ul>{}</ul>", "<li></li>".repeat(3000));
+	let root = Vis::load(&html)?;
+	let ul = root.find("ul");
+	let nth_2n_child = ul.find(":nth-child(2n)");
+	assert_eq!(nth_2n_child.siblings("").length(), 3000);
 	Ok(())
 }
 
@@ -696,5 +711,77 @@ fn test_content_text() -> Result {
 	assert!(inner_div_1_2.children("").length() > 0);
 	assert_eq!(inner_div_1_2_text, "inner-div-1-2");
 	// return
+	Ok(())
+}
+
+#[test]
+fn test_method_eq() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let term_with_id = root.find("[id^='term']");
+	assert_eq!(term_with_id.length(), 3);
+	// eq
+	let term_id_1 = term_with_id.eq(0);
+	assert_eq!(term_id_1.length(), 1);
+	assert!(term_id_1.is("#term-1"));
+	assert!(term_id_1.is_in(&term_with_id.first()));
+	// more
+	assert!(term_with_id.eq(2).is("#term-3"));
+	assert!(term_with_id.eq(2).is_in(&term_with_id.last()));
+	assert!(term_with_id.eq(3).is_empty());
+	Ok(())
+}
+
+#[test]
+fn test_method_slice() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let term_with_id = root.find("[id^='term']");
+	assert_eq!(term_with_id.length(), 3);
+	// slice
+	let term_id_slice = term_with_id.slice(1..);
+	assert_eq!(term_id_slice.length(), 2);
+	// slice
+	let term_id_slice = term_with_id.slice(1..5);
+	assert_eq!(term_id_slice.length(), 2);
+	// slice
+	let term_id_slice = term_with_id.slice(..3);
+	assert_eq!(term_id_slice.length(), 3);
+	// slice
+	let term_id_slice = term_with_id.slice(..5);
+	assert_eq!(term_id_slice.length(), 3);
+	// slice
+	let term_id_slice = term_with_id.slice(3..);
+	assert_eq!(term_id_slice.length(), 0);
 	Ok(())
 }
