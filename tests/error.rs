@@ -28,7 +28,7 @@ fn test_wrong_html_catch() {
 	let _ = Vis::load_options_catch(
 		html,
 		Default::default(),
-		Box::new(|e| {
+		Box::new(|_| {
 			// ignore the error, or write a log
 		}),
 	);
@@ -66,7 +66,7 @@ fn test_wrong_selector_catch() {
   "#;
 	let root = Vis::load_catch(
 		html,
-		Box::new(|e: Box<dyn Error>| {
+		Box::new(|_: Box<dyn Error>| {
 			// errors will be catched here
 			// error selector just get an empty elements
 		}),

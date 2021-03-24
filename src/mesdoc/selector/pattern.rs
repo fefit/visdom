@@ -20,7 +20,7 @@ lazy_static! {
 pub type BoxDynPattern = Box<dyn Pattern>;
 
 fn no_implemented(name: &str) -> ! {
-	panic!("No supported Pattern type '{}' found", name);
+	panic!("No supported pattern '{}' was found", name);
 }
 
 pub type MatchedData = HashMap<&'static str, &'static str>;
@@ -342,27 +342,6 @@ impl Nth {
 	}
 }
 
-#[cfg(test)]
-mod tests {
-	use super::Nth;
-	#[test]
-	fn test_allow_indexs() {
-		assert_eq!(
-			Nth::get_allowed_indexs(&Some("-2"), &Some("3"), 9),
-			vec![0, 2]
-		);
-		assert_eq!(
-			Nth::get_allowed_indexs(&Some("2"), &Some("3"), 9),
-			vec![2, 4, 6, 8]
-		);
-		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
-		assert_eq!(
-			Nth::get_allowed_indexs(&Some("2"), &None, 9),
-			vec![1, 3, 5, 7]
-		);
-		assert_eq!(Nth::get_allowed_indexs(&Some("-2"), &None, 9), vec![]);
-	}
-}
 /// RegExp
 #[derive(Debug)]
 pub struct RegExp<'a> {
@@ -508,4 +487,28 @@ pub fn check_params_return<F: Fn() -> BoxDynPattern>(
 		}
 	}
 	Ok(cb())
+}
+
+#[cfg(test)]
+mod tests {
+	use super::Nth;
+	#[test]
+	fn test_allow_indexs() {
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("-2"), &Some("3"), 9),
+			vec![0, 2]
+		);
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("2"), &Some("3"), 9),
+			vec![2, 4, 6, 8]
+		);
+		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
+		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 2), vec![]);
+		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("3"), 9), vec![2]);
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("2"), &None, 9),
+			vec![1, 3, 5, 7]
+		);
+		assert_eq!(Nth::get_allowed_indexs(&Some("-2"), &None, 9), vec![]);
+	}
 }

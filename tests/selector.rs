@@ -339,6 +339,10 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let odd_childs = ul.children("li:nth-child(odd)");
 	assert_eq!(odd_childs.length(), 5);
 	assert_eq!(odd_childs.text(), "item1item3item5item7item9");
+	// :nth-child(even)
+	let even_childs = ul.children("li:nth-child( even )");
+	assert_eq!(even_childs.length(), 4);
+	assert_eq!(even_childs.text(), "item2item4item6item8");
 	// :nth-child(3n)
 	let childs_3n = ul.children("li:nth-child(3n)");
 	assert_eq!(childs_3n.length(), 3);

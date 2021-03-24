@@ -360,6 +360,44 @@ fn test_method_parent() -> Result {
 }
 
 #[test]
+fn test_method_parents_until() -> Result {
+	let html = r##"
+  <ul id="one" class="level-1">
+    <li class="item-i">I</li>
+    <li id="ii" class="item-ii">II
+      <ul class="level-2">
+        <li class="item-a">A</li>
+        <li class="item-b">B
+          <ul class="level-3">
+            <li class="item-1">1</li>
+            <li class="item-2">2</li>
+            <li class="item-3">3</li>
+          </ul>
+        </li>
+        <li class="item-c">C</li>
+      </ul>
+    </li>
+    <li class="item-iii">III</li>
+  </ul>
+  "##;
+	let root = Vis::load(html)?;
+	let item_1 = root.find(".item-1");
+	// parents until
+	let to_level_3 = item_1.parents_until(".level-3", "", false);
+	assert_eq!(to_level_3.length(), 0);
+	// parents until
+	let to_level_3_contains = item_1.parents_until(".level-3", "", true);
+	assert_eq!(to_level_3_contains.length(), 1);
+	// parents until to level 1
+	let to_level_1 = item_1.parents_until(".level-1", "", false);
+	assert_eq!(to_level_1.length(), 4);
+	// parents  until to level 1, but only "li" tags
+	let to_level_1_items = item_1.parents_until(".level-1", "li", false);
+	assert_eq!(to_level_1_items.length(), 2);
+	Ok(())
+}
+
+#[test]
 fn test_method_parents() -> Result {
 	let root = Vis::load(HTML)?;
 	let id_ele = root.find("#id");
@@ -371,6 +409,164 @@ fn test_method_parents() -> Result {
 	Ok(())
 }
 
+#[test]
+fn test_method_prev() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let term_with_id = root.find("[id^='term']");
+	assert_eq!(term_with_id.length(), 3);
+	// prev
+	let term_with_id_prev = term_with_id.prev("");
+	assert_eq!(term_with_id_prev.length(), 2);
+	// prev dt
+	let term_with_id_prev = term_with_id.prev("dt");
+	assert_eq!(term_with_id_prev.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_method_next() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let term_with_id = root.find("[id^='term']");
+	assert_eq!(term_with_id.length(), 3);
+	// next
+	let term_with_id_next = term_with_id.next("");
+	assert_eq!(term_with_id_next.length(), 3);
+	// next dd
+	let term_with_id_next = term_with_id.next("dd");
+	assert_eq!(term_with_id_next.length(), 3);
+	// next dt
+	let term_with_id_next = term_with_id.next("dt");
+	assert_eq!(term_with_id_next.length(), 0);
+	Ok(())
+}
+#[test]
+fn test_method_next_all() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let id_term_2 = root.find("#term-2");
+	// next all
+	let item_after_term_2 = id_term_2.next_all("");
+	assert_eq!(item_after_term_2.length(), 6);
+	// next all dd
+	let dd_after_term_2 = id_term_2.next_all("dd");
+	assert_eq!(dd_after_term_2.length(), 5);
+	// next all dt
+	let dt_after_term_2 = id_term_2.next_all("dt");
+	assert_eq!(dt_after_term_2.length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_method_prev_all() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let id_term_2 = root.find("#term-2");
+	// prev all
+	let item_before_term_2 = id_term_2.prev_all("");
+	assert_eq!(item_before_term_2.length(), 5);
+	// prev all dd
+	let dd_before_term_2 = id_term_2.prev_all("dd");
+	assert_eq!(dd_before_term_2.length(), 4);
+	// prev all dt
+	let dt_before_term_2 = id_term_2.prev_all("dt");
+	assert_eq!(dt_before_term_2.length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_method_prev_until() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let id_term_2 = root.find("#term-2");
+	// until meet the dt
+	let dd_before_term_2 = id_term_2.prev_until("dt", "", false);
+	assert_eq!(dd_before_term_2.length(), 4);
+	// until meet the dt, but contains dt
+	let dd_and_self_before_term_2 = id_term_2.prev_until("dt", "", true);
+	assert_eq!(dd_and_self_before_term_2.length(), 5);
+	// until with filter
+	let id_term_3 = root.find("#term-3");
+	let filter_before_term_3 = id_term_3.prev_until("#term-1", ":contains('1')", true);
+	assert_eq!(filter_before_term_3.length(), 5);
+	Ok(())
+}
 #[test]
 fn test_method_next_until() -> Result {
 	let html = r##"
@@ -391,10 +587,16 @@ fn test_method_next_until() -> Result {
   "##;
 	let root = Vis::load(html)?;
 	let id_term_2 = root.find("#term-2");
+	// until meet the dt
 	let dd_after_term_2 = id_term_2.next_until("dt", "", false);
 	assert_eq!(dd_after_term_2.length(), 3);
+	// until meet the dt, but contains dt
 	let dd_and_self_after_term_2 = id_term_2.next_until("dt", "", true);
 	assert_eq!(dd_and_self_after_term_2.length(), 4);
+	// until with filter
+	let id_term_1 = root.find("#term-1");
+	let filter_after_term_1 = id_term_1.next_until("#term-3", ":contains('2')", false);
+	assert_eq!(filter_after_term_1.length(), 4);
 	Ok(())
 }
 

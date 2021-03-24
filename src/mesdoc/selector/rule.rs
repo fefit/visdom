@@ -152,7 +152,7 @@ impl Rule {
 					is_matched_finish = true;
 				} else {
 					panic!(
-						"Unexpect end of Pattern type '{}' at index {}, expect '{}' but found '{}'",
+						"Unexpected end of the pattern '{}' at index {}, expect '{}' but found '{}'",
 						vec_char_to_clean_str(&mut store.names),
 						index - 1,
 						END_CHAR,
@@ -358,4 +358,76 @@ pub fn add_rules(rules: Vec<RuleItem>) {
 
 pub(crate) fn init() {
 	pattern::init();
+}
+
+#[cfg(test)]
+mod tests {
+	use super::{Matcher, Rule, RuleDefItem, RuleItem};
+	#[test]
+	fn test_allow_debug() {
+		let rule = RuleDefItem(
+			":eq({spaces}{regexp!##(:first|:last)##}{spaces})",
+			":eq",
+			100,
+			Box::new(|_| Matcher {
+				..Default::default()
+			}),
+		);
+		let rule: RuleItem = rule.into();
+		let _ = format!("{:?}", rule.rule);
+	}
+
+	#[test]
+	fn test_rule_escape_start() {
+		let _ = Rule::get_queues("{{nth");
+	}
+
+	#[test]
+	fn test_rule_escape_end() {
+		let _ = Rule::get_queues("nth}}");
+	}
+
+	#[test]
+	fn test_rule_escape_both() {
+		let _ = Rule::get_queues("{{nth}}");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_escape_no_start() {
+		let _ = Rule::get_queues("{{nth}");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_wrong_escape_no_end() {
+		let _ = Rule::get_queues("{nth");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_wrong_escape_no_end_at_end() {
+		let _ = Rule::get_queues("{nth}{");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_params() {
+		// panic because no pattern register
+		let _ = Rule::get_queues("{abc!#abc#}");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_wrong_params() {
+		// panic because the params not end correctly
+		let _ = Rule::get_queues("{abc!#a#bc#}");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_params_hash() {
+		// panic because no pattern register
+		let _ = Rule::get_queues("{abc!##a#bc##}");
+	}
 }
