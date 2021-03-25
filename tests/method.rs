@@ -45,6 +45,14 @@ fn test_method_find() -> Result {
 	assert_eq!(p_ele.length(), 1);
 	let ul_ele = id_ele.find("ul");
 	assert_eq!(ul_ele.length(), 0);
+	// complex selector
+	let inner_div_2_2 = id_ele.find("~div .outer-div-1 + div > div.inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
+	assert!(inner_div_2_2.has_class("inner-div-2-2"));
+	// complex selector
+	let inner_div_2_2 = id_ele.find("+#nested .outer-div-1 ~ .outer-div-2 > div.inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
+	assert!(inner_div_2_2.has_class("inner-div-2-2"));
 	// nested
 	let nested = root.find("div#id ~ div#nested");
 	assert_eq!(nested.length(), 1);
