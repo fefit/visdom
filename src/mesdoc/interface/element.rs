@@ -1,5 +1,5 @@
 use super::{BoxDynNode, BoxDynText, Elements, INodeTrait, INodeType, Texts};
-use crate::mesdoc::{constants::DEF_NODES_LEN, error::Error as IError};
+use crate::mesdoc::error::Error as IError;
 use std::error::Error;
 use std::ops::Range;
 
@@ -21,7 +21,7 @@ impl IAttrValue {
 	pub fn is_str(&self, value: &str) -> bool {
 		match self {
 			IAttrValue::Value(v, _) => v == value,
-			IAttrValue::True => false,
+			IAttrValue::True => value.is_empty(),
 		}
 	}
 	/// pub fn `to_list`

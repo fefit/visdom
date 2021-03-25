@@ -21,15 +21,17 @@ fn test_normal_attr() -> Result {
 	// set again
 	div.set_attr(ATTR_NAME, None);
 	let value = div.attr(ATTR_NAME);
-	assert!(value.is_some() && value.as_ref().unwrap().is_true());
-	assert!(!value.as_ref().unwrap().is_str(""));
+	assert!(value.is_some());
+	assert!(value.as_ref().unwrap().is_true());
+	assert!(value.as_ref().unwrap().is_str(""));
 	assert!(value.as_ref().unwrap().to_string() == "");
 	assert!(value.as_ref().unwrap().to_list().is_empty());
 	// always get the first appeared attribute
 	let input = div.children("input");
 	let value = input.attr("type");
-	assert!(value.is_some() && value.as_ref().unwrap().is_str("text"));
-	assert!(value.is_some() && value.as_ref().unwrap().to_string() == "text");
+	assert!(value.is_some());
+	assert!(value.as_ref().unwrap().is_str("text"));
+	assert!(value.as_ref().unwrap().to_string() == "text");
 	assert_eq!(value.as_ref().unwrap().to_list(), vec!["text"]);
 	// ignore attribute cases: issue #2
 	let html: &str = r#"<input type="text" READONly /></div>"#;

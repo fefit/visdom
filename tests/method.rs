@@ -596,6 +596,9 @@ fn test_method_next_until() -> Result {
   "##;
 	let root = Vis::load(html)?;
 	let id_term_2 = root.find("#term-2");
+	// until wrong selector
+	let wrong_dd_after_term_2 = id_term_2.next_until(":dt", "", false);
+	assert_eq!(wrong_dd_after_term_2.length(), 0);
 	// until meet the dt
 	let dd_after_term_2 = id_term_2.next_until("dt", "", false);
 	assert_eq!(dd_after_term_2.length(), 3);
@@ -606,6 +609,9 @@ fn test_method_next_until() -> Result {
 	let id_term_1 = root.find("#term-1");
 	let filter_after_term_1 = id_term_1.next_until("#term-3", ":contains('2')", false);
 	assert_eq!(filter_after_term_1.length(), 4);
+	// until wrong filter
+	let wrong_filter_after_term_1 = id_term_1.next_until("#term-3", ":gt('2')", false);
+	assert_eq!(wrong_filter_after_term_1.length(), 0);
 	Ok(())
 }
 
@@ -669,11 +675,7 @@ fn test_method_siblings() -> Result {
 	let root = Vis::load(
 		r#"
 	    <div class="closest">
-	      <p>
-	        <a class="closest">aaa</a>
-          <b class="closest">bbb</b>
-          <c>ccc</c>
-	      </p>
+	      <p><a class="closest">aaa</a><b class="closest">bbb</b><c>ccc</c></p>
 	      <a>top-aaaa</a>
 	    </div>
 	"#,
@@ -814,5 +816,6 @@ fn test_method_for_root() -> Result {
 	assert_eq!(root.prev_all("").length(), 0);
 	assert_eq!(root.next_all("").length(), 0);
 	assert_eq!(root.siblings("").length(), 0);
+	assert_eq!(root.parent("").length(), 0);
 	Ok(())
 }

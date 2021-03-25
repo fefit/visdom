@@ -202,6 +202,6 @@ fn test_inner_html() -> Result {
 	let inner_html = "abc<span>def</span>ghj";
 	let code = format!("<div>{}</div>", inner_html);
 	let root = Vis::load(&code)?;
-	assert_eq!(root.html(), inner_html);
+	assert_eq!(root.find("div").get(0).unwrap().html(), inner_html);
 	Ok(())
 }

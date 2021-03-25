@@ -653,87 +653,36 @@ impl<'a> Elements<'a> {
 			for p in &selector.process {
 				let QueryProcess { should_in, query } = p;
 				let first_query = &query[0];
-				let mut group: Option<Elements> = None;
-				let mut start_rule_index: usize = 0;
-				let mut is_empty = false;
+				let mut group: Elements = Elements::with_capacity(DEF_NODES_LEN);
 				if let Some(lookup) = should_in {
-					let mut cur_group = Elements::with_capacity(DEF_NODES_LEN);
-					// get finded
+					// find the first query elements
 					let finded = Elements::select(self, first_query, Some(&Combinator::ChildrenAll));
 					if !finded.is_empty() {
-						let tops = Elements::select(self, &lookup[0], None);
-						if !tops.is_empty() {
-							// remove the first
-							start_rule_index = 1;
-							// check if the previous ele and the current ele are siblings.
-							let mut prev_ele: Option<&BoxDynElement> = None;
-							let mut is_find = false;
-							let first_comb = &first_query[0].1;
-							for ele in finded.get_ref() {
-								if prev_ele.is_some()
-									&& Elements::is_sibling(ele, prev_ele.expect("Has test is_some"))
-								{
-									match first_comb {
-										Combinator::Next => {
-											if is_find {
-												// do nothing, because has finded the only sibling ele matched.
-												continue;
-											}
-											// if not find, should detect the current ele
-										}
-										Combinator::NextAll => {
-											if is_find {
-												cur_group.push(ele.cloned());
-												continue;
-											}
-											// if not find, should detect the ele
-										}
-										_ => {
-											// do the same thing as `prev_ele`
-											// if `is_find` is true, then add the ele, otherwise it's not matched too.
-											// keep the `is_find` value
-											if is_find {
-												cur_group.push(ele.cloned());
-											}
-											continue;
-										}
-									};
-								}
-								// check if the ele is in firsts
-								if tops.has_ele(ele, &first_comb, Some(&lookup[1..])) {
-									cur_group.push(ele.cloned());
-									is_find = true;
-								} else {
-									is_find = false;
-								}
-								// set the prev ele
-								prev_ele = Some(ele);
+						let first_comb = &first_query[0].1;
+						// check the elements if satisfied the lookup
+						for ele in finded.get_ref() {
+							if self.has_ele(ele, first_comb, Some(&lookup)) {
+								group.push(ele.cloned());
 							}
 						}
 					}
-					is_empty = cur_group.is_empty();
-					group = Some(cur_group);
+				} else {
+					// find the first query elements
+					group = Elements::select(self, first_query, None);
 				}
-				if !is_empty {
-					let query = &query[start_rule_index..];
-					if !query.is_empty() {
-						let mut is_empty = false;
-						let mut group = Elements::select(group.as_ref().unwrap_or(self), &query[0], None);
+				if !group.is_empty() {
+					let mut need_combine = true;
+					if query.len() > 1 {
 						for rules in &query[1..] {
 							group = Elements::select(&group, rules, None);
 							if group.is_empty() {
-								is_empty = true;
+								need_combine = false;
 								break;
 							}
 						}
-						if !is_empty {
-							result = result.add(group);
-						}
-					} else {
-						let group = group.unwrap_or_else(|| self.cloned());
-						if !group.is_empty() {
-							result = result.add(group);
-						}
+					}
+					if need_combine {
+						result = result.add(group);
 					}
 				}
 			}
@@ -1029,25 +978,24 @@ impl<'a> Elements<'a> {
 			}
 			Siblings => {
 				// siblings
-				if elements.length() > 1000 {
-					// unique first
-					let uniques = elements.unique_all_siblings();
-					for (ele, is_parent) in uniques {
-						let eles = if !is_parent {
-							ele.siblings()
-						} else {
-							ele.children()
-						};
-						result.get_mut_ref().extend(matcher.apply(&eles, None));
-					}
-				} else {
-					for ele in elements.get_ref() {
-						let siblings = ele.siblings();
-						result.get_mut_ref().extend(matcher.apply(&siblings, None));
-					}
-					// not unique, need sort and unique
-					result.sort_and_unique();
+				// unique first
+				let uniques = elements.unique_all_siblings();
+				for (ele, is_parent) in uniques {
+					let eles = if !is_parent {
+						ele.siblings()
+					} else {
+						ele.children()
+					};
+					result.get_mut_ref().extend(matcher.apply(&eles, None));
 				}
+				/*
+				for ele in elements.get_ref() {
+					let siblings = ele.siblings();
+					result.get_mut_ref().extend(matcher.apply(&siblings, None));
+				}
+				// not unique, need sort and unique
+				result.sort_and_unique();
+				*/
 			}
 			Chain => {
 				// just filter
@@ -1142,7 +1090,9 @@ impl<'a> Elements<'a> {
 							if self.includes(&ancestor) {
 								return true;
 							}
-							if self.has_ele(&ancestor, comb, None) {
+							// iterator the search process, becareful with the combinator now is ChildrenAll
+							// the sentences must in if condition, otherwise it will break the for loop
+							if self.has_ele(&ancestor, &Combinator::ChildrenAll, None) {
 								return true;
 							}
 						}
@@ -1739,17 +1689,6 @@ impl<'a> Elements<'a> {
 			}
 		}
 		None
-	}
-
-	/// check if two nodes are siblings.
-	fn is_sibling(cur: &BoxDynElement, other: &BoxDynElement) -> bool {
-		// just check if they have same parent.
-		if let Some(parent) = cur.parent() {
-			if let Some(other_parent) = other.parent() {
-				return parent.is(&other_parent);
-			}
-		}
-		false
 	}
 }
 

@@ -48,6 +48,17 @@ fn test_document_trait() -> Result {
 	let doc_element = doc.document_element();
 	assert!(doc_element.is_some());
 	assert_eq!(doc_element.unwrap().tag_name(), "HTML");
+	// document fragement
+	let html = r##"<div>just a document fragement</div>"##;
+	let root = Vis::load(html)?;
+	let doc = root.document();
+	assert!(doc.is_some());
+	let doc = doc.unwrap();
+	// no title, head, body, documentElement
+	assert!(doc.title().is_none());
+	assert!(doc.head().is_none());
+	assert!(doc.document_element().is_none());
+	assert!(doc.body().is_none());
 	Ok(())
 }
 
