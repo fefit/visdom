@@ -47,7 +47,6 @@ fn compare_indexs(a: &VecDeque<usize>, b: &VecDeque<usize>) -> Ordering {
 	}
 	a_total.cmp(&b_total)
 }
-
 enum ElementRelation {
 	Ancestor,
 	Equal,
@@ -286,40 +285,22 @@ impl<'a> Elements<'a> {
 		let total = self.length();
 		let mut parents_indexs: HashMap<VecDeque<usize>, (usize, bool)> = HashMap::with_capacity(total);
 		let mut uniques: Vec<(BoxDynElement, bool)> = Vec::with_capacity(total);
-		let mut prev_parent: Option<BoxDynElement> = None;
-		let mut continued = false;
+		let mut parents: Vec<BoxDynElement> = Vec::with_capacity(total);
 		// just keep one sibling node
 		for ele in self.get_ref() {
 			if let Some(parent) = ele.parent() {
-				if let Some(prev_parent) = &prev_parent {
-					if parent.is(prev_parent) {
-						if !continued {
-							// may first meet the sibling, set use all children
-							if let Some(pair) = uniques.last_mut() {
-								*pair = (parent, true);
-							}
-							continued = true;
-						}
-						continue;
-					}
-				}
-				// reset continued
-				continued = false;
-				// set prev parent
-				prev_parent = Some(parent.cloned());
 				// parent indexs
 				let indexs = get_tree_indexs(&parent);
-				// new parent
-				if let Some((index, setted)) = parents_indexs.get_mut(&indexs) {
-					if !*setted {
-						if let Some(pair) = uniques.get_mut(*index) {
-							*pair = (parent, true);
-						}
-						*setted = true;
+				if let Some((index, changed)) = parents_indexs.get_mut(&indexs) {
+					if !*changed {
+						let index = *index;
+						*changed = true;
+						uniques[index] = (parents[index].cloned(), true);
 					}
 				} else {
 					parents_indexs.insert(indexs, (uniques.len(), false));
 					uniques.push((ele.cloned(), false));
+					parents.push(parent);
 				}
 			}
 		}
@@ -331,31 +312,18 @@ impl<'a> Elements<'a> {
 		let mut ancestors: Vec<(VecDeque<usize>, &BoxDynElement)> = Vec::with_capacity(self.length());
 		for ele in self.get_ref() {
 			let ele_indexs = get_tree_indexs(ele);
-			let mut need_add = false;
-			if !ancestors.is_empty() {
-				let mut sub_indexs: Vec<usize> = Vec::new();
-				for (index, (orig_ele_indexs, _)) in ancestors.iter().enumerate() {
-					match relation_of(&ele_indexs, orig_ele_indexs) {
-						ElementRelation::Feauture => {
-							need_add = true;
-							break;
-						}
-						ElementRelation::Ancestor => {
-							// this feature should not hit, just keep the logic
-							sub_indexs.push(index);
-							need_add = true;
-						}
-						_ => break,
+			let cur_len = ancestors.len();
+			if cur_len > 0 {
+				// just check the last ancestor
+				let (top_ele_indexs, _) = &ancestors[cur_len - 1];
+				match relation_of(&ele_indexs, top_ele_indexs) {
+					ElementRelation::Feauture => {
+						ancestors.push((ele_indexs, ele));
 					}
-				}
-				// this will not trigger, just keep the logic
-				if !sub_indexs.is_empty() {
-					retain_by_index(&mut ancestors, &sub_indexs);
+					ElementRelation::Descendant => {}
+					_ => unreachable!("The elements call `unique_parents` is not ordered"),
 				}
 			} else {
-				need_add = true;
-			}
-			if need_add {
 				ancestors.push((ele_indexs, ele));
 			}
 		}
@@ -506,6 +474,14 @@ impl<'a> Elements<'a> {
 	// siblings
 	pub fn siblings(&self, selector: &str) -> Elements<'a> {
 		let uniques = self.unique_all_siblings();
+		println!("uniques:{}", uniques.len());
+		for (ele, is_parent) in &uniques {
+			println!(
+				"name:{:?}, is_parent:{}",
+				ele.get_attribute("name"),
+				is_parent
+			);
+		}
 		// when selector is empty or only
 		let mut siblings_selector: Selector;
 		let siblings_comb = Combinator::Siblings;
@@ -714,7 +690,6 @@ impl<'a> Elements<'a> {
 		match cur_comb {
 			ChildrenAll => {
 				// unique if have ancestor and descendant relation elements
-				let uniques = elements.unique_parents();
 				// check if one handle, match one by one
 				if let Some(handle) = &matcher.one_handle {
 					let exec = |ele: &dyn IElementTrait, result: &mut Elements| {
@@ -734,9 +709,16 @@ impl<'a> Elements<'a> {
 						}
 						loop_handle(ele, result, handle)
 					};
-					// depth first search, keep the appear order
-					for ele in uniques.get_ref() {
-						exec(&**ele, &mut result);
+					if elements.length() > 1 {
+						let uniques = elements.unique_parents();
+						// depth first search, keep the appear order
+						for ele in uniques.get_ref() {
+							exec(&**ele, &mut result);
+						}
+					} else {
+						for ele in elements.get_ref() {
+							exec(&**ele, &mut result);
+						}
 					}
 				} else {
 					// specified first, just select the child
@@ -761,9 +743,17 @@ impl<'a> Elements<'a> {
 							}
 							loop_handle(ele, result, handle);
 						};
-						// get elements
-						for ele in uniques.get_ref() {
-							exec(&**ele, &mut result);
+						if elements.length() > 1 {
+							let uniques = elements.unique_parents();
+							// get elements
+							for ele in uniques.get_ref() {
+								exec(&**ele, &mut result);
+							}
+						} else {
+							// get elements
+							for ele in elements.get_ref() {
+								exec(&**ele, &mut result);
+							}
 						}
 					} else {
 						// if all handle, check childrens once all
@@ -795,9 +785,17 @@ impl<'a> Elements<'a> {
 							}
 							loop_handle(ele, result, handle)
 						};
-						// depth first search, keep the appear order
-						for ele in uniques.get_ref() {
-							exec(ele, &mut result);
+						if elements.length() > 1 {
+							let uniques = elements.unique_parents();
+							// get elements
+							for ele in uniques.get_ref() {
+								exec(ele, &mut result);
+							}
+						} else {
+							// get elements
+							for ele in elements.get_ref() {
+								exec(ele, &mut result);
+							}
 						}
 					}
 				};
@@ -1607,7 +1605,7 @@ impl<'a> Elements<'a> {
 						Ordering::Equal => {
 							// equal to first right, now all the second after current is behind first right
 							let cur_fir_index = sec_right_index + 1;
-							for index in sec_left_index + 1..sec_right_index {
+							for index in sec_left_index + 1..=sec_right_index {
 								mids.push((index, cur_fir_index));
 							}
 							break;
@@ -1620,7 +1618,7 @@ impl<'a> Elements<'a> {
 					match compare_indexs(&sec_right_level, &fir_left_level) {
 						Ordering::Less => {
 							// now second is all before current first left
-							for index in sec_left_index..=sec_left_index {
+							for index in sec_left_index..=sec_right_index {
 								mids.push((index, fir_left_index));
 							}
 							break;
@@ -2002,5 +2000,25 @@ impl<'a> IntoIterator for Elements<'a> {
 impl<'a> From<Vec<BoxDynElement<'a>>> for Elements<'a> {
 	fn from(nodes: Vec<BoxDynElement<'a>>) -> Self {
 		Elements { nodes }
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::collections::VecDeque;
+
+	use super::{relation_of, ElementRelation};
+	#[test]
+	fn test_fn_relation_of() {
+		let a: VecDeque<usize> = vec![0].into();
+		let b: VecDeque<usize> = vec![0, 1].into();
+		assert!(matches!(relation_of(&a, &b), ElementRelation::Ancestor));
+		assert!(matches!(relation_of(&b, &a), ElementRelation::Descendant));
+		let c: VecDeque<usize> = vec![1, 2, 3].into();
+		assert!(matches!(relation_of(&b, &c), ElementRelation::Feauture));
+		assert!(matches!(relation_of(&c, &b), ElementRelation::Feauture));
+		assert!(matches!(relation_of(&c, &a), ElementRelation::Feauture));
+		let d: VecDeque<usize> = vec![0, 1].into();
+		assert!(matches!(relation_of(&b, &d), ElementRelation::Equal));
 	}
 }

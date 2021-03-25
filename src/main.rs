@@ -7,11 +7,39 @@ use visdom::types::INodeType;
 use visdom::Vis;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	// let html = format!("<ul>{}</ul>", "<li></li>".repeat(12));
+	// let html = format!("<ul>{}</ul>", "<li></li>".repeat(9));
 	// let root = Vis::load(&html)?;
 	// let ul = root.find("ul");
-	// let nth_2n_child = ul.find(":nth-child(6n),:nth-child(3n),:nth-child(2n)");
-	// println!("2n:{}", ul.find(":nth-child(2n)").length());
+	// let nth_2n_child = ul.find(":nth-child(2n),:nth-child(1),:nth-child(n+8)");
+	// println!("2n:{}", nth_2n_child.length());
+	let html = r##"
+  <html>
+    <head></head>
+    <body>
+      <div id="id" name="#id">
+        <div class="class" name="#id .class">class-div</div>
+        <p>
+          p-tag
+        </p>
+      </div>
+      <div id="nested" name="#nested">
+        <div class="outer-div-1" name="#nested .outer-div-1">
+          <div class="inner-div-1-1" name="#nested .outer-div-1 .inner-div-1-1" inner-div-1-1</div>
+          <div class="inner-div-1-2" name="#nested .outer-div-1 .inner-div-1-2" inner-div-<span>1</span>-<span>2</span></div>
+        </div>
+        <div class="outer-div-2" name="#nested .outer-div-2">
+          <div class="inner-div-2-1" name="#nested .outer-div-2 .inner-div-2-1"></div>
+          <div class="inner-div-2-2" name="#nested .outer-div-2 .inner-div-2-1"></div>
+        </div>
+      </div>
+    </body>
+  </html>
+"##;
+	let root = Vis::load(html)?;
+	let div = root.find("div");
+	println!("div:{}", div.length());
+	let inner_div_2_2 = div.siblings("div");
+	println!("{}", inner_div_2_2.length());
 	// println!(
 	// 	"{}",
 	// 	ul.find(":nth-child(3n),:nth-child(2n),:nth-child(6n)")

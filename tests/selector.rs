@@ -335,6 +335,8 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let child = ul.find(":nth-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item1");
+	let child = ul.children(":nth-child(10)");
+	assert_eq!(child.length(), 0);
 	// :nth-child(odd)
 	let odd_childs = ul.find(":nth-child(odd)");
 	assert_eq!(odd_childs.length(), 5);
@@ -347,6 +349,9 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let childs_3n = ul.find(":nth-child(3n)");
 	assert_eq!(childs_3n.length(), 3);
 	assert_eq!(childs_3n.text(), "item3item6item9");
+	// group selector
+	let nth_group_child = ul.find(":nth-child(2n),:nth-child(10),:nth-child(1),:nth-child(n+8)");
+	assert_eq!(nth_group_child.length(), 6);
 	// filter
 	let childs_3n_2n = childs_3n.filter(":nth-child(2n)");
 	assert_eq!(childs_3n_2n.length(), 1);
@@ -355,11 +360,12 @@ fn test_selector_pseudo_nth_child() -> Result {
 	let html = format!("<ul>{}</ul>", "<li></li>".repeat(3000));
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
-	let nth_2n_child = ul.find(":nth-child(6n),:nth-child(3n),:nth-child(2n)");
+	let nth_group_child = ul.find(":nth-child(6n),:nth-child(3n),:nth-child(2n)");
 	assert_eq!(
-		nth_2n_child.length(),
+		nth_group_child.length(),
 		ul.find(":nth-child(2n),:nth-child(3n)").length()
 	);
+
 	Ok(())
 }
 

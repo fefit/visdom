@@ -45,6 +45,10 @@ fn test_method_find() -> Result {
 	assert_eq!(p_ele.length(), 1);
 	let ul_ele = id_ele.find("ul");
 	assert_eq!(ul_ele.length(), 0);
+	// unique selector
+	let div = root.find("div");
+	let inner_div_2_2 = div.find(".inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
 	// complex selector
 	let inner_div_2_2 = id_ele.find("~div .outer-div-1 + div > div.inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
@@ -283,15 +287,17 @@ fn test_method_is_all_in() -> Result {
 	let root = Vis::load(HTML)?;
 	let id_divs = root.find("div[id]");
 	let id_ele = id_divs.filter("#id");
-	// is #id
-	let is_id = id_ele.is_all_in(&id_divs);
-	assert_eq!(is_id, true);
-	// is #id
-	let is_id = id_divs.is_all_in(&id_ele);
-	assert_ne!(is_id, true);
-	// is #id
-	let is_id = id_divs.is_all_in(&root.find("div"));
-	assert!(is_id);
+	// all is div[id]
+	let is_all_has_id = id_ele.is_all_in(&id_divs);
+	assert!(is_all_has_id);
+	// all is #id
+	let is_all_id = id_divs.is_all_in(&id_ele);
+	assert!(!is_all_id);
+	// all is div
+	let is_all_div = id_divs.is_all_in(&root.find("div"));
+	assert!(is_all_div);
+	// not contains all id
+	assert!(!id_divs.is_all_in(&root.find("#nested, #nested div")));
 	Ok(())
 }
 
