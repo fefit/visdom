@@ -1,10 +1,3 @@
-/*
-*
-* all: *
-* id: #{identity}
-* class: .{identity}
-* attribute: [{identity}{rule##"(^|*~$)?=('")"##}]
-*/
 use crate::mesdoc::utils::{divide_isize, is_char_available_in_key, to_static_str, RoundType};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -200,7 +193,6 @@ pub struct Nth;
 impl Pattern for Nth {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
 		let rule: RegExp = RegExp {
-			cache: true,
 			context: r#"^(?:([-+])?([1-9]\d+|[0-9])?n(?:\s*([+-])\s*([1-9]\d+|[0-9]))?|([-+])?([1-9]\d+|[0-9]))"#,
 		};
 		let mut data = HashMap::with_capacity(2);
@@ -345,15 +337,15 @@ impl Nth {
 /// RegExp
 #[derive(Debug)]
 pub struct RegExp<'a> {
-	pub cache: bool,
 	pub context: &'a str,
 }
 
 impl<'a> Pattern for RegExp<'a> {
+	/// impl `matched`
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
-		let Self { context, cache } = *self;
+		let Self { context } = *self;
 		let content = chars.iter().collect::<String>();
-		let rule = RegExp::get_rule(context, cache);
+		let rule = RegExp::get_rule(context);
 		if let Some(caps) = rule.captures(to_static_str(content)) {
 			let total_len = caps[0].len();
 			let mut data = HashMap::with_capacity(caps.len() - 1);
@@ -372,43 +364,31 @@ impl<'a> Pattern for RegExp<'a> {
 		}
 		None
 	}
+	/// impl `from_params`
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		let mut cache = true;
-		if !s.is_empty() {
-			if s == "!" {
-				cache = false;
-			} else {
-				return Err("Wrong param of Pattern type 'regexp', just allow '!' to generate a regexp with 'cached' field falsely.".into());
-			}
-		}
-		Ok(Box::new(RegExp {
-			context: to_static_str(p.to_string()),
-			cache,
-		}))
+		check_params_return(&[s], || {
+			Box::new(RegExp {
+				context: to_static_str(p.to_string()),
+			})
+		})
 	}
 }
 
 impl<'a> RegExp<'a> {
-	pub fn get_rule(context: &str, cache: bool) -> Arc<Regex> {
+	pub fn get_rule(context: &str) -> Arc<Regex> {
 		let wrong_regex = format!("Wrong regex context '{}'", context);
 		let last_context = String::from("^") + context;
-		let rule = if cache {
-			let mut regexs = REGEXS.lock().unwrap();
-			if let Some(rule) = regexs.get(&last_context[..]) {
-				Arc::clone(rule)
-			} else {
-				let key = &to_static_str(last_context);
-				let rule = Regex::new(key).expect(&wrong_regex);
-				let value = Arc::new(rule);
-				let result = Arc::clone(&value);
-				regexs.insert(key, value);
-				result
-			}
+		let mut regexs = REGEXS.lock().unwrap();
+		if let Some(rule) = regexs.get(&last_context[..]) {
+			Arc::clone(rule)
 		} else {
-			let key = &last_context[..];
-			Arc::new(Regex::new(key).expect(&wrong_regex))
-		};
-		rule
+			let key = &to_static_str(last_context);
+			let rule = Regex::new(key).expect(&wrong_regex);
+			let value = Arc::new(rule);
+			let result = Arc::clone(&value);
+			regexs.insert(key, value);
+			result
+		}
 	}
 }
 
@@ -491,7 +471,7 @@ pub fn check_params_return<F: Fn() -> BoxDynPattern>(
 
 #[cfg(test)]
 mod tests {
-	use super::Nth;
+	use super::{add_pattern, check_params_return, AttrKey, BoxDynPattern, Matched, Nth, Pattern};
 	#[test]
 	fn test_allow_indexs() {
 		assert_eq!(
@@ -505,10 +485,61 @@ mod tests {
 		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
 		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 2), vec![]);
 		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("3"), 9), vec![2]);
+		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("-3"), 9), vec![]);
 		assert_eq!(
 			Nth::get_allowed_indexs(&Some("2"), &None, 9),
 			vec![1, 3, 5, 7]
 		);
 		assert_eq!(Nth::get_allowed_indexs(&Some("-2"), &None, 9), vec![]);
+		assert_eq!(Nth::get_allowed_indexs(&Some("-4"), &Some("3"), 2), vec![]);
+	}
+
+	#[test]
+	fn test_check_params_return() {
+		assert!(check_params_return(&["a"], || Box::new('c')).is_err());
+		assert!(check_params_return(&["", "a"], || Box::new('c')).is_err());
+		assert!(check_params_return(&["", ""], || Box::new('c')).is_ok());
+	}
+	#[test]
+	#[should_panic]
+	fn test_new_pattern() {
+		#[derive(Debug)]
+		struct TestPattern;
+		impl Pattern for TestPattern {
+			fn matched(&self, _: &[char]) -> Option<Matched> {
+				None
+			}
+			fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String>
+			where
+				Self: Sized + Send + 'static,
+			{
+				check_params_return(&[s, p], || Box::new(TestPattern))
+			}
+		}
+		let pat: Box<dyn Pattern> = Box::new(TestPattern);
+		assert_eq!(pat.is_nested(), false);
+		add_pattern("test", Box::new(TestPattern::from_params));
+		add_pattern("test", Box::new(TestPattern::from_params));
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_from_params() {
+		let _ = char::from_params("", "");
+	}
+
+	#[test]
+	fn test_pattern_matched() {
+		let nth: BoxDynPattern = Box::new(Nth);
+		assert!(nth.matched(&['-', 'a']).is_none());
+		assert!(nth.matched(&['-', '1']).is_some());
+		let part_matched = nth.matched(&['-', '2', 'n', '+', 'a']);
+		assert!(part_matched.is_some());
+		assert_eq!(part_matched.unwrap().chars, vec!['-', '2', 'n']);
+		// attr key
+		let attr_key: BoxDynPattern = Box::new(AttrKey);
+		assert!(attr_key.matched(&[',']).is_none());
+		assert!(attr_key.matched(&[' ']).is_none());
+		assert!(attr_key.matched(&['\u{0000}']).is_none());
 	}
 }

@@ -233,7 +233,7 @@ pub fn contains_chars(target: &[char], search: &[char]) -> bool {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
 	use super::{divide_isize, RoundType};
 	#[test]
 	fn test_divide_isize() {
