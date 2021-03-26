@@ -423,4 +423,10 @@ mod tests {
 	fn test_combinator_unable_reverse() {
 		let _ = Combinator::Parent.reverse();
 	}
+
+	#[test]
+	#[should_panic]
+	fn test_wrong_combinator_string() {
+		let _: Combinator = "<".into();
+	}
 }

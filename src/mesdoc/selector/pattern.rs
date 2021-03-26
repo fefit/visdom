@@ -471,7 +471,9 @@ pub fn check_params_return<F: Fn() -> BoxDynPattern>(
 
 #[cfg(test)]
 mod tests {
-	use super::{add_pattern, check_params_return, AttrKey, BoxDynPattern, Matched, Nth, Pattern};
+	use super::{
+		add_pattern, check_params_return, AttrKey, BoxDynPattern, Matched, Nth, Pattern, RegExp,
+	};
 	#[test]
 	fn test_allow_indexs() {
 		assert_eq!(
@@ -486,6 +488,7 @@ mod tests {
 		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 2), vec![]);
 		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("3"), 9), vec![2]);
 		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("-3"), 9), vec![]);
+		assert_eq!(Nth::get_allowed_indexs(&Some("1"), &Some("6"), 5), vec![]);
 		assert_eq!(
 			Nth::get_allowed_indexs(&Some("2"), &None, 9),
 			vec![1, 3, 5, 7]
@@ -518,6 +521,9 @@ mod tests {
 		}
 		let pat: Box<dyn Pattern> = Box::new(TestPattern);
 		assert_eq!(pat.is_nested(), false);
+		assert!(pat.matched(&['a']).is_none());
+		assert!(format!("{:?}", pat).contains("Pattern"));
+		assert!(TestPattern::from_params("a", "").is_err());
 		add_pattern("test", Box::new(TestPattern::from_params));
 		add_pattern("test", Box::new(TestPattern::from_params));
 	}
@@ -541,5 +547,8 @@ mod tests {
 		assert!(attr_key.matched(&[',']).is_none());
 		assert!(attr_key.matched(&[' ']).is_none());
 		assert!(attr_key.matched(&['\u{0000}']).is_none());
+		// regexp
+		let reg_exp: BoxDynPattern = Box::new(RegExp { context: "abc" });
+		assert!(format!("{:?}", reg_exp).contains("abc"));
 	}
 }

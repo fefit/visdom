@@ -362,19 +362,11 @@ pub(crate) fn init() {
 
 #[cfg(test)]
 mod tests {
-	use super::{Matcher, Rule, RuleDefItem, RuleItem};
+	use super::{Matcher, Rule};
 	#[test]
-	fn test_allow_debug() {
-		let rule = RuleDefItem(
-			":eq({spaces}{regexp!##(:first|:last)##}{spaces})",
-			":eq",
-			100,
-			Box::new(|_| Matcher {
-				..Default::default()
-			}),
-		);
-		let rule: RuleItem = rule.into();
-		let _ = format!("{:?}", rule.rule);
+	fn test_matcher_debug() {
+		let matcher: Matcher = Default::default();
+		assert!(format!("{:?}", matcher).contains("Matcher"));
 	}
 
 	#[test]
@@ -385,6 +377,12 @@ mod tests {
 	#[test]
 	fn test_rule_escape_end() {
 		let _ = Rule::get_queues("nth}}");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_escape_end_repeat() {
+		let _ = Rule::get_queues("nth}}}");
 	}
 
 	#[test]
@@ -408,6 +406,13 @@ mod tests {
 	#[should_panic]
 	fn test_wrong_escape_no_end_at_end() {
 		let _ = Rule::get_queues("{nth}{");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_params_not_end() {
+		// panic because no pattern register
+		let _ = Rule::get_queues("{abc!#abc}");
 	}
 
 	#[test]
