@@ -51,11 +51,11 @@ fn test_method_find() -> Result {
 	assert_eq!(root.find("body>#nested").length(), 1);
 	// should in
 	let inner_div_1 = root.find(".outer-div-1");
-	let inner_div_2_2 = inner_div_1.find("~div > div.inner-div-2-2");
+	let inner_div_2_2 = inner_div_1.find("~div > .inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
-	let inner_div_2_2 = inner_div_1.find("+div > div.inner-div-2-2");
+	let inner_div_2_2 = inner_div_1.find("+div > .inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
-	let inner_div_2_2 = root.find("#nested").find(">div ~ div div.inner-div-2-2");
+	let inner_div_2_2 = root.find("#nested").find(">div ~ div .inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
 	// unique selector
 	let div = root.find("div");
@@ -211,6 +211,10 @@ fn test_method_is() -> Result {
 	let root = Vis::load(HTML)?;
 	let id_divs = root.find("div[id]");
 	let id_ele = id_divs.filter("#id");
+	let nested = id_divs.filter("#nested");
+	assert!(nested.is("#id~#nested"));
+	assert!(nested.is("div+#nested"));
+	assert!(nested.is("body > #nested"));
 	// is #id
 	let is_id = id_ele.is("body #id");
 	assert!(is_id);

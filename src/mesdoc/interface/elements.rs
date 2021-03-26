@@ -2006,6 +2006,9 @@ mod tests {
 	use std::collections::VecDeque;
 
 	use super::{relation_of, ElementRelation};
+	use crate::mesdoc::selector::Combinator;
+	use crate::Vis;
+	use std::error::Error;
 	#[test]
 	fn test_fn_relation_of() {
 		let a: VecDeque<usize> = vec![0].into();
