@@ -38,8 +38,17 @@ fn test_normal_attr() -> Result {
 	// ignore attribute cases: issue #2
 	let html: &str = r#"<input type="text" READONly /></div>"#;
 	let root = Vis::load(html)?;
-	let input = root.children("[readOnly]");
+	let mut input = root.children("[readOnly]");
 	assert_eq!(input.length(), 1);
+	let title = "this's a title";
+	input.set_attr("title", Some(title));
+	assert_eq!(input.attr("title").unwrap().to_string(), title);
+	let title = "\"this's a title";
+	input.set_attr("title", Some(title));
+	assert_eq!(
+		input.attr("title").unwrap().to_string(),
+		title.replace("'", "&apos;")
+	);
 	Ok(())
 }
 

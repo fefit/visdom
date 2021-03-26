@@ -59,7 +59,7 @@ fn test_set_text() -> Result {
 	assert_eq!(parent.html(), encoded_setted);
 	parent.set_text("");
 	assert!(parent.text().is_empty());
-	// content tag
+	// pre tag
 	let html: &str = r#"<pre class="parent"></pre>"#;
 	let root = Vis::load(html)?;
 	let mut parent = root.children(".parent");
@@ -69,8 +69,31 @@ fn test_set_text() -> Result {
 	assert_eq!(parent.children("strong").length(), 0);
 	parent.set_text("");
 	assert!(parent.text().is_empty());
+	// script tag
+	let inner_script = "var a = 1;";
+	let html = format!(r#"<script>{}</script>"#, inner_script);
+	let root = Vis::load(&html)?;
+	let mut script = root.find("script");
+	assert_eq!(script.length(), 1);
+	assert_eq!(script.text(), inner_script);
+	// set text
+	let inner_script = "var b = 2;";
+	script.set_text(inner_script);
+	assert_eq!(script.text(), inner_script);
+	// style tag
+	let root = Vis::load("<style></style>")?;
+	let mut style = root.find("style");
+	assert_eq!(style.length(), 1);
+	assert_eq!(style.text(), "");
+	let inner_style = "body{background:blue;}";
+	style.set_html(inner_style);
+	assert_eq!(style.text(), inner_style);
+	assert_eq!(style.html(), inner_style);
 	Ok(())
 }
+
+#[test]
+fn test_text_content() {}
 
 #[test]
 fn test_inner_html() -> Result {

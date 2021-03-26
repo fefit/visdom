@@ -18,7 +18,7 @@ use mesdoc::interface::{
 use mesdoc::{error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::RenderOptions,
-	entity::{encode, EncodeType::NamedOrDecimal, EntitySet::SpecialChars},
+	entity::{encode, encode_chars, EncodeType, EntitySet},
 	parser::{
 		allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, NameCase, Node, NodeType, RefNode,
 	},
@@ -211,7 +211,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 				if !content.is_empty() {
 					if no_content_tag {
 						// encode content
-						let content = encode(content, SpecialChars, NamedOrDecimal);
+						let content = encode(content, EntitySet::SpecialChars, EncodeType::NamedOrDecimal);
 						let mut text_node = Node::create_text_node(content, None);
 						// set text node parent
 						text_node.parent = Some(Rc::downgrade(&self));
@@ -501,7 +501,11 @@ impl IElementTrait for Rc<RefCell<Node>> {
 						if find_quote {
 							if quote == ch {
 								// find more quotes
-								content.push('\\');
+								let mut encoded_quote =
+									encode_chars(&[ch], EntitySet::SpecialChars, EncodeType::Named);
+								content.append(&mut encoded_quote);
+							} else {
+								content.push(ch);
 							}
 						} else {
 							// if first is double quote, change the variable `quote` to single quote
@@ -509,9 +513,11 @@ impl IElementTrait for Rc<RefCell<Node>> {
 							if ch == '"' {
 								quote = '\'';
 							}
+							content.push(ch);
 						}
+					} else {
+						content.push(ch);
 					}
-					content.push(ch);
 				}
 				AttrData { content }
 			});

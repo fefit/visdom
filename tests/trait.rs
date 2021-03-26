@@ -44,6 +44,8 @@ fn test_document_trait() -> Result {
 			.tag_name(),
 		"HEAD"
 	);
+	// source code
+	assert_eq!(doc.source_code(), html);
 	// document element
 	let doc_element = doc.document_element();
 	assert!(doc_element.is_some());
@@ -96,6 +98,26 @@ fn test_text_trait() -> Result {
 	// get now texts
 	let texts = id_content.texts(0);
 	assert_eq!(texts.length(), 0);
+	// append text for content tag
+	let root = Vis::load("<script></script>")?;
+	let mut script_text = root.find("script").texts(1);
+	script_text.for_each(|_, text_node| {
+		assert_eq!(text_node.text(), "");
+		text_node.prepend_text("var a;");
+		text_node.append_text("var b;");
+		assert_eq!(text_node.text(), "var a;var b;");
+		true
+	});
+	// style
+	let root = Vis::load("<style></style>")?;
+	let mut style_text = root.find("style").texts(1);
+	style_text.for_each(|_, text_node| {
+		assert_eq!(text_node.text(), "");
+		text_node.append_text("{}");
+		text_node.prepend_text("body");
+		assert_eq!(text_node.text(), "body{}");
+		true
+	});
 	Ok(())
 }
 
