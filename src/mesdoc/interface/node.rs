@@ -75,3 +75,14 @@ pub trait INodeTrait {
 	// node index
 	fn index(&self) -> usize;
 }
+
+#[cfg(test)]
+mod tests {
+	use super::INodeType;
+	#[test]
+	fn test_inode_type() {
+		let element_type = INodeType::Element;
+		assert!(format!("{:?}", element_type).contains("Element"));
+		assert!(element_type.is_element());
+	}
+}

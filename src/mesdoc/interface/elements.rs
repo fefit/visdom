@@ -79,8 +79,6 @@ fn relation_of(a: &VecDeque<usize>, b: &VecDeque<usize>) -> ElementRelation {
 		(true, false) => ElementRelation::Ancestor,
 	}
 }
-
-#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum FilterType {
 	Filter,
 	Not,
@@ -1046,6 +1044,12 @@ impl<'a> Elements<'a> {
 		}
 		result
 	}
+
+	/// pub fn contains
+	pub fn contains(&self, ele: &BoxDynElement, comb: &Combinator) -> bool {
+		self.has_ele(ele, comb, None)
+	}
+
 	// `has_ele`
 	pub(crate) fn has_ele(
 		&self,
@@ -1995,20 +1999,11 @@ impl<'a> IntoIterator for Elements<'a> {
 	}
 }
 
-impl<'a> From<Vec<BoxDynElement<'a>>> for Elements<'a> {
-	fn from(nodes: Vec<BoxDynElement<'a>>) -> Self {
-		Elements { nodes }
-	}
-}
-
 #[cfg(test)]
 mod tests {
 	use std::collections::VecDeque;
 
 	use super::{relation_of, ElementRelation};
-	use crate::mesdoc::selector::Combinator;
-	use crate::Vis;
-	use std::error::Error;
 	#[test]
 	fn test_fn_relation_of() {
 		let a: VecDeque<usize> = vec![0].into();

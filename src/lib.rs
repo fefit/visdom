@@ -32,6 +32,7 @@ pub mod types {
 		BoxDynElement, BoxDynNode, BoxDynText, Elements, IAttrValue, IDocumentTrait, IEnumTyped,
 		INodeType, Texts,
 	};
+	pub use crate::mesdoc::selector::Combinator;
 }
 
 // re export `ParseOptions`

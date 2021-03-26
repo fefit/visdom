@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::result::Result as StdResult;
-use visdom::types::{Elements, IAttrValue};
+use visdom::types::{Combinator, Elements, IAttrValue};
 use visdom::Vis;
 type Result = StdResult<(), Box<dyn Error>>;
 
@@ -55,8 +55,10 @@ fn test_method_find() -> Result {
 	assert_eq!(inner_div_2_2.length(), 1);
 	let inner_div_2_2 = inner_div_1.find("+div > .inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
-	let inner_div_2_2 = root.find("#nested").find(">div ~ div .inner-div-2-2");
-	assert_eq!(inner_div_2_2.length(), 1);
+	let outer_div_2 = root.find("#nested").find("div + .inner-div-2-2");
+	assert_eq!(outer_div_2.length(), 1);
+	let outer_div_2 = root.find("#nested").find("div ~ .inner-div-2-2");
+	assert_eq!(outer_div_2.length(), 1);
 	// unique selector
 	let div = root.find("div");
 	let inner_div_2_2 = div.find(".inner-div-2-2");
@@ -899,7 +901,45 @@ fn test_method_for_root() -> Result {
 	let root = Vis::load(html)?;
 	assert_eq!(root.prev_all("").length(), 0);
 	assert_eq!(root.next_all("").length(), 0);
-	assert_eq!(root.siblings("").length(), 0);
+	assert_eq!(root.get(0).unwrap().siblings().length(), 0);
 	assert_eq!(root.parent("").length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_method_contains() -> Result {
+	let html = r##"
+    <dl>
+      <dt id="term-1">term 1</dt>
+        <dd>definition 1-a</dd>
+        <dd>definition 1-b</dd>
+        <dd>definition 1-c</dd>
+        <dd>definition 1-d</dd>
+      <dt id="term-2">term 2</dt>
+        <dd>definition 2-a</dd>
+        <dd>definition 2-b</dd>
+        <dd>definition 2-c</dd>
+      <dt id="term-3">term 3</dt>
+        <dd>definition 3-a</dd>
+        <dd>definition 3-b</dd>
+    </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let dl = root.find("dl");
+	let childs = dl.children("");
+	assert!(dl.contains(childs.get(0).unwrap(), &Combinator::Children));
+	assert!(dl.contains(childs.get(0).unwrap(), &Combinator::ChildrenAll));
+	assert!(childs
+		.eq(0)
+		.contains(childs.get(1).unwrap(), &Combinator::Next));
+	assert!(childs
+		.eq(0)
+		.contains(childs.get(0).unwrap(), &Combinator::Chain));
+	assert!(childs
+		.eq(0)
+		.contains(childs.get(2).unwrap(), &Combinator::NextAll));
+	assert!(!childs
+		.eq(0)
+		.contains(childs.get(2).unwrap(), &Combinator::Next));
 	Ok(())
 }

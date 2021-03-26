@@ -1,5 +1,4 @@
 use super::BoxDynText;
-#[derive(Default)]
 pub struct Texts<'a> {
 	nodes: Vec<BoxDynText<'a>>,
 }
@@ -75,11 +74,5 @@ impl<'a> IntoIterator for Texts<'a> {
 	type IntoIter = Box<dyn Iterator<Item = Self::Item> + 'a>;
 	fn into_iter(self) -> Self::IntoIter {
 		Box::new(self.nodes.into_iter())
-	}
-}
-
-impl<'a> From<Vec<BoxDynText<'a>>> for Texts<'a> {
-	fn from(nodes: Vec<BoxDynText<'a>>) -> Self {
-		Texts { nodes }
 	}
 }

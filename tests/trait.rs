@@ -116,5 +116,19 @@ fn test_node_trait() -> Result {
 	// get root
 	let root_element = root.get(0).unwrap().root_element().unwrap();
 	assert_eq!(root_element.is(&root_element.root_element().unwrap()), true);
+	// content
+	let content = root.find("#content");
+	assert!(content
+		.get(0)
+		.unwrap()
+		.clone_node()
+		.typed()
+		.into_text()
+		.is_none());
+	let mut texts = content.texts(1);
+	texts.for_each(|_, text_node| {
+		assert!(text_node.clone_node().typed().into_element().is_none());
+		true
+	});
 	Ok(())
 }

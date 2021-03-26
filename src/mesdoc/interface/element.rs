@@ -281,3 +281,24 @@ pub trait IElementTrait: INodeTrait {
 		}))
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::IAttrValue;
+	#[test]
+	fn test_i_attr_value() {
+		// string value
+		let attr_value = IAttrValue::Value("Hello".into(), None);
+		assert!(format!("{:?}", attr_value).contains("Hello"));
+		assert!(attr_value.is_str("Hello"));
+		assert!(!attr_value.is_true());
+		assert_eq!(attr_value.to_list(), vec!["Hello"]);
+		assert_eq!(attr_value.to_string(), "Hello");
+		// flag value
+		let attr_value = IAttrValue::True;
+		assert!(attr_value.is_str(""));
+		assert_eq!(attr_value.to_string(), "");
+		assert!(attr_value.is_true());
+		assert!(attr_value.to_list().is_empty());
+	}
+}

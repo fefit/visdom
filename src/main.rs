@@ -35,7 +35,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     </body>
   </html>
 "##;
-	// let root = Vis::load(html)?;
 	// let div = root.find("div");
 	// println!("div:{}", div.length());
 	// let child_divs = div.find("div:nth-child(1)");
