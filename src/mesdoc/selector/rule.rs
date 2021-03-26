@@ -364,9 +364,16 @@ pub(crate) fn init() {
 mod tests {
 	use super::{Matcher, Rule};
 	#[test]
-	fn test_matcher_debug() {
+	fn test_allow_debug() {
 		let matcher: Matcher = Default::default();
 		assert!(format!("{:?}", matcher).contains("Matcher"));
+		let rule: Rule = Rule {
+			in_cache: false,
+			priority: 1,
+			queues: vec![],
+			handle: Box::new(|_| Default::default()),
+		};
+		assert!(format!("{:?}", rule).contains("Rule"));
 	}
 
 	#[test]
@@ -398,8 +405,26 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_wrong_escape_no_end() {
+	fn test_rule_not_end_1() {
 		let _ = Rule::get_queues("{nth");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_not_end_2() {
+		let _ = Rule::get_queues("{nth#");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_not_end_3() {
+		let _ = Rule::get_queues("{nth#a#");
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_rule_not_end_4() {
+		let _ = Rule::get_queues("{nth#a##}");
 	}
 
 	#[test]

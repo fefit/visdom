@@ -356,22 +356,22 @@ fn make_first_or_last_child(selector: &'static str, asc: bool) -> RuleDefItem {
 			let handle = make_asc_or_desc_nth_child_handle(asc);
 			let specified_handle = Some(make_asc_or_desc_nth_child_specified(asc, 1));
 			Matcher {
-				all_handle: Some(Box::new(move |eles, is_all| {
+				all_handle: Some(Box::new(move |eles, _| {
 					let mut result: Elements = Elements::with_capacity(DEF_NODES_LEN);
-					if is_all.is_none() {
-						group_siblings_then_done(
-							eles,
-							|_| Some(vec![0]),
-							|data: &mut SiblingsNodeData| {
-								handle_nth_child(data, eles, &mut result, &handle);
-							},
-						);
-					} else {
+					group_siblings_then_done(
+						eles,
+						|_| Some(vec![0]),
+						|data: &mut SiblingsNodeData| {
+							handle_nth_child(data, eles, &mut result, &handle);
+						},
+					);
+					/*
+						// is_all
 						let range = 0..1;
 						let allow_indexs = vec![0];
 						let finded = handle(&eles, &range, &allow_indexs, &eles);
 						result.get_mut_ref().extend(finded);
-					}
+					*/
 					result
 				})),
 				specified_handle,
@@ -570,17 +570,17 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 				None
 			};
 			Matcher {
-				all_handle: Some(Box::new(move |eles: &Elements, is_all| {
+				all_handle: Some(Box::new(move |eles: &Elements, _| {
 					let mut result: Elements = Elements::with_capacity(DEF_NODES_LEN);
-					if is_all.is_none() {
-						group_siblings_then_done(
-							eles,
-							|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
-							|data: &mut SiblingsNodeData| {
-								handle_nth_of_type(asc, data, eles, &mut result);
-							},
-						);
-					} else {
+					group_siblings_then_done(
+						eles,
+						|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
+						|data: &mut SiblingsNodeData| {
+							handle_nth_of_type(asc, data, eles, &mut result);
+						},
+					);
+					/*
+						// is_all
 						let total = eles.length();
 						let allow_indexs = Some(Nth::get_allowed_indexs(&n, &index, total));
 						let parent = if total > 0 {
@@ -594,7 +594,7 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 							parent,
 						};
 						handle_nth_of_type(asc, &data, eles, &mut result);
-					}
+					*/
 					result
 				})),
 				specified_handle,

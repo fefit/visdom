@@ -45,6 +45,10 @@ fn test_method_find() -> Result {
 	assert_eq!(p_ele.length(), 1);
 	let ul_ele = id_ele.find("ul");
 	assert_eq!(ul_ele.length(), 0);
+	// nested should in
+	assert_eq!(root.find("div~#nested").length(), 1);
+	assert_eq!(root.find("div+#nested").length(), 1);
+	assert_eq!(root.find("body>#nested").length(), 1);
 	// unique selector
 	let div = root.find("div");
 	let inner_div_2_2 = div.find(".inner-div-2-2");
