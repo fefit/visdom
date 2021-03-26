@@ -570,16 +570,17 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 				None
 			};
 			Matcher {
-				all_handle: Some(Box::new(move |eles: &Elements, _| {
+				all_handle: Some(Box::new(move |eles: &Elements, is_all| {
 					let mut result: Elements = Elements::with_capacity(DEF_NODES_LEN);
-					group_siblings_then_done(
-						eles,
-						|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
-						|data: &mut SiblingsNodeData| {
-							handle_nth_of_type(asc, data, eles, &mut result);
-						},
-					);
-					/*
+					if is_all.is_none() {
+						group_siblings_then_done(
+							eles,
+							|total: usize| Some(Nth::get_allowed_indexs(&n, &index, total)),
+							|data: &mut SiblingsNodeData| {
+								handle_nth_of_type(asc, data, eles, &mut result);
+							},
+						);
+					} else {
 						// is_all
 						let total = eles.length();
 						let allow_indexs = Some(Nth::get_allowed_indexs(&n, &index, total));
@@ -594,7 +595,7 @@ fn make_asc_or_desc_nth_of_type(selector: &'static str, asc: bool) -> RuleDefIte
 							parent,
 						};
 						handle_nth_of_type(asc, &data, eles, &mut result);
-					*/
+					}
 					result
 				})),
 				specified_handle,
@@ -629,31 +630,30 @@ fn make_first_or_last_of_type(selector: &'static str, asc: bool) -> RuleDefItem 
 		Box::new(move |_| {
 			let specified_handle = Some(make_asc_or_desc_nth_of_type_specified(asc, 1));
 			Matcher {
-				all_handle: Some(Box::new(move |eles: &Elements, is_all| {
+				all_handle: Some(Box::new(move |eles: &Elements, _| {
 					let mut result: Elements = Elements::with_capacity(DEF_NODES_LEN);
-					if is_all.is_none() {
-						group_siblings_then_done(
-							eles,
-							|_: usize| Some(vec![0]),
-							|data: &mut SiblingsNodeData| {
-								handle_nth_of_type(asc, data, eles, &mut result);
-							},
-						);
-					} else {
-						let total = eles.length();
-						let allow_indexs = Some(vec![0]);
-						let parent = if total > 0 {
-							eles.get(0).expect("length > 0").parent()
-						} else {
-							None
-						};
-						let data = SiblingsNodeData {
-							range: 0..total,
-							allow_indexs,
-							parent,
-						};
-						handle_nth_of_type(asc, &data, eles, &mut result);
-					}
+					group_siblings_then_done(
+						eles,
+						|_: usize| Some(vec![0]),
+						|data: &mut SiblingsNodeData| {
+							handle_nth_of_type(asc, data, eles, &mut result);
+						},
+					);
+					/*
+					 let total = eles.length();
+					 let allow_indexs = Some(vec![0]);
+					 let parent = if total > 0 {
+						 eles.get(0).expect("length > 0").parent()
+					 } else {
+						 None
+					 };
+					 let data = SiblingsNodeData {
+						 range: 0..total,
+						 allow_indexs,
+						 parent,
+					 };
+					 handle_nth_of_type(asc, &data, eles, &mut result);
+					*/
 					result
 				})),
 				specified_handle,

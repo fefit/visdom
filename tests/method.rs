@@ -49,6 +49,14 @@ fn test_method_find() -> Result {
 	assert_eq!(root.find("div~#nested").length(), 1);
 	assert_eq!(root.find("div+#nested").length(), 1);
 	assert_eq!(root.find("body>#nested").length(), 1);
+	// should in
+	let inner_div_1 = root.find(".outer-div-1");
+	let inner_div_2_2 = inner_div_1.find("~div > div.inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
+	let inner_div_2_2 = inner_div_1.find("+div > div.inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
+	let inner_div_2_2 = root.find("#nested").find(">div ~ div div.inner-div-2-2");
+	assert_eq!(inner_div_2_2.length(), 1);
 	// unique selector
 	let div = root.find("div");
 	let inner_div_2_2 = div.find(".inner-div-2-2");
