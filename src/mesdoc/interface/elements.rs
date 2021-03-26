@@ -285,7 +285,7 @@ impl<'a> Elements<'a> {
 		let total = self.length();
 		let mut parents_indexs: HashMap<VecDeque<usize>, (usize, bool)> = HashMap::with_capacity(total);
 		let mut uniques: Vec<(BoxDynElement, bool)> = Vec::with_capacity(total);
-		let mut parents: Vec<BoxDynElement> = Vec::with_capacity(total);
+		let mut parents: HashMap<usize, BoxDynElement> = HashMap::with_capacity(total);
 		// just keep one sibling node
 		for ele in self.get_ref() {
 			if let Some(parent) = ele.parent() {
@@ -295,12 +295,18 @@ impl<'a> Elements<'a> {
 					if !*changed {
 						let index = *index;
 						*changed = true;
-						uniques[index] = (parents[index].cloned(), true);
+						uniques[index] = (
+							parents
+								.remove(&index)
+								.expect("When call `unique_all_siblings`, the parents variable's index must exist"),
+							true,
+						);
 					}
 				} else {
-					parents_indexs.insert(indexs, (uniques.len(), false));
+					let cur_index = uniques.len();
+					parents_indexs.insert(indexs, (cur_index, false));
 					uniques.push((ele.cloned(), false));
-					parents.push(parent);
+					parents.insert(cur_index, parent);
 				}
 			}
 		}
@@ -474,14 +480,6 @@ impl<'a> Elements<'a> {
 	// siblings
 	pub fn siblings(&self, selector: &str) -> Elements<'a> {
 		let uniques = self.unique_all_siblings();
-		println!("uniques:{}", uniques.len());
-		for (ele, is_parent) in &uniques {
-			println!(
-				"name:{:?}, is_parent:{}",
-				ele.get_attribute("name"),
-				is_parent
-			);
-		}
 		// when selector is empty or only
 		let mut siblings_selector: Selector;
 		let siblings_comb = Combinator::Siblings;

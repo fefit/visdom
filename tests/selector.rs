@@ -396,7 +396,7 @@ fn test_selector_pseudo_nth_last_child() -> Result {
 	let root = Vis::load(&html)?;
 	let ul = root.find("ul");
 	// :nth-last-child(1)
-	let child = ul.find(":nth-last-child(1)");
+	let child = ul.children(":nth-last-child(1)");
 	assert_eq!(child.length(), 1);
 	assert_eq!(child.text(), "item9");
 	// :nth-last-child(odd)

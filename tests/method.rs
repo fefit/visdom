@@ -49,6 +49,12 @@ fn test_method_find() -> Result {
 	let div = root.find("div");
 	let inner_div_2_2 = div.find(".inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
+	let firsts = div.find(":nth-child(1)");
+	assert_eq!(firsts.length(), 5);
+	assert!(firsts.eq(3).is("span"));
+	let after_firsts = div.find(":nth-child(n + 2)");
+	assert_eq!(after_firsts.length(), 5);
+	assert!(after_firsts.eq(0).is("p"));
 	// complex selector
 	let inner_div_2_2 = id_ele.find("~div .outer-div-1 + div > div.inner-div-2-2");
 	assert_eq!(inner_div_2_2.length(), 1);
@@ -144,6 +150,8 @@ fn test_method_not() -> Result {
 	let root = Vis::load(HTML)?;
 	let id_divs = root.find("div[id]");
 	let id_ele = id_divs.filter("#id");
+	// div is not p
+	assert_eq!(id_divs.not("p").length(), id_divs.length());
 	// not #id
 	let not_id = id_ele.not("#id");
 	assert_eq!(not_id.length(), 0);
@@ -310,9 +318,11 @@ fn test_method_has() -> Result {
 	let has_class_div = id_ele.has("div.class");
 	assert_eq!(has_class_div.length(), 1);
 	// #id
-	let not_id_eles = id_divs.has("[class|='outer']");
-	assert_eq!(not_id_eles.length() > 0, true);
-	assert_eq!(not_id_eles.has("div.class").length(), 0);
+	let nested = id_divs.has("[class|='outer']");
+	assert_eq!(nested.length(), 1);
+	assert_eq!(nested.has("div.class").length(), 0);
+	let nested = id_divs.has("[class|='inner']");
+	assert_eq!(nested.length(), 1);
 	// is #id
 	let be_id_ele = id_divs.has("div+p");
 	assert!(be_id_ele.is_all_in(&id_ele));
@@ -324,13 +334,17 @@ fn test_method_has_in() -> Result {
 	let root = Vis::load(HTML)?;
 	let id_divs = root.find("div[id]");
 	let id_ele = id_divs.filter("#id");
+	assert_eq!(id_divs.length(), 2);
 	// #id
 	let has_class_div = id_ele.has_in(&root.find("div.class"));
 	assert_eq!(has_class_div.length(), 1);
 	// #id
-	let not_id_eles = id_divs.has_in(&root.find("[class|='outer']"));
-	assert_eq!(not_id_eles.length() > 0, true);
-	assert_eq!(not_id_eles.has_in(&root.find("div.class")).length(), 0);
+	let nested = id_divs.has_in(&root.find("[class|='outer']"));
+	assert_eq!(nested.length(), 1);
+	assert_eq!(nested.has_in(&root.find("div.class")).length(), 0);
+	// iterator
+	let nested = id_divs.has_in(&root.find("[class|='inner']"));
+	assert_eq!(nested.length(), 1);
 	// is #id
 	let be_id_ele = id_divs.has_in(&root.find("div+p"));
 	assert!(be_id_ele.is_all_in(&id_ele));
@@ -686,6 +700,13 @@ fn test_method_closest() -> Result {
 
 #[test]
 fn test_method_siblings() -> Result {
+	// siblings
+	let root = Vis::load(&HTML)?;
+	let divs = root.find("div");
+	assert_eq!(divs.length(), 9);
+	let siblings = divs.siblings("div");
+	assert_eq!(siblings.length(), 8);
+	// more cases
 	let root = Vis::load(
 		r#"
 	    <div class="closest">
@@ -805,6 +826,39 @@ fn test_method_slice() -> Result {
 	// slice
 	let term_id_slice = term_with_id.slice(3..);
 	assert_eq!(term_id_slice.length(), 0);
+	Ok(())
+}
+
+#[test]
+fn test_method_add() -> Result {
+	let html = r##"
+  <dl>
+    <dt id="term-1">term 1</dt>
+      <dd>definition 1-a</dd>
+      <dd>definition 1-b</dd>
+      <dd>definition 1-c</dd>
+      <dd>definition 1-d</dd>
+    <dt id="term-2">term 2</dt>
+      <dd>definition 2-a</dd>
+      <dd>definition 2-b</dd>
+      <dd>definition 2-c</dd>
+    <dt id="term-3">term 3</dt>
+      <dd>definition 3-a</dd>
+      <dd>definition 3-b</dd>
+  </dl>
+  "##;
+	let root = Vis::load(html)?;
+	let dl = root.find("dl");
+	let dt = dl.children("dt");
+	let dd = dl.children("dd");
+	let dl_childs = dt.add(dd);
+	assert_eq!(dl.children("").length(), dl_childs.length());
+	assert!(dl_childs.eq(0).is("dt") && dl_childs.eq(0).attr("id").unwrap().is_str("term-1"));
+	assert!(dl_childs.eq(1).is("dd") && dl_childs.eq(1).text().contains("1-a"));
+	assert!(dl_childs.last().is("dd") && dl_childs.last().text().contains("3-b"));
+	// clone self
+	let another_dl_childs = dl_childs.add(Elements::new());
+	assert_eq!(another_dl_childs.length(), dl_childs.length());
 	Ok(())
 }
 

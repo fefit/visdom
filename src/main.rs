@@ -24,8 +24,8 @@ fn main() -> Result<(), Box<dyn Error>> {
       </div>
       <div id="nested" name="#nested">
         <div class="outer-div-1" name="#nested .outer-div-1">
-          <div class="inner-div-1-1" name="#nested .outer-div-1 .inner-div-1-1" inner-div-1-1</div>
-          <div class="inner-div-1-2" name="#nested .outer-div-1 .inner-div-1-2" inner-div-<span>1</span>-<span>2</span></div>
+          <div class="inner-div-1-1" name="#nested .outer-div-1 .inner-div-1-1">inner-div-1-1</div>
+          <div class="inner-div-1-2" name="#nested .outer-div-1 .inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
         </div>
         <div class="outer-div-2" name="#nested .outer-div-2">
           <div class="inner-div-2-1" name="#nested .outer-div-2 .inner-div-2-1"></div>
@@ -35,11 +35,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     </body>
   </html>
 "##;
-	let root = Vis::load(html)?;
-	let div = root.find("div");
-	println!("div:{}", div.length());
-	let inner_div_2_2 = div.siblings("div");
-	println!("{}", inner_div_2_2.length());
+	// let root = Vis::load(html)?;
+	// let div = root.find("div");
+	// println!("div:{}", div.length());
+	// let child_divs = div.find("div:nth-child(1)");
+	// println!("{}", child_divs.length());
+	// child_divs.map(|_, ele| {
+	// 	println!("{:?}:{}", ele.get_attribute("name"), ele.tag_name());
+	// });
 	// println!(
 	// 	"{}",
 	// 	ul.find(":nth-child(3n),:nth-child(2n),:nth-child(6n)")

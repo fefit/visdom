@@ -11,9 +11,11 @@ fn test_normal_attr() -> Result {
 	let mut div = root.children("div");
 	// has attribute
 	assert!(div.has_attr(ATTR_NAME));
+	assert!(!div.has_attr("content"));
 	// get attribute
 	let value = div.attr(ATTR_NAME);
 	assert!(value.is_some() && value.unwrap().is_true());
+	assert!(root.find("p").attr(ATTR_NAME).is_none());
 	// remove attribute
 	div.remove_attr(ATTR_NAME);
 	let now_value = div.attr(ATTR_NAME);
@@ -71,5 +73,15 @@ fn test_class_attr() -> Result {
 	assert!(div.has_class("third"));
 	let value = div.attr(ATTR_NAME).unwrap();
 	assert!(value.is_str("second third"));
+	// remove class and set again
+	div.remove_attr("class");
+	assert!(!div.has_attr("class"));
+	div.add_class("first");
+	assert!(div.has_class("first"));
+	// remove class and toggle again
+	div.remove_attr("class");
+	div.toggle_class("first second");
+	assert!(div.has_class("first"));
+	assert!(div.has_class("second"));
 	Ok(())
 }
