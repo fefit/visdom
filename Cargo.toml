@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "0.4.7"
+version = "0.4.8"
 edition = "2018"
 description = "A html document syntax and operation library, use APIs similar to jquery, easy to use for web scraping and confused html."
 keywords = ["html-parser", "dom", "jquery", "scrape", "crawl"]
