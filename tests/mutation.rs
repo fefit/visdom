@@ -140,3 +140,51 @@ fn test_empty() -> Result {
 	assert_eq!(content.html(), "");
 	Ok(())
 }
+
+#[test]
+fn test_remove() -> Result {
+	let html = r#"<div id="content">This is a <strong>test</strong>!</div>"#;
+	let root = Vis::load(html)?;
+	let content = root.find("#content");
+	assert_eq!(content.find("strong").length(), 1);
+	content.find("strong").remove();
+	assert_eq!(content.find("strong").length(), 0);
+	assert_eq!(content.text(), "This is a !");
+	Ok(())
+}
+
+#[test]
+fn test_allow_insert() -> Result {
+	// --- void tags, not allowed insert any html ---
+	let html = r#"<div id="content"><img src="picture.jpg" /></div>"#;
+	let root = Vis::load(html)?;
+	// set html will make no sence
+	let mut img = root.find("img");
+	img.set_html("<div class='test'></div>");
+	assert_eq!(img.html(), "");
+	// append
+	let mut childs = Vis::load("abc<span>def</span><!--ghi-->")?;
+	childs.append_to(&mut img);
+	assert_eq!(img.html(), "");
+	// ----- title -----
+	let html = r#"<title></title>"#;
+	let root = Vis::load(html)?;
+	let mut title = root.find("title");
+	title.set_html("ab<span></span>cd");
+	assert_eq!(title.text(), "ab<span></span>cd");
+	title.empty();
+	let mut content = Vis::load("ab<span></span>cd")?;
+	content.append_to(&mut title);
+	assert_eq!(title.text(), "abcd");
+	// ----- insert self----
+	let html = r#"<div id="wrapper"><div id="inner"></div></div>"#;
+	let root = Vis::load(html)?;
+	let mut wrapper = root.find("#wrapper");
+	let mut inner = wrapper.find("#inner");
+	// insert parent to child, will make no sence
+	wrapper.append_to(&mut inner);
+	assert_eq!(wrapper.find("#inner").length(), 1);
+	// insert to self, will not allowed by rust
+	// inner.append_to(&mut inner);
+	Ok(())
+}

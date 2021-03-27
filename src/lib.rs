@@ -1,13 +1,14 @@
 //! Visdom
 //!
 //! ### Description
-//! A fast library using jquery-like API for operating html document, useful for html scraping or keep away from scraping.
+//! A html scraping library using API similar to jQuery, aim to be easy to use and fast.
 //!
 //! ### Features
-//! - Standard css selectors: e.g. `#id`, `.class`, `p`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`,  and also some jquery like selectors such as `:contains`, `:header` and so on.
-//! - Useful selector methods: e.g. `find`,`filter`,`has`, `is`, `not`, `add`, `closest`.
-//! - Content modification: `set_html`, `set_text`, `append_text`, `prepend_text` can also used by text node.
-//! - Fast enough.
+//! - Standard css selectors: e.g. `#id`, `.class`, `p`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`, and also some jquery like selectors such as `:contains`, `:header` and so on.
+//! - Powerful api: e.g. `find`,`filter`,`has`, `is`, `not`, `add`, `closest`, `map` and so on.
+//! - Content mutations: `set_html`, `set_text` can also used by text node, also have methods such as `append_text`, `prepend_text`.
+//! - Well tested: welcome submit issues to us if you meet any question.
+
 mod mesdoc;
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
@@ -78,12 +79,12 @@ impl Dom {
 		}
 		// test if the node is dom's parent node
 		let mut cur = dom.cloned();
-		while let Some(parent) = &cur.parent() {
+		while let Some(parent) = cur.parent() {
 			if parent.is(&node) {
 				Dom::halt(dom, method, &format!("Can't {} of self's parent", method));
 				return false;
 			}
-			cur = parent.cloned();
+			cur = parent;
 		}
 		true
 	}
@@ -722,12 +723,12 @@ impl IElementTrait for Rc<RefCell<Node>> {
 							// set childs to nodes
 							*childs = nodes;
 						}
-					} else {
-						// reset nodes index
-						reset_next_siblings_index(0, &nodes);
-						// set nodes as childs
-						self.borrow_mut().childs = Some(nodes);
+						return;
 					}
+					// reset nodes index
+					reset_next_siblings_index(0, &nodes);
+					// set nodes as childs
+					self.borrow_mut().childs = Some(nodes);
 				}
 			}
 		} else {
