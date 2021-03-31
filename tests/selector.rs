@@ -95,7 +95,7 @@ fn test_class_selector() -> Result {
     <a class="en link"></a>
     <a class="en-US link"></a>
     <span class="en"></span>
-    <em>no class selector</em>
+    <em class>no class selector</em>
   </nav>
   "##;
 	let root = Vis::load(&html)?;
@@ -660,6 +660,12 @@ fn test_selector_pseudo_not() -> Result {
 	// not dt
 	let not_dt = dl.children(":not(dt)");
 	assert_eq!(not_dt.length(), 6);
+	// not dt and dd
+	let not_dt_dd = dl.children(":not(dt,dd)");
+	assert_eq!(not_dt_dd.length(), 0);
+	// not dt and dd
+	let not_dt_dd = dl.children(":not(dt,:not(dt))");
+	assert_eq!(not_dt_dd.length(), 0);
 	// not dt
 	let not_dt_first = dl.children(":not(dt:nth-child(-n + 1))");
 	assert_eq!(not_dt_first.length(), 8);

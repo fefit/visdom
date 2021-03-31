@@ -114,18 +114,17 @@ pub fn divide_isize(a: isize, b: isize, round: RoundType) -> isize {
 }
 
 pub fn retain_by_index<T>(v: &mut Vec<T>, indexs: &[usize]) {
-	if indexs.len() < 30 {
-		for (i, index) in indexs.iter().enumerate() {
-			v.remove(index - i);
-		}
-	} else {
-		let mut loop_index: usize = 0;
-		v.retain(|_| {
-			let removed = indexs.contains(&loop_index);
-			loop_index += 1;
-			!removed
-		});
+	for (i, index) in indexs.iter().enumerate() {
+		v.remove(index - i);
 	}
+	/*
+	let mut loop_index: usize = 0;
+	v.retain(|_| {
+		let removed = indexs.contains(&loop_index);
+		loop_index += 1;
+		!removed
+	});
+	*/
 }
 
 // get a class list from class attribute

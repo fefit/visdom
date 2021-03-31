@@ -43,7 +43,7 @@ fn test_normal_attr() -> Result {
 	let title = "this's a title";
 	input.set_attr("title", Some(title));
 	assert_eq!(input.attr("title").unwrap().to_string(), title);
-	let title = "\"this's a title";
+	let title = "\"this's a\" title";
 	input.set_attr("title", Some(title));
 	assert_eq!(
 		input.attr("title").unwrap().to_string(),
