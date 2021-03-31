@@ -14,7 +14,7 @@
 
 [API Document](https://github.com/fefit/visdom/wiki/API-Document)&nbsp;&nbsp;&nbsp;&nbsp;
 [Online Demos](http://visdom.suchjs.com/#doc)&nbsp;&nbsp;&nbsp;&nbsp;
-[Performance](https://github.com/fefit/visdom/performance)&nbsp;&nbsp;&nbsp;&nbsp;
+[Performance](https://github.com/fefit/visdom/blob/main/performance/README.md)&nbsp;&nbsp;&nbsp;&nbsp;
 [中文 API 文档](https://github.com/fefit/visdom/wiki/%E4%B8%AD%E6%96%87API%E6%96%87%E6%A1%A3)&nbsp;&nbsp;&nbsp;&nbsp;
 [更新文档](https://github.com/fefit/visdom/blob/main/CHANGELOG.md)
 
