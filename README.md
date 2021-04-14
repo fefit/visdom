@@ -20,19 +20,19 @@
 
 </h4>
 <p>
-:house: A html parsing、node selecting and mutation library written in Rust, using APIs similar to <a href="https://www.jquery.com">jQuery</a>, left off the parts thoes only worked in the browserS(e.g. render and event related methods).
+:house:  A html parsing & node selecting and mutation library written in Rust, using APIs similar to <a href="https://www.jquery.com" target="_blank">jQuery</a>, left off the parts thoes only worked in the browsers(e.g. render and event related methods).
 
-It's not only helpful for the working with web scraping, but also supported useful APIs to mutate `text` nodes, so you can use it to mix your html with dirty html fragement to keep away from web scrapers too. :sparkling_heart:
+It's not only helpful for the working with html scraping, but also have useful APIs to mutate `text` nodes, so you can use it for mixing your html with dirty html fragement, and keep the web scrapers away. :sparkling_heart:
 
 </p>
 
-## Demo
+## Usage
 
 ```rust
 use visdom::Vis;
 use std::error::Error;
 
-fn main()-> Result<(), Box<dyn Error>>{
+fn main() -> Result<(), Box<dyn Error>>{
   let html = r##"
     <!DOCTYPE html>
     <html>
