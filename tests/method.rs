@@ -446,6 +446,7 @@ fn test_method_parents_until() -> Result {
 	// parents until to level 1
 	let to_level_1 = item_1.parents_until(".level-1", "", false);
 	assert_eq!(to_level_1.length(), 4);
+	assert_eq!(to_level_1.eq(0).has_class("item-ii"), true);
 	// parents  until to level 1, but only "li" tags
 	let to_level_1_items = item_1.parents_until(".level-1", "li", false);
 	assert_eq!(to_level_1_items.length(), 2);
@@ -613,6 +614,7 @@ fn test_method_prev_until() -> Result {
 	// until meet the dt
 	let dd_before_term_2 = id_term_2.prev_until("dt", "", false);
 	assert_eq!(dd_before_term_2.length(), 4);
+	assert_eq!(dd_before_term_2.eq(0).text(), "definition 1-a");
 	// until meet the dt, but contains dt
 	let dd_and_self_before_term_2 = id_term_2.prev_until("dt", "", true);
 	assert_eq!(dd_and_self_before_term_2.length(), 5);

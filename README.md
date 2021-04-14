@@ -20,16 +20,52 @@
 
 </h4>
 <p>
-:house: A server-side html document syntax and operation library written in Rust, using apis similar to <a href="https://www.jquery.com">jQuery</a>, left off the parts thoes only worked in the browser(e.g. render and event related methods).
+:house: A html parsing、node selecting and mutation library written in Rust, using APIs similar to <a href="https://www.jquery.com">jQuery</a>, left off the parts thoes only worked in the browserS(e.g. render and event related methods).
 
-It's not only helpful for the working with web scraping, but also supported useful apis to operate `text` nodes, so you can use it to mix your html with dirty html fragement to keep away from web scrapers too. :sparkling_heart:
+It's not only helpful for the working with web scraping, but also supported useful APIs to mutate `text` nodes, so you can use it to mix your html with dirty html fragement to keep away from web scrapers too. :sparkling_heart:
 
 </p>
 
+## Demo
+
+```rust
+use visdom::Vis;
+use std::error::Error;
+
+fn main()-> Result<(), Box<dyn Error>>{
+  let html = r##"
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+      </head>
+      <body>
+        <nav id="header">
+          <ul>
+            <li>Hello,</li>
+            <li>Vis</li>
+            <li>Dom</li>
+          </ul>
+        </nav>
+      </body>
+    </html>
+  "##;
+  // load html
+  let root = Vis::load(html)?;
+  let lis = root.find("#header li");
+  let lis_text = lis.text();
+  println!("{}", lis_text);
+  // will output "Hello,VisDom"
+  Ok(())
+}
+```
+
+[Try it online](http://visdom.suchjs.com/#hello)
+
 ## Depedencies
 
-- Html Parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
-- Html Entity encode and decode：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
+- Html parser：[https://github.com/fefit/rphtml](https://github.com/fefit/rphtml)
+- Html entity encoding and decoding：[https://github.com/fefit/htmlentity](https://github.com/fefit/htmlentity)
 
 ## Questions & Advices & Bugs?
 

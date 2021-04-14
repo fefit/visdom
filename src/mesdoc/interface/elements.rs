@@ -456,7 +456,14 @@ impl<'a> Elements<'a> {
 	// prev_until
 	pub fn prev_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
 		let uniques = self.unique_sibling_last();
-		uniques.select_with_comb_until("prev_until", selector, filter, contains, Combinator::Prev)
+		let mut result =
+			uniques.select_with_comb_until("prev_until", selector, filter, contains, Combinator::Prev);
+		// should reverse the result when length > 1
+		// because the prevs executed from last to first
+		if result.length() > 1 {
+			result.get_mut_ref().reverse();
+		}
+		result
 	}
 	// next
 	pub fn next(&self, selector: &str) -> Elements<'a> {
@@ -558,6 +565,8 @@ impl<'a> Elements<'a> {
 			contains,
 			Combinator::Parent,
 		);
+		// parents may not unique if has ancestor and childs
+		// if parents length > 1, the parents need reversed
 		result.sort_and_unique();
 		result
 	}
