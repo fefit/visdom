@@ -257,6 +257,40 @@ fn test_selector_pseudo_first_child() -> Result {
 	// next :first-child
 	let next_first_child = first_child.next_all(":first-child");
 	assert_eq!(next_first_child.length(), 0);
+	// nested
+	let html = r#"<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>:first-child</title>
+    </head>
+  <body>
+    <ul class="list">
+      <li name="item-1">
+        <ul>
+          <li name="item-1-sub-item-1">sub-item-1</li>
+          <li name="item-1-sub-item-2">sub-item-2</li>
+        </ul>
+      </li>
+      <li name="item-2">
+        <ul>
+          <li name="item-2-sub-item-1">sub-item-1</li>
+          <li name="item-2-sub-item-2">sub-item-2</li>
+        </ul>
+      </li>
+    </ul>
+  </body>
+  </html>"#;
+	let root = Vis::load(html)?;
+	let list = root.find("ul.list");
+	let items = list.find("li:first-child");
+	assert_eq!(items.length(), 3);
+	let items_first_name = items.eq(0).attr("name");
+	let items_second_name = items.eq(1).attr("name");
+	let items_third_name = items.eq(2).attr("name");
+	assert!(items_first_name.is_some() && items_first_name.unwrap().is_str("item-1"));
+	assert!(items_second_name.is_some() && items_second_name.unwrap().is_str("item-1-sub-item-1"));
+	assert!(items_third_name.is_some() && items_third_name.unwrap().is_str("item-2-sub-item-1"));
 	Ok(())
 }
 
