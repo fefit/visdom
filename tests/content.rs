@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::result::Result as StdResult;
-use visdom::Vis;
+use visdom::{types::INodeType, Vis};
 type Result = StdResult<(), Box<dyn Error>>;
 
 #[test]
@@ -114,5 +114,48 @@ fn test_outer_html() -> Result {
 	assert_eq!(root.find("div").get(0).unwrap().outer_html(), code);
 	assert_eq!(root.find("div").outer_html(), code);
 	assert_eq!(root.find("p").outer_html(), "");
+	Ok(())
+}
+
+#[test]
+fn test_texts() -> Result {
+	let html = r##"
+    <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div>
+  "##;
+	let root = Vis::load(&html)?;
+	let content = root.find("#content");
+	let texts = content.texts(0);
+	assert_eq!(texts.length(), 6);
+	// top childs
+	let texts_limit = content.texts(1);
+	assert_eq!(texts_limit.length(), 3);
+	// filters, ignore content nodes such as style/script
+	let texts_filter = content.texts_by(
+		0,
+		Box::new(|_, node| !matches!(node.node_type(), INodeType::Element)),
+	);
+	assert_eq!(texts_filter.length(), 4);
+	// filter also with limit depth
+	let texts_filter = content.texts_by(
+		1,
+		Box::new(|_, node| !matches!(node.node_type(), INodeType::Element)),
+	);
+	assert_eq!(texts_filter.length(), 2);
+	// just content tags
+	let html = r##"<script>var a = 1;</script>"##;
+	let root = Vis::load(html)?;
+	let script = root.find("script");
+	let mut texts = script.texts(0);
+	assert_eq!(texts.length(), 1);
+	texts.for_each(|_, node| {
+		assert_eq!(node.text(), "var a = 1;");
+		true
+	});
+	// filter content tags
+	let texts = script.texts_by(
+		0,
+		Box::new(|_, node| !matches!(node.node_type(), INodeType::Element)),
+	);
+	assert_eq!(texts.length(), 0);
 	Ok(())
 }

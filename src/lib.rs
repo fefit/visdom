@@ -1,13 +1,14 @@
 //! Visdom
 //!
 //! ### Description
-//! A html scraping library using API similar to jQuery, aim to be easy to use and fast.
+//! A fast and easy to use library for html parsing & node selecting & node mutation, suitable for web scraping and html confusion.
 //!
 //! ### Features
-//! - Standard css selectors: e.g. `#id`, `.class`, `p`, `[attr~=value]`, `:nth-child`, `:nth-of-type`, `:not`, and also some jquery like selectors such as `:contains`, `:header` and so on.
-//! - Powerful api: e.g. `find`,`filter`,`has`, `is`, `not`, `add`, `closest`, `map` and so on.
-//! - Content mutations: `set_html`, `set_text` can also used by text node, also have methods such as `append_text`, `prepend_text`.
-//! - Well tested: welcome submit issues to us if you meet any question.
+//! - Easy to use: APIs are very closed to jQuery, most APIs you just need change the name from camelCase to snake_case.
+//! - Standard css selectors: e.g. `#id`, `.class`, `p`, `[attr~=value]`, `:nth-child(odd)`, `:nth-of-type(n)`, `:not`, other jQuery-only selectors are supported too, such as `:contains`, `:header` and so on.
+//! - Useful API methods: e.g. `find`, `filter`, `has`, `is`, `not`, `add`, `closest`, `map` and so on.
+//! - Content mutations: `set_html`, `set_text` can also called by text nodes, external methods such as `append_text`、`prepend_text` are supported.
+//! - Well tested: the unit tests have covered most cases, but if you meet any bugs or questions, welcome to submit issues or PR to us.
 
 mod mesdoc;
 use mesdoc::interface::{
@@ -191,13 +192,22 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		None
 	}
 
-	/// impl `contents`
+	/// impl `text_contents`
 	fn text_contents(&self) -> Vec<char> {
 		self.borrow().build(
 			&RenderOptions {
 				decode_entity: true,
 				..Default::default()
 			},
+			matches!(self.node_type(), INodeType::Element),
+		)
+	}
+
+	/// impl `text_chars`
+	/// `text_chars` keep the original characters in html
+	fn text_chars(&self) -> Vec<char> {
+		self.borrow().build(
+			&Default::default(),
 			matches!(self.node_type(), INodeType::Element),
 		)
 	}
@@ -212,7 +222,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 				if !content.is_empty() {
 					if no_content_tag {
 						// encode content
-						let content = encode(content, EntitySet::SpecialChars, EncodeType::NamedOrDecimal);
+						let content = encode(content, EntitySet::Html, EncodeType::NamedOrDecimal);
 						let mut text_node = Node::create_text_node(content, None);
 						// set text node parent
 						text_node.parent = Some(Rc::downgrade(&self));
@@ -742,48 +752,71 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	}
 
 	/// impl `texts`
-	fn texts<'b>(&self, limit_depth: u32) -> Option<Texts<'b>> {
+	fn texts_by<'b>(
+		&self,
+		limit_depth: usize,
+		handle: &dyn Fn(usize, &BoxDynText) -> bool,
+	) -> Option<Texts<'b>> {
 		let limit_depth = if limit_depth == 0 {
-			u32::MAX
+			usize::MAX
 		} else {
 			limit_depth
 		};
 		let mut result: Texts = Texts::with_capacity(5);
-		fn loop_handle(node: BoxDynElement, result: &mut Texts, cur_depth: u32, limit_depth: u32) {
-			let child_nodes = node.child_nodes();
+		fn loop_handle(
+			ele: BoxDynElement,
+			result: &mut Texts,
+			cur_depth: usize,
+			limit_depth: usize,
+			handle: &dyn Fn(usize, &BoxDynText) -> bool,
+		) {
+			let child_nodes = ele.child_nodes();
 			if !child_nodes.is_empty() {
 				let next_depth = cur_depth + 1;
 				let recursive = next_depth < limit_depth;
-				for node in &node.child_nodes() {
+				for node in &child_nodes {
 					match node.node_type() {
 						INodeType::Text => {
 							// append text node to result
 							let node = node.clone_node();
 							let text = node.typed().into_text().expect("TextNode must true");
-							result.get_mut_ref().push(text);
+							if handle(cur_depth, &text) {
+								result.get_mut_ref().push(text);
+							}
 						}
 						INodeType::Element => {
-							// if need recursive find the text node
-							if recursive {
-								let node = node.clone_node();
-								let ele = node.typed().into_element().expect("ElementNode must true");
-								loop_handle(ele, result, next_depth, limit_depth);
+							let node = node.clone_node();
+							let cur_ele = node.typed().into_element().expect("ElementNode must true");
+							if check_if_content_tag(&cur_ele.tag_names()) {
+								// check if content tag
+								// content tag, change the element into text type
+								let text = cur_ele
+									.into_text()
+									.expect("Content tag must be able to translate into text node");
+								if handle(cur_depth, &text) {
+									result.get_mut_ref().push(text);
+								}
+							} else if recursive {
+								// not content tags need recursive
+								// if need recursive find the text node
+								loop_handle(cur_ele, result, next_depth, limit_depth, handle);
 							}
 						}
 						_ => {}
 					}
 				}
-			} else if check_if_content_tag(&node.tag_names()) {
+			} else if check_if_content_tag(&ele.tag_names()) {
 				// content tag, change the element into text type
-				result.get_mut_ref().push(
-					node
-						.into_text()
-						.expect("Content tag must be able to translate into text node"),
-				);
+				let text = ele
+					.into_text()
+					.expect("Content tag must be able to translate into text node");
+				if handle(cur_depth, &text) {
+					result.get_mut_ref().push(text);
+				}
 			}
 		}
-		let node = Box::new(Rc::clone(&self)) as BoxDynElement;
-		loop_handle(node, &mut result, 0, limit_depth);
+		let ele = Box::new(Rc::clone(&self)) as BoxDynElement;
+		loop_handle(ele, &mut result, 0, limit_depth, handle);
 		if !result.is_empty() {
 			return Some(result);
 		}

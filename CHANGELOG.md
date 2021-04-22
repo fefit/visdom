@@ -2,6 +2,19 @@
 
 0.2.1 版本后各个接口方法已经基本趋于稳定，后面将不会做大的调整。
 
+## [0.4.10] - 2021-04-22
+
+### 修复
+
+- 修复 `texts(limit_depth: usize)` 方法获取文本节点时，可能会漏掉内容标签的问题，参数由 `u32` 统一为 `usize`
+- 修复 element trait 的 `set_text()` 方法实体进行转义时，仅转义 `<>&` 这三个特殊字符，单双引号不再进行转义，和浏览器保持一致
+
+### 修改
+
+- 增加 `texts_by(limit_depth: usize, handle: Box<dyn Fn(usize, &BoxDynText) -> bool ))` 方法，方便获取节点时，可以根据节点类型等进行排除
+
+- `element` trait 增加 `text_chars()` 方法，和 `text_contents()` 方法不同，当内容中包含 html 实体转义字符时，该方法不会进行转义，而是保留原始字符
+
 ## [0.4.9] - 2021-04-14
 
 ### 修复

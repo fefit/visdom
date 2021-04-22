@@ -246,7 +246,7 @@ impl Rule {
 			if is_matched_finish {
 				match store.next() {
 					Ok(queue) => queues.push(queue),
-					Err(reason) => panic!(reason),
+					Err(reason) => panic!("{}", reason),
 				};
 			}
 			prev_char = ch;

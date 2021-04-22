@@ -118,6 +118,18 @@ fn test_text_trait() -> Result {
 		assert_eq!(text_node.text(), "body{}");
 		true
 	});
+	// text_contents vs text_chars
+	let root = Vis::load(r#"<a>&lt;span&gt;&amp;</a>"#)?;
+	let a_link = root.find("a");
+	let mut texts = a_link.texts(1);
+	texts.for_each(|_, ele| {
+		assert_eq!(ele.text(), "<span>&");
+		assert_eq!(
+			ele.text_chars().iter().collect::<String>(),
+			"&lt;span&gt;&amp;"
+		);
+		true
+	});
 	Ok(())
 }
 

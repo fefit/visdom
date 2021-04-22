@@ -1,4 +1,6 @@
-use super::{BoxDynElement, IAttrValue, IElementTrait, InsertPosition, MaybeDoc, Texts};
+use super::{
+	BoxDynElement, BoxDynText, IAttrValue, IElementTrait, InsertPosition, MaybeDoc, Texts,
+};
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
 	constants::DEF_NODES_LEN,
@@ -1756,10 +1758,26 @@ impl<'a> Elements<'a> {
 
 	/// pub fn `texts`
 	/// get the text node of each element
-	pub fn texts(&self, limit_depth: u32) -> Texts<'a> {
+	pub fn texts(&self, limit_depth: usize) -> Texts<'a> {
 		let mut result = Texts::with_capacity(DEF_NODES_LEN);
 		for ele in self.get_ref() {
 			if let Some(text_nodes) = ele.texts(limit_depth) {
+				result.get_mut_ref().extend(text_nodes);
+			}
+		}
+		result
+	}
+
+	/// pub fn `texts_by`
+	/// get the text node of each element, filter by the handle
+	pub fn texts_by(
+		&self,
+		limit_depth: usize,
+		handle: Box<dyn Fn(usize, &BoxDynText) -> bool>,
+	) -> Texts<'a> {
+		let mut result = Texts::with_capacity(DEF_NODES_LEN);
+		for ele in self.get_ref() {
+			if let Some(text_nodes) = ele.texts_by(limit_depth, &handle) {
 				result.get_mut_ref().extend(text_nodes);
 			}
 		}

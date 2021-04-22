@@ -35,6 +35,7 @@ impl<'a> Texts<'a> {
 		}
 		self
 	}
+
 	// alias for `for_each`
 	pub fn each<F>(&mut self, handle: F) -> &mut Self
 	where
@@ -42,6 +43,7 @@ impl<'a> Texts<'a> {
 	{
 		self.for_each(handle)
 	}
+
 	// filter_by
 	pub fn filter_by<F>(&self, handle: F) -> Texts<'a>
 	where

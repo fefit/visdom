@@ -68,6 +68,8 @@ pub trait INodeTrait {
 		self.text_content()
 	}
 	fn text_contents(&self) -> Vec<char>;
+	// this don't decode the entity
+	fn text_chars(&self) -> Vec<char>;
 	// set text
 	fn set_text(&mut self, content: &str);
 	// set html

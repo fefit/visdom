@@ -269,7 +269,15 @@ pub trait IElementTrait: INodeTrait {
 	fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);
 	fn remove_child(&mut self, ele: BoxDynElement);
 	// texts
-	fn texts<'b>(&self, _limit_depth: u32) -> Option<Texts<'b>> {
+	fn texts<'b>(&self, limit_depth: usize) -> Option<Texts<'b>> {
+		let handle = Box::new(|_: usize, _: &BoxDynText| true);
+		self.texts_by(limit_depth, &handle)
+	}
+	fn texts_by<'b>(
+		&self,
+		_limit_depth: usize,
+		_handle: &dyn Fn(usize, &BoxDynText) -> bool,
+	) -> Option<Texts<'b>> {
 		None
 	}
 	// special for content tag, 'style','script','title','textarea'
