@@ -76,7 +76,7 @@ where
 			let mut is_first = false;
 			let mut in_next_group = false;
 			if let Some(prev_parent) = &data.parent {
-				if parent.is(&prev_parent) {
+				if parent.is(prev_parent) {
 					// sibling node, just add
 					data.range.end = index + 1;
 				} else {
@@ -286,7 +286,7 @@ fn handle_nth_child<'r>(
 		.as_ref()
 		.expect("parent must set in callback")
 		.children();
-	let finded = handle(&eles, &data.range, allow_indexs, &childs);
+	let finded = handle(eles, &data.range, allow_indexs, &childs);
 	result.get_mut_ref().extend(finded);
 }
 // make for 'nth-child','nth-last-child'
@@ -322,7 +322,7 @@ fn make_asc_or_desc_nth_child(selector: &'static str, asc: bool) -> RuleDefItem 
 						let total = eles.length();
 						let range = 0..total;
 						let allow_indexs = Nth::get_allowed_indexs(&n, &index, total);
-						let finded = handle(&eles, &range, &allow_indexs, &eles);
+						let finded = handle(eles, &range, &allow_indexs, eles);
 						result.get_mut_ref().extend(finded);
 					}
 					result
@@ -830,7 +830,7 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 						let contents = ele.text_contents();
 						// let contents = vec!['b'];
 						// let contents_count = contents.len();
-						contains_chars(&contents, &&search)
+						contains_chars(&contents, &search)
 						// match contents_count.cmp(&search_count) {
 						// 	Ordering::Less => false,
 						// 	_ => ,

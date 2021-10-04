@@ -13,7 +13,7 @@ fn test_attribute_selector() -> Result {
     <a href="#" lang="uk en">uk-en</a>
   </nav>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let lang = root.find("#lang");
 	let links = lang.children("");
 	// equal
@@ -44,7 +44,7 @@ fn test_attribute_selector() -> Result {
     <a href="#" lang="">empty lang</a>
   </nav>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let lang = root.find("#lang");
 	assert_eq!(lang.find("a[lang^='']").length(), 0);
 	assert_eq!(lang.find("a[lang$='']").length(), 0);
@@ -69,7 +69,7 @@ fn test_id_selector() -> Result {
     <a id="link"></a>
   </nav>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let lang = root.find("#lang");
 	assert_eq!(lang.length(), 1);
 	// link
@@ -98,7 +98,7 @@ fn test_class_selector() -> Result {
     <em class>no class selector</em>
   </nav>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let lang = root.find("#lang");
 	assert_eq!(lang.find(".link").length(), 2);
 	assert_eq!(lang.find(".en").length(), 2);
@@ -174,7 +174,7 @@ fn test_selector_pseudo_contains() -> Result {
     </p>
   </div>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let content = root.find("#content");
 	assert_eq!(content.find("p:contains('Visdom')").length(), 2);
 	// npsp; &#160; space: &#32;
@@ -213,12 +213,12 @@ fn test_selector_pseudo_only_child() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	// :only-child
 	let only_child = root.find("li:only-child");
 	assert_eq!(only_child.length(), 2);
-	assert_eq!(only_child.eq(0).parent("").is(".list1"), true);
-	assert_eq!(only_child.eq(1).parent("").is(".list3"), true);
+	assert!(only_child.eq(0).parent("").is(".list1"));
+	assert!(only_child.eq(1).parent("").is(".list3"));
 	Ok(())
 }
 
@@ -246,7 +246,7 @@ fn test_selector_pseudo_first_child() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	// :first-child
 	let first_child = root.find("li:first-child");
 	assert_eq!(first_child.length(), 1);
@@ -318,7 +318,7 @@ fn test_selector_pseudo_last_child() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	// :last-child
 	let last_child = root.find("li:last-child");
 	assert_eq!(last_child.length(), 1);
@@ -356,7 +356,7 @@ fn test_selector_pseudo_nth_child() -> Result {
   </body>
   </html>
 "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let ul = root.find("ul");
 	// :nth-child(0)
 	let child = ul.find(":nth-child(0)");
@@ -427,7 +427,7 @@ fn test_selector_pseudo_nth_last_child() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let ul = root.find("ul");
 	// :nth-last-child(1)
 	let child = ul.children(":nth-last-child(1)");
@@ -465,7 +465,7 @@ fn test_selector_pseudo_only_of_type() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let content = root.find("#content");
 	// :only-of-type
 	let only_of_type = content.find(":only-of-type");
@@ -502,7 +502,7 @@ fn test_selector_pseudo_first_of_type() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let dl = root.find("dl");
 	// :first-of-type
 	let type_child = dl.find(":first-of-type");
@@ -543,7 +543,7 @@ fn test_selector_pseudo_last_of_type() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let dl = root.find("dl");
 	// :last-of-type
 	let type_child = dl.find(":last-of-type");
@@ -584,7 +584,7 @@ fn test_selector_pseudo_nth_of_type() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let dl = root.find("dl");
 	// :nth-of-type(0)
 	let type_child = dl.children(":nth-of-type(0)");
@@ -636,7 +636,7 @@ fn test_selector_pseudo_nth_last_of_type() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let dl = root.find("dl");
 	// :nth-last-of-type(1)
 	let last_type_child = dl.find(":nth-last-of-type(1)");
@@ -689,7 +689,7 @@ fn test_selector_pseudo_not() -> Result {
     </body>
     </html>
   "#;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let dl = root.find("dl");
 	// not dt
 	let not_dt = dl.children(":not(dt)");

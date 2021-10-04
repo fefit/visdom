@@ -279,7 +279,7 @@ impl Rule {
 		queues: &[BoxDynPattern],
 		chars: &[char],
 	) -> Option<(MatchedQueue, usize, usize)> {
-		let (result, matched_len, matched_queue_item, _) = exec(&queues, chars);
+		let (result, matched_len, matched_queue_item, _) = exec(queues, chars);
 		if matched_len > 0 {
 			Some((result, matched_len, matched_queue_item))
 		} else {

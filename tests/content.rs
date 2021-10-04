@@ -122,8 +122,9 @@ fn test_texts() -> Result {
 	let html = r##"
     <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div>
   "##;
-	let root = Vis::load(&html)?;
+	let root = Vis::load(html)?;
 	let content = root.find("#content");
+	println!("content===>{}", content.length());
 	let texts = content.texts(0);
 	assert_eq!(texts.length(), 6);
 	// top childs

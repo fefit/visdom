@@ -74,14 +74,14 @@ impl Dom {
 			return false;
 		}
 		// test if same node
-		if dom.is(&node) {
+		if dom.is(node) {
 			Dom::halt(dom, method, &format!("Can't {} of dom.", method));
 			return false;
 		}
 		// test if the node is dom's parent node
 		let mut cur = dom.cloned();
 		while let Some(parent) = cur.parent() {
-			if parent.is(&node) {
+			if parent.is(node) {
 				Dom::halt(dom, method, &format!("Can't {} of self's parent", method));
 				return false;
 			}
@@ -183,9 +183,11 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		if let Some(root) = &self.borrow().root {
 			if let Some(root) = &root.upgrade() {
 				if let Some(doc) = &root.borrow().document {
-					return Some(Box::new(Document {
-						doc: Rc::clone(doc).into(),
-					}));
+					if let Some(ref_doc) = &doc.upgrade() {
+						return Some(Box::new(Document {
+							doc: Rc::clone(ref_doc).into(),
+						}));
+					}
 				}
 			}
 		}
@@ -225,7 +227,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 						let content = encode(content, EntitySet::Html, EncodeType::NamedOrDecimal);
 						let mut text_node = Node::create_text_node(content, None);
 						// set text node parent
-						text_node.parent = Some(Rc::downgrade(&self));
+						text_node.parent = Some(Rc::downgrade(self));
 						// set childs
 						node.childs = Some(vec![Rc::new(RefCell::new(text_node))]);
 					} else {
@@ -260,7 +262,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 	fn set_html(&mut self, content: &str) {
 		let mut is_element = true;
 		let target = match self.node_type() {
-			INodeType::Element => Some(Rc::clone(&self)),
+			INodeType::Element => Some(Rc::clone(self)),
 			INodeType::Text => {
 				if let Some(parent) = &self.borrow_mut().parent {
 					if let Some(parent) = &parent.upgrade() {
@@ -632,7 +634,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
 		// base validate
 		let action = position.action();
-		if !Dom::validate_dom_change(self, &node, action) {
+		if !Dom::validate_dom_change(self, node, action) {
 			return;
 		}
 		let node_type = node.node_type();
@@ -644,7 +646,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 					if let Some(childs) = &dom.borrow().childs {
 						childs
 							.iter()
-							.map(|v| Rc::clone(&v))
+							.map(|v| Rc::clone(v))
 							.collect::<Vec<RefNode>>()
 					} else {
 						vec![]
@@ -714,7 +716,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				AfterBegin | BeforeEnd => {
 					// set nodes parent
 					for node in &nodes {
-						node.borrow_mut().parent = Some(Rc::downgrade(&self));
+						node.borrow_mut().parent = Some(Rc::downgrade(self));
 					}
 					// prepend, append
 					if let Some(childs) = &mut self.borrow_mut().childs {
@@ -727,7 +729,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 							// always reset nodes index
 							reset_next_siblings_index(0, &nodes);
 							// reset childs index
-							reset_next_siblings_index(nodes.len(), &childs);
+							reset_next_siblings_index(nodes.len(), childs);
 							// append childs to nodes
 							nodes.append(childs);
 							// set childs to nodes
@@ -815,7 +817,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				}
 			}
 		}
-		let ele = Box::new(Rc::clone(&self)) as BoxDynElement;
+		let ele = Box::new(Rc::clone(self)) as BoxDynElement;
 		loop_handle(ele, &mut result, 0, limit_depth, handle);
 		if !result.is_empty() {
 			return Some(result);
@@ -839,7 +841,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	fn is(&self, ele: &BoxDynElement) -> bool {
 		let specified: Box<dyn Any> = ele.cloned().to_node();
 		if let Ok(dom) = specified.downcast::<RefNode>() {
-			return Node::is_same(&self, &dom);
+			return Node::is_same(self, &dom);
 		}
 		false
 	}
@@ -850,7 +852,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	}
 }
 
-struct Document {
+pub struct Document {
 	doc: DocHolder,
 }
 
@@ -858,10 +860,13 @@ impl Document {
 	fn bind_error(&mut self, handle: IErrorHandle) {
 		*self.doc.borrow().onerror.borrow_mut() = Some(Rc::new(handle));
 	}
-	fn list<'b>(&self) -> Elements<'b> {
+	/// Get an elements set.
+	pub fn elements<'b>(self) -> Elements<'b> {
 		let root = Rc::clone(&self.doc.borrow().root);
-		Elements::with_nodes(vec![Box::new(root)])
+		Elements::with_all(vec![Box::new(root)], Some(Box::new(self)))
 	}
+	/// Destory the document
+	pub fn destory(self) {}
 }
 
 impl IDocumentTrait for Document {
@@ -882,11 +887,9 @@ impl IDocumentTrait for Document {
 	}
 	// onerror
 	fn onerror(&self) -> Option<Rc<IErrorHandle>> {
-		if let Some(error_handle) = &(*self.doc.borrow().onerror.borrow()) {
-			Some(Rc::clone(error_handle))
-		} else {
-			None
-		}
+		(*self.doc.borrow().onerror.borrow())
+			.as_ref()
+			.map(|error_handle| Rc::clone(error_handle))
 	}
 }
 
@@ -985,14 +988,14 @@ impl Vis {
 	/// load the html with options, get an elements collection
 	pub fn load_options(html: &str, options: ParseOptions) -> Result<Elements, Box<dyn Error>> {
 		let doc = Vis::parse_doc_options(html, options)?;
-		Ok(doc.list())
+		Ok(doc.elements())
 	}
 	/// load the html with options, and catch the errors
 	pub fn load_options_catch(html: &str, options: ParseOptions, handle: IErrorHandle) -> Elements {
 		let doc = Vis::parse_doc_options(html, options);
 		if let Ok(mut doc) = doc {
 			doc.bind_error(handle);
-			doc.list()
+			doc.elements()
 		} else {
 			handle(doc.err().unwrap());
 			Elements::new()

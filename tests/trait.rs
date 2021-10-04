@@ -23,7 +23,7 @@ fn test_document_trait() -> Result {
 	let root = Vis::load(&html)?;
 	// get document
 	let doc = root.document();
-	assert_eq!(doc.is_some(), true);
+	assert!(doc.is_some());
 	// doc methods
 	let doc = doc.unwrap();
 	// title
@@ -149,7 +149,7 @@ fn test_node_trait() -> Result {
 	let root = Vis::load(html)?;
 	// get root
 	let root_element = root.get(0).unwrap().root_element().unwrap();
-	assert_eq!(root_element.is(&root_element.root_element().unwrap()), true);
+	assert!(root_element.is(&root_element.root_element().unwrap()));
 	// content
 	let content = root.find("#content");
 	assert!(content

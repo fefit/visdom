@@ -293,7 +293,7 @@ fn test_method_is_all_by() -> Result {
 	let id_ele = id_divs.filter("#id");
 	// is #id
 	let is_id = id_ele.is_all_by(|index, _| index == 0);
-	assert_eq!(is_id, true);
+	assert!(is_id);
 	// is #id
 	let is_id = id_divs.is_all_by(|_, node| {
 		node
@@ -301,7 +301,7 @@ fn test_method_is_all_by() -> Result {
 			.map(|v| v.is_str("id"))
 			.unwrap_or(false)
 	});
-	assert_ne!(is_id, true);
+	assert!(!is_id);
 	// is #id
 	let is_id = id_divs.is_all_by(|_, node| node.tag_name() == "DIV");
 	assert!(is_id);
@@ -446,7 +446,7 @@ fn test_method_parents_until() -> Result {
 	// parents until to level 1
 	let to_level_1 = item_1.parents_until(".level-1", "", false);
 	assert_eq!(to_level_1.length(), 4);
-	assert_eq!(to_level_1.eq(0).has_class("item-ii"), true);
+	assert!(to_level_1.eq(0).has_class("item-ii"));
 	// parents  until to level 1, but only "li" tags
 	let to_level_1_items = item_1.parents_until(".level-1", "li", false);
 	assert_eq!(to_level_1_items.length(), 2);
@@ -721,7 +721,7 @@ fn test_method_closest() -> Result {
 #[test]
 fn test_method_siblings() -> Result {
 	// siblings
-	let root = Vis::load(&HTML)?;
+	let root = Vis::load(HTML)?;
 	let divs = root.find("div");
 	assert_eq!(divs.length(), 9);
 	let siblings = divs.siblings("div");

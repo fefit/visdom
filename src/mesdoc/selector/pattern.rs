@@ -520,7 +520,7 @@ mod tests {
 			}
 		}
 		let pat: Box<dyn Pattern> = Box::new(TestPattern);
-		assert_eq!(pat.is_nested(), false);
+		assert!(!pat.is_nested());
 		assert!(pat.matched(&['a']).is_none());
 		assert!(format!("{:?}", pat).contains("Pattern"));
 		assert!(TestPattern::from_params("a", "").is_err());

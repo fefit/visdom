@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// let nth_2n_child = ul.find(":nth-child(2n),:nth-child(1),:nth-child(n+8)");
 	// println!("2n:{}", nth_2n_child.length());
 	let html = r##"
-  <html>
+  <html lang="utf-8">
     <head></head>
     <body>
       <div id="id" name="#id">
@@ -247,5 +247,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// 	true
 	// });
 	// println!("{}", root.outer_html());
+	let html = r#"
+  <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div>
+  "#;
+	let root = Vis::load(html)?;
+	println!("root:{}", root.find("div").length());
+	println!("root:{:?}", root.find("#content").length());
 	Ok(())
 }

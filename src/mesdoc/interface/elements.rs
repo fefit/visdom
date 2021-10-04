@@ -91,6 +91,9 @@ pub(crate) enum FilterType {
 #[derive(Default)]
 pub struct Elements<'a> {
 	nodes: Vec<BoxDynElement<'a>>,
+	// doc will used by root elements
+	#[allow(dead_code)]
+	doc: MaybeDoc<'a>,
 }
 
 /*
@@ -135,17 +138,25 @@ impl<'a> Elements<'a> {
 	pub(crate) fn with_node(ele: &BoxDynElement) -> Self {
 		Elements {
 			nodes: vec![ele.cloned()],
+			..Default::default()
 		}
 	}
 	// with nodes
 	pub fn with_nodes(nodes: Vec<BoxDynElement<'a>>) -> Self {
-		Elements { nodes }
+		Elements {
+			nodes,
+			..Default::default()
+		}
 	}
-
+	// with all
+	pub(crate) fn with_all(nodes: Vec<BoxDynElement<'a>>, doc: MaybeDoc<'a>) -> Self {
+		Elements { nodes, doc }
+	}
 	// with capacity
 	pub fn with_capacity(size: usize) -> Self {
 		Elements {
 			nodes: Vec::with_capacity(size),
+			..Default::default()
 		}
 	}
 	/*------------get/set element nodes---------------*/
@@ -372,7 +383,7 @@ impl<'a> Elements<'a> {
 		}
 		self.trigger_method(method, selector, |selector| {
 			selector.head_combinator(comb);
-			self.find_selector(&selector)
+			self.find_selector(selector)
 		})
 	}
 	// for all combinator until selectors
@@ -408,7 +419,7 @@ impl<'a> Elements<'a> {
 						// find the next element
 						cur_eles = cur_eles.find_selector(&next_selector);
 						if !cur_eles.is_empty() {
-							let meet_until = cur_eles.filter_type_handle(&selector, &FilterType::Is).1;
+							let meet_until = cur_eles.filter_type_handle(selector, &FilterType::Is).1;
 							// meet the until element, and not contains, stop before check element
 							if meet_until && !contains {
 								break;
@@ -644,7 +655,7 @@ impl<'a> Elements<'a> {
 						let first_comb = &first_query[0].1;
 						// check the elements if satisfied the lookup
 						for ele in finded.get_ref() {
-							if self.has_ele(ele, first_comb, Some(&lookup)) {
+							if self.has_ele(ele, first_comb, Some(lookup)) {
 								group.push(ele.cloned());
 							}
 						}
@@ -778,7 +789,7 @@ impl<'a> Elements<'a> {
 									for child in childs.get_ref() {
 										if cmp_index < total_matched {
 											let cmp_child = &matched_childs[cmp_index];
-											if child.is(&cmp_child) {
+											if child.is(cmp_child) {
 												cmp_index += 1;
 												result.get_mut_ref().push(child.cloned());
 											}
@@ -1004,7 +1015,7 @@ impl<'a> Elements<'a> {
 			}
 			Chain => {
 				// just filter
-				result = matcher.apply(&elements, None);
+				result = matcher.apply(elements, None);
 			}
 		};
 		result
@@ -1020,7 +1031,7 @@ impl<'a> Elements<'a> {
 		let mut elements = if first_rule.0.in_cache && matches!(comb, Combinator::ChildrenAll) {
 			let (matcher, ..) = first_rule;
 			// set use cache true
-			let cached = matcher.apply(&elements, Some(true));
+			let cached = matcher.apply(elements, Some(true));
 			let count = cached.length();
 			if count > 0 {
 				let mut result = Elements::with_capacity(count);
@@ -1035,7 +1046,7 @@ impl<'a> Elements<'a> {
 				Elements::new()
 			}
 		} else {
-			Elements::select_by_rule(&elements, first_rule, Some(comb))
+			Elements::select_by_rule(elements, first_rule, Some(comb))
 		};
 		if !elements.is_empty() && rules.len() > 1 {
 			for rule in &rules[1..] {
@@ -1085,7 +1096,7 @@ impl<'a> Elements<'a> {
 			Parent => {
 				for ele in elements.get_ref() {
 					if let Some(parent) = &ele.parent() {
-						if self.includes(&parent) {
+						if self.includes(parent) {
 							return true;
 						}
 					}
@@ -1094,16 +1105,16 @@ impl<'a> Elements<'a> {
 			ParentAll => {
 				for ele in elements.get_ref() {
 					if let Some(parent) = &ele.parent() {
-						if self.includes(&parent) {
+						if self.includes(parent) {
 							return true;
 						}
 						if let Some(ancestor) = &parent.parent() {
-							if self.includes(&ancestor) {
+							if self.includes(ancestor) {
 								return true;
 							}
 							// iterator the search process, becareful with the combinator now is ChildrenAll
 							// the sentences must in if condition, otherwise it will break the for loop
-							if self.has_ele(&ancestor, &Combinator::ChildrenAll, None) {
+							if self.has_ele(ancestor, &Combinator::ChildrenAll, None) {
 								return true;
 							}
 						}
@@ -1113,7 +1124,7 @@ impl<'a> Elements<'a> {
 			Prev => {
 				for ele in elements.get_ref() {
 					if let Some(prev) = &ele.previous_element_sibling() {
-						if self.includes(&prev) {
+						if self.includes(prev) {
 							return true;
 						}
 					}
@@ -1297,7 +1308,7 @@ impl<'a> Elements<'a> {
 	pub fn filter(&self, selector: &str) -> Elements<'a> {
 		const METHOD: &str = "filter";
 		self.trigger_method(METHOD, selector, |selector| {
-			self.filter_type_handle(&selector, &FilterType::Filter).0
+			self.filter_type_handle(selector, &FilterType::Filter).0
 		})
 	}
 
@@ -1353,7 +1364,7 @@ impl<'a> Elements<'a> {
 	pub fn is_all(&self, selector: &str) -> bool {
 		const METHOD: &str = "is_all";
 		self.trigger_method(METHOD, selector, |selector| {
-			self.filter_type_handle(&selector, &FilterType::IsAll).1
+			self.filter_type_handle(selector, &FilterType::IsAll).1
 		})
 	}
 
@@ -1381,7 +1392,7 @@ impl<'a> Elements<'a> {
 	pub fn not(&self, selector: &str) -> Elements<'a> {
 		const METHOD: &str = "not";
 		self.trigger_method(METHOD, selector, |selector| {
-			self.filter_type_handle(&selector, &FilterType::Not).0
+			self.filter_type_handle(selector, &FilterType::Not).0
 		})
 	}
 
@@ -1445,7 +1456,7 @@ impl<'a> Elements<'a> {
 			}
 			false
 		}
-		self.filter_by(|_, ele| loop_handle(ele, &search))
+		self.filter_by(|_, ele| loop_handle(ele, search))
 	}
 }
 
@@ -1560,8 +1571,8 @@ impl<'a> Elements<'a> {
 			let sec_left = &second[sec_left_index];
 			let sec_left_level = get_tree_indexs(sec_left);
 			// the first left
-			let fir_left_level = get_first_index_cached(&mut first_indexs, &first, fir_left_index);
-			match compare_indexs(&sec_left_level, &fir_left_level) {
+			let fir_left_level = get_first_index_cached(&mut first_indexs, first, fir_left_index);
+			match compare_indexs(&sec_left_level, fir_left_level) {
 				Ordering::Equal => {
 					// move forward both
 					sec_left_index += 1;
@@ -1570,8 +1581,8 @@ impl<'a> Elements<'a> {
 				Ordering::Greater => {
 					// second left is behind first left
 					// if second left is also behind first right
-					let fir_right_level = get_first_index_cached(&mut first_indexs, &first, fir_right_index);
-					match compare_indexs(&sec_left_level, &fir_right_level) {
+					let fir_right_level = get_first_index_cached(&mut first_indexs, first, fir_right_index);
+					match compare_indexs(&sec_left_level, fir_right_level) {
 						Ordering::Greater => {
 							// now second is all after first right
 							let cur_fir_index = fir_right_index + 1;
@@ -1588,8 +1599,8 @@ impl<'a> Elements<'a> {
 							let mut mid = (l + r) / 2;
 							let mut find_equal = false;
 							while mid != l {
-								let mid_level = get_first_index_cached(&mut first_indexs, &first, mid);
-								match compare_indexs(&sec_left_level, &mid_level) {
+								let mid_level = get_first_index_cached(&mut first_indexs, first, mid);
+								match compare_indexs(&sec_left_level, mid_level) {
 									Ordering::Greater => {
 										// second left is behind middle
 										l = mid;
@@ -1628,7 +1639,7 @@ impl<'a> Elements<'a> {
 				Ordering::Less => {
 					let sec_right = &second[sec_right_index];
 					let sec_right_level = get_tree_indexs(sec_right);
-					match compare_indexs(&sec_right_level, &fir_left_level) {
+					match compare_indexs(&sec_right_level, fir_left_level) {
 						Ordering::Less => {
 							// now second is all before current first left
 							for index in sec_left_index..=sec_right_index {

@@ -163,7 +163,7 @@ pub fn class_list_to_string(class_list: &[Vec<char>]) -> String {
 			let mut attr_class: Vec<char> = Vec::with_capacity(total * 5);
 			let last_index = total - 1;
 			for name in &class_list[..last_index] {
-				attr_class.extend_from_slice(&name);
+				attr_class.extend_from_slice(name);
 				attr_class.push(' ');
 			}
 			attr_class.extend_from_slice(&class_list[last_index]);
