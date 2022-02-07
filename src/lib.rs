@@ -25,11 +25,11 @@ use rphtml::{
 		allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, NameCase, Node, NodeType, RefNode,
 	},
 };
-use std::error::Error;
 use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
 // re export `IAttrValue` `IEnumTyped` `INodeType`
 pub mod types {
+	pub use crate::mesdoc::error::BoxDynError;
 	pub use crate::mesdoc::interface::{
 		BoxDynElement, BoxDynNode, BoxDynText, Elements, IAttrValue, IDocumentTrait, IEnumTyped,
 		INodeType, Texts,
@@ -43,7 +43,7 @@ pub mod html {
 }
 
 use crate::html::ParseOptions;
-use crate::types::{IAttrValue, IEnumTyped, INodeType};
+use crate::types::{BoxDynError, IAttrValue, IEnumTyped, INodeType};
 /// type implement INodeTrait with Node
 struct Dom;
 
@@ -214,7 +214,10 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		)
 	}
 
-	/// impl `set_text`
+	/// `set_text` for an element node or a text node
+	/// # Notice
+	/// For an element node, if the tag is a `script` or `style` or `textarea` or `title`, the content will not be encoded.
+	/// Otherwise, the content will be encoded at first.
 	fn set_text(&mut self, content: &str) {
 		let node_type = self.node_type();
 		match node_type {
@@ -355,7 +358,8 @@ impl INodeTrait for Rc<RefCell<Node>> {
 }
 
 impl ITextTrait for Rc<RefCell<Node>> {
-	// delete the node
+	/// Remove a text node.
+	///
 	fn remove(self: Box<Self>) {
 		let index = self.index();
 		if let Some(parent) = &self.borrow_mut().parent {
@@ -644,10 +648,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 			let mut nodes = match node_type {
 				INodeType::DocumentFragement => {
 					if let Some(childs) = &dom.borrow().childs {
-						childs
-							.iter()
-							.map(|v| Rc::clone(v))
-							.collect::<Vec<RefNode>>()
+						childs.iter().map(Rc::clone).collect::<Vec<RefNode>>()
 					} else {
 						vec![]
 					}
@@ -826,7 +827,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	}
 
 	/// impl `into_text`
-	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, Box<dyn Error>> {
+	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, BoxDynError> {
 		if check_if_content_tag(&self.tag_names()) {
 			Ok(self as BoxDynText)
 		} else {
@@ -889,7 +890,7 @@ impl IDocumentTrait for Document {
 	fn onerror(&self) -> Option<Rc<IErrorHandle>> {
 		(*self.doc.borrow().onerror.borrow())
 			.as_ref()
-			.map(|error_handle| Rc::clone(error_handle))
+			.map(Rc::clone)
 	}
 }
 
@@ -899,8 +900,8 @@ impl IDocumentTrait for Document {
 ///
 /// ```
 /// use visdom::Vis;
-/// use std::error::Error;
-/// fn main()-> Result<(), Box<dyn Error>>{
+/// use visdom::types::BoxDynError;
+/// fn main()-> Result<(), BoxDynError>{
 ///   let html = r##"
 ///      <!doctype html>
 ///      <html>
@@ -980,13 +981,13 @@ impl Vis {
 	pub(crate) fn parse_doc_options(
 		html: &str,
 		options: ParseOptions,
-	) -> Result<Document, Box<dyn Error>> {
+	) -> Result<Document, BoxDynError> {
 		mesdoc::init();
 		let doc = Doc::parse(html, options)?;
 		Ok(Document { doc })
 	}
 	/// load the html with options, get an elements collection
-	pub fn load_options(html: &str, options: ParseOptions) -> Result<Elements, Box<dyn Error>> {
+	pub fn load_options(html: &str, options: ParseOptions) -> Result<Elements, BoxDynError> {
 		let doc = Vis::parse_doc_options(html, options)?;
 		Ok(doc.elements())
 	}
@@ -1002,7 +1003,7 @@ impl Vis {
 		}
 	}
 	/// load the html into elements
-	pub fn load(html: &str) -> Result<Elements, Box<dyn Error>> {
+	pub fn load(html: &str) -> Result<Elements, BoxDynError> {
 		Vis::load_options(html, Vis::options())
 	}
 	/// load the html, and catch the errors

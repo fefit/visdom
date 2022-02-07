@@ -2,17 +2,18 @@
 use std::thread;
 use std::time::SystemTime;
 use std::{collections::VecDeque, error::Error};
-use visdom::types::IDocumentTrait;
 use visdom::types::INodeType;
+use visdom::types::{BoxDynError, IDocumentTrait};
 use visdom::Vis;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), BoxDynError> {
 	// let html = format!("<ul>{}</ul>", "<li></li>".repeat(9));
 	// let root = Vis::load(&html)?;
 	// let ul = root.find("ul");
 	// let nth_2n_child = ul.find(":nth-child(2n),:nth-child(1),:nth-child(n+8)");
 	// println!("2n:{}", nth_2n_child.length());
 	let html = r##"
+  <!doctype html>
   <html lang="utf-8">
     <head></head>
     <body>
@@ -247,11 +248,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 	// 	true
 	// });
 	// println!("{}", root.outer_html());
-	let html = r#"
-  <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div>
+	let html = r#"<!DOCTYPE html><html>
+  <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div></html>
   "#;
 	let root = Vis::load(html)?;
-	println!("root:{}", root.find("div").length());
-	println!("root:{:?}", root.find("#content").length());
+	println!("root:{}", root.length());
+	let html_ele = root.children("html");
+	println!(
+		"html_ele: {}, {}",
+		html_ele.length(),
+		html_ele
+			.map(|_, ele| ele.tag_name())
+			.iter()
+			.fold(String::from(""), |mut ret, cur| {
+				ret.push_str(cur);
+				ret
+			})
+	);
+	// first.map(|_, ele| {
+	// 	println!("{:?}", ele.tag_name());
+	// });
+	// println!("{}", first.get(0).unwrap().tag_name());
+	// println!("root:{}", root.find("div").length());
+	// println!("root:{:?}", root.find("#content").length());
 	Ok(())
 }

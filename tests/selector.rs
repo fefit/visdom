@@ -1,7 +1,7 @@
-use std::error::Error;
 use std::result::Result as StdResult;
+use visdom::types::BoxDynError;
 use visdom::Vis;
-type Result = StdResult<(), Box<dyn Error>>;
+type Result = StdResult<(), BoxDynError>;
 
 #[test]
 fn test_attribute_selector() -> Result {
@@ -136,6 +136,22 @@ fn test_selector_pseudo_header() -> Result {
 	assert_eq!(hgroups.length(), 1);
 	let not_hgroups = root.find(":not(:header)");
 	assert_eq!(not_hgroups.length(), 1);
+	Ok(())
+}
+
+#[test]
+fn test_selector_pseudo_root() -> Result {
+	let html = r#"<h1>abc</h1><div></div>"#;
+	let root = Vis::load(html)?;
+	// non html document, root is empty
+	let html_element = root.find(":root");
+	assert_eq!(html_element.length(), 0);
+	// html document
+	let html = r#"<!doctype html><html><head></head><body><div id="nav"></div></body></html>"#;
+	let root = Vis::load(html)?;
+	let html_element = root.find(":root");
+	assert_eq!(html_element.length(), 1);
+	assert_eq!(html_element.get(0).unwrap().tag_name(), "HTML");
 	Ok(())
 }
 

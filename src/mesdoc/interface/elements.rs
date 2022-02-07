@@ -1,6 +1,7 @@
 use super::{
 	BoxDynElement, BoxDynText, IAttrValue, IElementTrait, InsertPosition, MaybeDoc, Texts,
 };
+use crate::mesdoc::error::BoxDynError;
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
 	constants::DEF_NODES_LEN,
@@ -13,13 +14,13 @@ use crate::mesdoc::{
 	selector::rule::MatchSpecifiedHandle,
 	utils::{get_class_list, retain_by_index, to_static_str},
 };
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::{
 	cmp::Ordering,
 	collections::VecDeque,
 	ops::{Bound, RangeBounds},
 };
-use std::{collections::HashMap, error::Error};
 
 // get the ele indexs in tree
 fn get_tree_indexs(ele: &BoxDynElement) -> VecDeque<usize> {
@@ -117,7 +118,7 @@ impl<'a> Elements<'a> {
 		Default::default()
 	}
 
-	pub(crate) fn trigger_method_throw_error(&self, method: &str, error: Box<dyn Error>) {
+	pub(crate) fn trigger_method_throw_error(&self, method: &str, error: BoxDynError) {
 		if let Some(doc) = &self
 			.get(0)
 			.expect("Use index 0 when length > 0")
@@ -196,7 +197,9 @@ impl<'a> Elements<'a> {
 		}
 		self
 	}
-	// alias for `for_each`
+	/// Alias for `for_each`
+	///
+	///
 	pub fn each<F>(&mut self, handle: F) -> &mut Self
 	where
 		F: FnMut(usize, &mut BoxDynElement) -> bool,
@@ -749,11 +752,11 @@ impl<'a> Elements<'a> {
 							) {
 								handle(
 									ele,
-									Box::new(|child, is_matched| {
+									Box::new(|child, is_matched, loop_child| {
 										if is_matched {
 											result.get_mut_ref().push(child.cloned());
 										}
-										if child.child_nodes_length() > 0 {
+										if loop_child && child.child_nodes_length() > 0 {
 											loop_handle(child, result, handle);
 										}
 									}),
@@ -834,7 +837,7 @@ impl<'a> Elements<'a> {
 						for ele in elements.get_ref() {
 							handle(
 								&**ele,
-								Box::new(|ele, is_matched| {
+								Box::new(|ele, is_matched, _| {
 									if is_matched {
 										result.get_mut_ref().push(ele.cloned());
 									}

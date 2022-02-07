@@ -1,10 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use crossbeam::sync::WaitGroup;
-use std::error::Error;
-use std::thread;
+use visdom::types::BoxDynError;
 use visdom::Vis;
 
-fn bench_selector() -> Result<(), Box<dyn Error>> {
+fn bench_selector() -> Result<(), BoxDynError> {
 	let html: String = format!(
 		r##"
       <ul>

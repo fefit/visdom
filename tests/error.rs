@@ -1,5 +1,4 @@
-use std::error::Error;
-use visdom::Vis;
+use visdom::{types::BoxDynError, Vis};
 
 #[test]
 #[should_panic]
@@ -46,7 +45,7 @@ fn test_wrong_selector() {
 	let root = Vis::load_options_catch(
 		html,
 		Default::default(),
-		Box::new(|e: Box<dyn Error>| {
+		Box::new(|e: BoxDynError| {
 			// errors will catched
 			panic!("{:?}", e.to_string());
 		}),
@@ -66,7 +65,7 @@ fn test_wrong_selector_catch() {
   "#;
 	let root = Vis::load_catch(
 		html,
-		Box::new(|_: Box<dyn Error>| {
+		Box::new(|_: BoxDynError| {
 			// errors will be catched here
 			// error selector just get an empty elements
 		}),

@@ -1,8 +1,7 @@
-use std::error::Error;
 use std::result::Result as StdResult;
-use visdom::types::{Combinator, Elements, IAttrValue};
+use visdom::types::{BoxDynError, Combinator, Elements, IAttrValue};
 use visdom::Vis;
-type Result = StdResult<(), Box<dyn Error>>;
+type Result = StdResult<(), BoxDynError>;
 
 const HTML: &str = r##"
   <html>

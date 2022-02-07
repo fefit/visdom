@@ -1,7 +1,7 @@
-use std::error::Error;
 use std::result::Result as StdResult;
+use visdom::types::BoxDynError;
 use visdom::Vis;
-type Result = StdResult<(), Box<dyn Error>>;
+type Result = StdResult<(), BoxDynError>;
 
 #[test]
 fn test_document_trait() -> Result {

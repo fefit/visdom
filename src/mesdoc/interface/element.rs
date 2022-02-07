@@ -1,6 +1,5 @@
 use super::{BoxDynNode, BoxDynText, Elements, INodeTrait, INodeType, Texts};
-use crate::mesdoc::error::Error as IError;
-use std::error::Error;
+use crate::mesdoc::error::{BoxDynError, Error as IError};
 use std::ops::Range;
 
 pub type BoxDynElement<'a> = Box<dyn IElementTrait + 'a>;
@@ -241,11 +240,14 @@ pub trait IElementTrait: INodeTrait {
 	}
 	// children
 	fn children<'b>(&self) -> Elements<'b> {
-		let child_nodes = self.child_nodes();
-		let mut result = Elements::with_capacity(child_nodes.len());
-		for ele in child_nodes {
-			if let INodeType::Element = ele.node_type() {
-				result.push(ele.typed().into_element().unwrap());
+		let total = self.child_nodes_length();
+		let mut result = Elements::with_capacity(total);
+		for index in 0..total {
+			let node = self
+				.child_nodes_item(index)
+				.expect("child nodes index must less than total.");
+			if let INodeType::Element = node.node_type() {
+				result.push(node.typed().into_element().unwrap());
 			}
 		}
 		result
@@ -282,7 +284,7 @@ pub trait IElementTrait: INodeTrait {
 	}
 	// special for content tag, 'style','script','title','textarea'
 	#[allow(clippy::boxed_local)]
-	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, Box<dyn Error>> {
+	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, BoxDynError> {
 		Err(Box::new(IError::InvalidTraitMethodCall {
 			method: "into_text".into(),
 			message: "The into_text method is not implemented.".into(),

@@ -1,7 +1,9 @@
-use std::error::Error;
 use std::result::Result as StdResult;
-use visdom::{types::INodeType, Vis};
-type Result = StdResult<(), Box<dyn Error>>;
+use visdom::{
+	types::{BoxDynError, INodeType},
+	Vis,
+};
+type Result = StdResult<(), BoxDynError>;
 
 #[test]
 fn test_set_html() -> Result {

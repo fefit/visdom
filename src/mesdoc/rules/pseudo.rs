@@ -21,6 +21,43 @@ fn nth_index_to_number(index: &Option<&str>) -> isize {
 		.expect("Nth's index is not ok")
 }
 
+/// Pseudo selector ":root"
+fn pseudo_root(rules: &mut Vec<RuleItem>) {
+	let selector = ":root";
+	let name = selector;
+	let rule = RuleDefItem(
+		name,
+		selector,
+		PRIORITY,
+		Box::new(|_| Matcher {
+			specified_handle: Some(Box::new(|ele, mut callback| {
+				println!("{:?}, {}", ele.node_type(), ele.is_root_element());
+				if ele.is_root_element() {
+					let total = ele.child_nodes_length();
+					println!("total:{}", total);
+					for index in 0..total {
+						let node = ele
+							.child_nodes_item(index)
+							.expect("Child nodes item index must less than total");
+						if matches!(node.node_type(), INodeType::Element) {
+							let ele = node
+								.typed()
+								.into_element()
+								.expect("Call `typed` for element ele.");
+							println!("{}", ele.tag_name());
+							if ele.tag_name() == "HTML" {
+								callback(&*ele, true, false);
+							}
+						}
+					}
+				}
+			})),
+			..Default::default()
+		}),
+	);
+	rules.push(rule.into());
+}
+
 /// pseudo selector ":empty"
 fn pseudo_empty(rules: &mut Vec<RuleItem>) {
 	// empty
@@ -120,7 +157,7 @@ fn make_asc_or_desc_nth_child_specified(asc: bool, index: isize) -> MatchSpecifi
 					Box::new(|child| {
 						let is_matched = cur_index == index;
 						cur_index += 1;
-						callback(child, is_matched);
+						callback(child, is_matched, true);
 						true
 					}),
 				);
@@ -148,7 +185,7 @@ fn make_asc_or_desc_nth_child_specified(asc: bool, index: isize) -> MatchSpecifi
 					0,
 					false,
 					Box::new(|child| {
-						callback(child, matched[loop_index]);
+						callback(child, matched[loop_index], true);
 						loop_index += 1;
 						true
 					}),
@@ -473,7 +510,7 @@ fn make_asc_or_desc_nth_of_type_specified(asc: bool, index: isize) -> MatchSpeci
 					Box::new(|child| {
 						let is_matched =
 							get_allowed_name_ele(child, &mut names, &allow_indexs, &mut node_indexs);
-						callback(child, is_matched);
+						callback(child, is_matched, true);
 						true
 					}),
 				);
@@ -503,7 +540,7 @@ fn make_asc_or_desc_nth_of_type_specified(asc: bool, index: isize) -> MatchSpeci
 					0,
 					false,
 					Box::new(|child| {
-						callback(child, matched[loop_index]);
+						callback(child, matched[loop_index], true);
 						loop_index += 1;
 						true
 					}),
@@ -891,6 +928,7 @@ fn pseudo_alias_submit(rules: &mut Vec<RuleItem>) {
 }
 
 pub fn init(rules: &mut Vec<RuleItem>) {
+	pseudo_root(rules);
 	pseudo_empty(rules);
 	// first-child, last-child
 	pseudo_first_child(rules);

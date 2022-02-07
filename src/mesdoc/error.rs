@@ -1,4 +1,5 @@
 use thiserror::Error;
+pub type BoxDynError = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Error, Debug)]
 pub enum Error {
 	#[error("Invalid selector:'{context}'<{reason}>")]

@@ -14,7 +14,7 @@ lazy_static! {
 pub type MatchAllHandle = Box<dyn (for<'a, 'r> Fn(&'a Elements<'r>, Option<bool>) -> Elements<'r>)>;
 pub type MatchOneHandle = Box<dyn (Fn(&dyn IElementTrait, Option<bool>) -> bool)>;
 pub type MatchSpecifiedHandle =
-	Box<dyn for<'a> Fn(&'a dyn IElementTrait, Box<dyn FnMut(&dyn IElementTrait, bool) + 'a>)>;
+	Box<dyn for<'a> Fn(&'a dyn IElementTrait, Box<dyn FnMut(&dyn IElementTrait, bool, bool) + 'a>)>;
 // matcher factory
 pub type MatcherFactory = Box<dyn (Fn(MatchedQueue) -> Matcher) + Send + Sync>;
 

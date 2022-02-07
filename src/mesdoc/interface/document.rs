@@ -1,10 +1,10 @@
 use super::{BoxDynElement, BoxDynNode, Elements};
+use crate::mesdoc::error::BoxDynError;
 use crate::mesdoc::utils::to_static_str;
-use std::error::Error;
 use std::rc::Rc;
 
 pub type MaybeDoc<'a> = Option<Box<dyn IDocumentTrait + 'a>>;
-pub type IErrorHandle = Box<dyn Fn(Box<dyn Error>)>;
+pub type IErrorHandle = Box<dyn Fn(BoxDynError)>;
 pub trait IDocumentTrait {
 	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynElement<'b>>;
 	fn source_code(&self) -> &'static str;
@@ -50,7 +50,7 @@ pub trait IDocumentTrait {
 		None
 	}
 	// trigger error
-	fn trigger_error(&self, error: Box<dyn Error>) {
+	fn trigger_error(&self, error: BoxDynError) {
 		if let Some(handle) = &self.onerror() {
 			handle(error);
 		}
