@@ -253,9 +253,9 @@ fn main() -> Result<(), BoxDynError> {
   <html>
     <body>
     
-    <select>
+    <select multiple>
       <option value="1">1</option>
-      <option value="2">2</option>
+      <option value="2" selected>2</option>
       <option value="3" selected>3</option>
     </select>
 
@@ -264,12 +264,8 @@ fn main() -> Result<(), BoxDynError> {
   "#;
 	let root = Vis::load(html)?;
 	println!("root:{}", root.length());
-	let options = root.find("option").filter(":checked");
-	println!(
-		"count: {}, select:{:?}",
-		options.length(),
-		options.val().to_string()
-	);
+	let select_value = root.find("select").val();
+	for val in select_value {}
 	// first.map(|_, ele| {
 	// 	println!("{:?}", ele.tag_name());
 	// });

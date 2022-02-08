@@ -2,6 +2,17 @@
 
 0.2.1 版本后各个接口方法已经基本趋于稳定，后面将不会做大的调整。
 
+## [0.4.13] - 2022-02-08
+
+### 增加
+
+- 为元素 `IElementTrait` 增加 `.value()` 方法，为 `Elements` 增加 `.val()` 方法，返回 `IFormValue` 枚举，当元素为 `multiple` 的 `select` 时，返回 `IFormValue::Multiple(Vec<String>)`，其它返回 `IFormValue::Single(String)`，通过 `to_string` 方法返回 `String` 值。
+- 增加伪类 `:checked`，以方便获取表单元素中选取的元素。
+
+### 修复
+
+- 修复 `:root` 伪类在非子类查找时候丢失查询handle的问题
+- 删除冗余的 `println!` debug信息
 ## [0.4.12] - 2022-02-07
 
 ### 增加

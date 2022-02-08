@@ -16,6 +16,7 @@ fn test_val() -> Result {
   <input type="checkbox" name="checkboxinput" value="checkbox1" />
   <input type="checkbox" name="checkboxinput" value="checkbox2" checked="checked" />
   <input type="checkbox" name="checkboxinput" value="checkbox3" checked="checked" />
+  <p value="abc"></p>
   "#;
 	let root = Vis::load(html)?;
 	let inputs = root.children("input");
@@ -36,6 +37,9 @@ fn test_val() -> Result {
 		inputs.filter("[type='checkbox']:checked").val().to_string(),
 		"checkbox2"
 	);
+	assert_eq!(root.find("p").length(), 1);
+	assert_eq!(root.find("p").val().to_string(), "");
+	assert_eq!(root.find("div").val().to_string(), "");
 	// ---- textarea ----
 	let textarea_content = r#"<div>This is the content in textarea</div>"#;
 	let html = format!("<textarea>{}</textarea>", textarea_content);
@@ -142,6 +146,7 @@ fn test_val() -> Result {
 	let select = root.children("select");
 	assert_eq!(select.find("option:checked").length(), 4);
 	assert_eq!(select.val().to_string(), "2,3,5,7");
+	assert_eq!(select.val().into_iter().collect::<String>(), "2357");
 	Ok(())
 }
 
