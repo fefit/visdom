@@ -129,6 +129,104 @@ fn test_tagname_selector() -> Result {
 }
 
 #[test]
+fn test_selector_pseudo_checked() -> Result {
+	// normal select
+	let html = r#"<select><option value="1"></option><option value="2"></option><option value="3"></option></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 3);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "1");
+	let selected_options = root.find("select > option:checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "1");
+	let selected_options = select.find(":checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "1");
+	// normal select
+	let html = r#"<select><optgroup><option value="1"></option><option value="2"></option><option value="3"></option></optgroup></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 3);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 0);
+	// normal select
+	let html = r#"<select><option value="1"></option><option value="2"></option><option value="3" selected="selected"></option></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 3);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "3");
+	// normal select
+	let html = r#"<select><option value="0"></option><optgroup><option value="1"></option><option value="2"></option><option value="3"></option></optgroup></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 4);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "0");
+	// normal select
+	let html = r#"<select><option value="0"></option><optgroup><option value="1"></option><option value="2"></option><option value="3" selected="selected"></option></optgroup></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 4);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 1);
+	assert_eq!(selected_options.val().to_string(), "3");
+	// multiple select
+	let html = r#"<select multiple><option value="1"></option><option value="2"></option><option value="3"></option></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 3);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 0);
+	// multiple select
+	let html = r#"<select multiple><option value="1"></option><option value="2" selected="selected"></option><option value="3" selected="selected"></option></select>"#;
+	let root = Vis::load(html)?;
+	let select = root.find("select");
+	let options = select.find("option");
+	assert_eq!(options.length(), 3);
+	let selected_options = options.filter(":checked");
+	assert_eq!(selected_options.length(), 2);
+	assert_eq!(
+		selected_options
+			.map(|_, ele| ele.value().to_string())
+			.join(","),
+		"2,3"
+	);
+	// input type radio
+	let html = r#"<input type="radio" name="radioinput" value="1" /><input type="radio" name="radioinput" value="2" /><input type="radio" name="radioinput" value="3" checked="checked" />"#;
+	let root = Vis::load(html)?;
+	let radios = root.find("input[name='radioinput']");
+	assert_eq!(radios.length(), 3);
+	let selected_radio = radios.filter(":checked");
+	assert_eq!(selected_radio.length(), 1);
+	assert_eq!(selected_radio.val().to_string(), "3");
+	// input type checkbox
+	let html = r#"<input type="checkbox" name="chkbox" value="1" /><input type="checkbox" name="chkbox" value="2" checked="checked" /><input type="checkbox" name="chkbox" value="3" checked="checked" />"#;
+	let root = Vis::load(html)?;
+	let chkbox = root.find("input[name='chkbox']");
+	assert_eq!(chkbox.length(), 3);
+	let selected_chkbox = chkbox.filter(":checked");
+	assert_eq!(selected_chkbox.length(), 2);
+	assert_eq!(
+		selected_chkbox
+			.map(|_, ele| ele.value().to_string())
+			.join(","),
+		"2,3"
+	);
+	Ok(())
+}
+
+#[test]
 fn test_selector_pseudo_header() -> Result {
 	let html = r#"<h1></h1><div></div>"#;
 	let root = Vis::load(html)?;
@@ -150,6 +248,10 @@ fn test_selector_pseudo_root() -> Result {
 	let html = r#"<!doctype html><html><head></head><body><div id="nav"></div></body></html>"#;
 	let root = Vis::load(html)?;
 	let html_element = root.find(":root");
+	assert_eq!(html_element.length(), 1);
+	assert_eq!(html_element.get(0).unwrap().tag_name(), "HTML");
+	// html document
+	let html_element = root.find("html:root");
 	assert_eq!(html_element.length(), 1);
 	assert_eq!(html_element.get(0).unwrap().tag_name(), "HTML");
 	Ok(())

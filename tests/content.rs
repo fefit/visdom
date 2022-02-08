@@ -20,10 +20,28 @@ fn test_val() -> Result {
 	let root = Vis::load(html)?;
 	let inputs = root.children("input");
 	assert_eq!(inputs.val().to_string(), "textinput");
+	assert_eq!(inputs.filter("[type='radio']").length(), 3);
+	assert_eq!(inputs.filter("[type='radio']:checked").length(), 1);
+	assert_eq!(
+		inputs.filter("[type='radio']:checked").val().to_string(),
+		"radio2"
+	);
 	assert_eq!(
 		inputs.filter("[name='radioinput']").eq(0).val().to_string(),
 		"radio1"
 	);
+	assert_eq!(inputs.filter("[type='checkbox']").length(), 3);
+	assert_eq!(inputs.filter("[type='checkbox']:checked").length(), 2);
+	assert_eq!(
+		inputs.filter("[type='checkbox']:checked").val().to_string(),
+		"checkbox2"
+	);
+	// ---- textarea ----
+	let textarea_content = r#"<div>This is the content in textarea</div>"#;
+	let html = format!("<textarea>{}</textarea>", textarea_content);
+	let root = Vis::load(&html)?;
+	let textarea = root.children("textarea");
+	assert_eq!(textarea.val().to_string(), textarea_content);
 	// ---- select ----
 	// select without selected option
 	let html = r#"
@@ -35,6 +53,8 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 1);
+	assert_eq!(select.find("option:checked").val().to_string(), "1");
 	assert_eq!(select.val().to_string(), "1");
 	// select without selected option, but in optgroup
 	let html = r#"
@@ -48,6 +68,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 0);
 	assert_eq!(select.val().to_string(), "");
 	// select with selected option
 	let html = r#"
@@ -59,6 +80,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 1);
 	assert_eq!(select.val().to_string(), "2");
 	// select with selected option in optgroup
 	let html = r#"
@@ -72,6 +94,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 1);
 	assert_eq!(select.val().to_string(), "2");
 	// multiple select with selected option
 	let html = r#"
@@ -83,6 +106,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 0);
 	assert_eq!(select.val().to_string(), "");
 	// multiple select with selected option in optgroup
 	let html = r#"
@@ -96,6 +120,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 0);
 	assert_eq!(select.val().to_string(), "");
 	// multiple select with selected option in optgroup
 	let html = r#"
@@ -115,6 +140,7 @@ fn test_val() -> Result {
   "#;
 	let root = Vis::load(html)?;
 	let select = root.children("select");
+	assert_eq!(select.find("option:checked").length(), 4);
 	assert_eq!(select.val().to_string(), "2,3,5,7");
 	Ok(())
 }
@@ -240,7 +266,6 @@ fn test_texts() -> Result {
   "##;
 	let root = Vis::load(html)?;
 	let content = root.find("#content");
-	println!("content===>{}", content.length());
 	let texts = content.texts(0);
 	assert_eq!(texts.length(), 6);
 	// top childs

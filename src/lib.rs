@@ -512,7 +512,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		// if it's an (textarea)
 		if is_equal_chars(&tag_name, &textarea_tag) {
 			// textarea
-			return IFormValue::Single(self.inner_html());
+			return IFormValue::Single(self.text());
 		}
 		// other element
 		IFormValue::Single(String::from(""))
