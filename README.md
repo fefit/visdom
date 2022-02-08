@@ -30,9 +30,9 @@ It's not only helpful for the working with html scraping, but also have useful A
 
 ```rust
 use visdom::Vis;
-use std::error::Error;
+use visdom::types::BoxDynError;
 
-fn main() -> Result<(), Box<dyn Error>>{
+fn main() -> Result<(), BoxDynError>{
   let html = r##"
     <!DOCTYPE html>
     <html>
