@@ -3,7 +3,9 @@ mod node;
 pub use node::{BoxDynNode, IEnumTyped, INodeTrait, INodeType};
 // element trait
 mod element;
-pub use element::{BoxDynElement, IAttrValue, IElementTrait, InsertPosition, MaybeElement};
+pub use element::{
+	BoxDynElement, IAttrValue, IElementTrait, IFormValue, InsertPosition, MaybeElement,
+};
 // text trait
 mod text;
 pub use text::{BoxDynText, ITextTrait};

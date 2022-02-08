@@ -42,6 +42,34 @@ impl ToString for IAttrValue {
 	}
 }
 
+/// IFormValue
+#[derive(Debug)]
+pub enum IFormValue {
+	Single(String),
+	Multiple(Vec<String>),
+}
+
+impl ToString for IFormValue {
+	fn to_string(&self) -> String {
+		match self {
+			IFormValue::Single(v) => v.clone(),
+			IFormValue::Multiple(v) => v.join(","),
+		}
+	}
+}
+
+// impl IntoIterator for IFormValue
+impl IntoIterator for IFormValue {
+	type Item = String;
+	type IntoIter = std::vec::IntoIter<String>;
+	fn into_iter(self) -> Self::IntoIter {
+		match self {
+			IFormValue::Multiple(v) => v.into_iter(),
+			IFormValue::Single(_) => vec![].into_iter(),
+		}
+	}
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum InsertPosition {
 	BeforeBegin,
@@ -208,6 +236,8 @@ pub trait IElementTrait: INodeTrait {
 		}
 		Elements::new()
 	}
+	// value
+	fn value(&self) -> IFormValue;
 	// tag name
 	fn tag_name(&self) -> String {
 		self

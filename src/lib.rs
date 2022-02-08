@@ -13,10 +13,11 @@
 mod mesdoc;
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
-	IErrorHandle, INodeTrait, ITextTrait, IUncareNodeTrait, InsertPosition, MaybeDoc, MaybeElement,
-	Texts,
+	IErrorHandle, IFormValue, INodeTrait, ITextTrait, IUncareNodeTrait, InsertPosition, MaybeDoc,
+	MaybeElement, Texts,
 };
 
+use mesdoc::utils::is_equal_chars;
 use mesdoc::{error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::RenderOptions,
@@ -32,7 +33,7 @@ pub mod types {
 	pub use crate::mesdoc::error::BoxDynError;
 	pub use crate::mesdoc::interface::{
 		BoxDynElement, BoxDynNode, BoxDynText, Elements, IAttrValue, IDocumentTrait, IEnumTyped,
-		INodeType, Texts,
+		IFormValue, INodeType, Texts,
 	};
 	pub use crate::mesdoc::selector::Combinator;
 }
@@ -421,7 +422,101 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		};
 		vec![]
 	}
-
+	/// impl `value`
+	fn value(&self) -> IFormValue {
+		let tag_name = self.tag_names();
+		let input_tag = ['i', 'n', 'p', 'u', 't'];
+		let select_tag = ['s', 'e', 'l', 'e', 'c', 't'];
+		let option_tag = ['o', 'p', 't', 'i', 'o', 'n'];
+		let textarea_tag = ['t', 'e', 'x', 't', 'a', 'r', 'e', 'a'];
+		// if it's an (input)
+		if is_equal_chars(&tag_name, &input_tag) || is_equal_chars(&tag_name, &option_tag) {
+			// input
+			if let Some(IAttrValue::Value(v, _)) = self.get_attribute("value") {
+				return IFormValue::Single(v);
+			}
+			return IFormValue::Single(String::from(""));
+		}
+		// if it's a (select)
+		if is_equal_chars(&tag_name, &select_tag) {
+			let is_multiple = self.has_attribute("multiple");
+			// default value, if no option has "selected"
+			let mut default_value: Option<String> = None;
+			// if select's 'multiple' attribute is setted
+			let mut values: Vec<String> = vec![];
+			// collect option values
+			fn collect_option_values(
+				parent: &RefNode,
+				default_value: &mut Option<String>,
+				values: &mut Vec<String>,
+				option_tag: &[char],
+				is_multiple: bool,
+				level: u8,
+			) {
+				if let Some(childs) = &parent.borrow().childs {
+					for child in childs {
+						if matches!(child.node_type(), INodeType::Element) {
+							let child_tag = child.tag_names();
+							if is_equal_chars(&child_tag, option_tag) {
+								let is_selected = child.has_attribute("selected");
+								if is_selected || (default_value.is_none() && level == 0) {
+									let value = if let Some(IAttrValue::Value(v, _)) = child.get_attribute("value") {
+										v
+									} else {
+										String::from("")
+									};
+									if is_selected {
+										values.push(value);
+										// break if is single select
+										if !is_multiple {
+											break;
+										}
+									} else {
+										*default_value = Some(value);
+									}
+								}
+							} else {
+								collect_option_values(
+									child,
+									default_value,
+									values,
+									option_tag,
+									is_multiple,
+									level + 1,
+								);
+							}
+						}
+					}
+				}
+			}
+			// get the values of option
+			collect_option_values(
+				self,
+				&mut default_value,
+				&mut values,
+				&option_tag,
+				is_multiple,
+				0,
+			);
+			// if is multiple select
+			if is_multiple {
+				return IFormValue::Multiple(values);
+			}
+			// single select, check if has selected option
+			if !values.is_empty() {
+				return IFormValue::Single(values.remove(0));
+			}
+			// no selected option or no option tag
+			return IFormValue::Single(default_value.unwrap_or_else(|| String::from("")));
+		}
+		// if it's an (textarea)
+		if is_equal_chars(&tag_name, &textarea_tag) {
+			// textarea
+			return IFormValue::Single(self.inner_html());
+		}
+		// other element
+		IFormValue::Single(String::from(""))
+	}
 	/// impl `children`
 	fn child_nodes_length(&self) -> usize {
 		self

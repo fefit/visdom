@@ -202,6 +202,20 @@ pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
 	true
 }
 
+pub fn is_equal_chars(target: &[char], cmp: &[char]) -> bool {
+	let t_len = target.len();
+	let s_len = cmp.len();
+	if t_len == s_len {
+		for (index, ch) in target.iter().enumerate() {
+			if ch != &cmp[index] {
+				return false;
+			}
+		}
+		return true;
+	}
+	false
+}
+
 fn contains_chars_nocheck(target: &[char], search: &[char], t_len: usize, s_len: usize) -> bool {
 	// check if match
 	let max_start_index: usize = t_len - s_len;

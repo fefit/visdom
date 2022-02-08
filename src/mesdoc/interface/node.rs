@@ -39,6 +39,7 @@ impl<'a> IEnumTyped<'a> {
 		}
 	}
 }
+
 pub trait INodeTrait {
 	fn to_node(self: Box<Self>) -> Box<dyn Any>;
 	// clone a ele

@@ -1,8 +1,9 @@
-use crate::mesdoc::interface::{BoxDynElement, Elements, IElementTrait, INodeType};
+#![deny(clippy::print_stdout)]
+use crate::mesdoc::interface::{BoxDynElement, Elements, IAttrValue, IElementTrait, INodeType};
 use crate::mesdoc::selector::pattern::Nth;
 use crate::mesdoc::selector::rule::{Matcher, Rule, RuleDefItem, RuleItem};
 use crate::mesdoc::selector::MatchedQueue;
-use crate::mesdoc::utils::contains_chars;
+use crate::mesdoc::utils::{contains_chars, is_equal_chars};
 use crate::mesdoc::{
 	constants::{
 		DEF_NODES_LEN, PRIORITY_PSEUDO_SELECTOR, SELECTOR_ALIAS_NAME_HEADER, SELECTOR_ALIAS_NAME_INPUT,
@@ -31,10 +32,8 @@ fn pseudo_root(rules: &mut Vec<RuleItem>) {
 		PRIORITY,
 		Box::new(|_| Matcher {
 			specified_handle: Some(Box::new(|ele, mut callback| {
-				println!("{:?}, {}", ele.node_type(), ele.is_root_element());
 				if ele.is_root_element() {
 					let total = ele.child_nodes_length();
-					println!("total:{}", total);
 					for index in 0..total {
 						let node = ele
 							.child_nodes_item(index)
@@ -44,13 +43,20 @@ fn pseudo_root(rules: &mut Vec<RuleItem>) {
 								.typed()
 								.into_element()
 								.expect("Call `typed` for element ele.");
-							println!("{}", ele.tag_name());
 							if ele.tag_name() == "HTML" {
 								callback(&*ele, true, false);
 							}
 						}
 					}
 				}
+			})),
+			one_handle: Some(Box::new(|ele, _| {
+				if ele.tag_name() == "HTML" {
+					if let Some(parent) = &ele.parent() {
+						return matches!(parent.node_type(), INodeType::Document);
+					}
+				}
+				false
 			})),
 			..Default::default()
 		}),
@@ -888,6 +894,104 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 
 // -----------jquery selectors----------
 
+/// pseudo selector: `:checked`
+fn pseudo_checked(rules: &mut Vec<RuleItem>) {
+	let selector = ":checked";
+	let name = selector;
+	let rule = RuleDefItem(
+		name,
+		selector,
+		PRIORITY,
+		Box::new(|_| Matcher {
+			one_handle: Some(Box::new(|ele, _| {
+				let tag_name = ele.tag_names();
+				let input_tag = ['i', 'n', 'p', 'u', 't'];
+				let option_tag = ['o', 'p', 't', 'i', 'o', 'n'];
+				let select_tag = ['s', 'e', 'l', 'e', 'c', 't'];
+				if is_equal_chars(&tag_name, &input_tag) {
+					// an input element that with type 'checkbox' or 'radio'
+					if let Some(IAttrValue::Value(input_type, _)) = ele.get_attribute("type") {
+						let lower_input_type = input_type.to_ascii_lowercase();
+						// when the input is checkbox or radio
+						if lower_input_type == "checkbox" || lower_input_type == "radio" {
+							return ele.has_attribute("checked");
+						}
+					}
+					false
+				} else if is_equal_chars(&tag_name, &option_tag) {
+					let is_selected = ele.has_attribute("selected");
+					if is_selected {
+						// if the option tag has 'selected' attribute
+						true
+					} else {
+						// check if is the default option
+						// 1. under the parent 'select' element, without nested tags
+						// 2. the 'select' is not a multiple select
+						// 3. the 'option' is the first 'option' tag
+						// 4. the 'select' has no selected 'option'
+						if let Some(parent) = &ele.parent() {
+							// check condition 1 & 2
+							if is_equal_chars(&parent.tag_names(), &select_tag)
+								&& !parent.has_attribute("multiple")
+							{
+								// check if is the first option, condition 3
+								let mut prev = ele.previous_element_sibling();
+								while let Some(prev_ele) = &prev {
+									if is_equal_chars(&prev_ele.tag_names(), &option_tag) {
+										return false;
+									}
+									prev = prev_ele.previous_element_sibling();
+								}
+								// check if the select has selected option, condition 4
+								fn check_selected_option(ele: &BoxDynElement, option_tag: &[char]) -> bool {
+									if is_equal_chars(&ele.tag_names(), option_tag) {
+										return ele.has_attribute("selected");
+									} else {
+										// check the childs
+										let total = ele.child_nodes_length();
+										for index in 0..total {
+											let node = ele
+												.child_nodes_item(index)
+												.expect("Child nodes item index must less than total");
+											if matches!(node.node_type(), INodeType::Element) {
+												let child = node
+													.typed()
+													.into_element()
+													.expect("Call `typed` for element ele.");
+												if check_selected_option(&child, option_tag) {
+													return true;
+												}
+											}
+										}
+									}
+									false
+								}
+								// check the next siblings
+								let mut next = ele.next_element_sibling();
+								while let Some(next_ele) = &next {
+									if check_selected_option(next_ele, &option_tag) {
+										return false;
+									}
+									next = next_ele.next_element_sibling();
+								}
+								// now the option is default option
+								return true;
+							}
+						}
+						// not selected option
+						false
+					}
+				} else {
+					// need loop the child
+					false
+				}
+			})),
+			..Default::default()
+		}),
+	);
+	rules.push(rule.into());
+}
+
 /// pseudo selector: `:header`
 fn pseudo_alias_header(rules: &mut Vec<RuleItem>) {
 	let (selector, alias) = SELECTOR_ALIAS_NAME_HEADER;
@@ -930,27 +1034,29 @@ fn pseudo_alias_submit(rules: &mut Vec<RuleItem>) {
 pub fn init(rules: &mut Vec<RuleItem>) {
 	pseudo_root(rules);
 	pseudo_empty(rules);
-	// first-child, last-child
+	// :first-child, :last-child
 	pseudo_first_child(rules);
 	pseudo_last_child(rules);
-	// only-child
+	// :only-child
 	pseudo_only_child(rules);
-	// nth-child,nth-last-child
+	// :nth-child,:nth-last-child
 	pseudo_nth_child(rules);
 	pseudo_nth_last_child(rules);
-	// first-of-type,last-of-type
+	// :first-of-type,:last-of-type
 	pseudo_first_of_type(rules);
 	pseudo_last_of_type(rules);
-	// nth-of-type,nth-last-of-type
+	// :nth-of-type,:nth-last-of-type
 	pseudo_nth_of_type(rules);
 	pseudo_nth_last_of_type(rules);
-	// only-of-type
+	// :only-of-type
 	pseudo_only_of_type(rules);
-	// not
+	// :not
 	pseudo_not(rules);
-	// contains
+	// :contains
 	pseudo_contains(rules);
 	// ---- jquery selectors -----
+	// :checked
+	pseudo_checked(rules);
 	// :header alias
 	pseudo_alias_header(rules);
 	// :input alias

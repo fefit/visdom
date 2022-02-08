@@ -1,5 +1,5 @@
 use super::{
-	BoxDynElement, BoxDynText, IAttrValue, IElementTrait, InsertPosition, MaybeDoc, Texts,
+	BoxDynElement, BoxDynText, IAttrValue, IElementTrait, IFormValue, InsertPosition, MaybeDoc, Texts,
 };
 use crate::mesdoc::error::BoxDynError;
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
@@ -1724,6 +1724,15 @@ impl<'a> Elements<'a> {
 */
 impl<'a> Elements<'a> {
 	// -------------Content API----------------
+	/// pub fn `val`
+	/// get the value of the form element
+	pub fn val(&self) -> IFormValue {
+		if let Some(first) = self.get(0) {
+			return first.value();
+		}
+		IFormValue::Single(String::from(""))
+	}
+
 	/// pub fn `text`
 	/// get the text of each element in the set
 	pub fn text(&self) -> &str {

@@ -6,6 +6,120 @@ use visdom::{
 type Result = StdResult<(), BoxDynError>;
 
 #[test]
+fn test_val() -> Result {
+	// ---- input ----
+	let html = r#"
+  <input type="text" value="textinput" />
+  <input type="radio" name="radioinput" value="radio1" />
+  <input type="radio" name="radioinput" value="radio2" checked="checked" />
+  <input type="radio" name="radioinput" value="radio3" />
+  <input type="checkbox" name="checkboxinput" value="checkbox1" />
+  <input type="checkbox" name="checkboxinput" value="checkbox2" checked="checked" />
+  <input type="checkbox" name="checkboxinput" value="checkbox3" checked="checked" />
+  "#;
+	let root = Vis::load(html)?;
+	let inputs = root.children("input");
+	assert_eq!(inputs.val().to_string(), "textinput");
+	assert_eq!(
+		inputs.filter("[name='radioinput']").eq(0).val().to_string(),
+		"radio1"
+	);
+	// ---- select ----
+	// select without selected option
+	let html = r#"
+  <select>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "1");
+	// select without selected option, but in optgroup
+	let html = r#"
+  <select>
+    <optgroup>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </optgroup>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "");
+	// select with selected option
+	let html = r#"
+  <select>
+    <option value="1">1</option>
+    <option value="2" selected="selected">2</option>
+    <option value="3">3</option>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "2");
+	// select with selected option in optgroup
+	let html = r#"
+  <select>
+    <optgroup>
+      <option value="1">1</option>
+      <option value="2" selected="selected">2</option>
+      <option value="3">3</option>
+    </optgroup>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "2");
+	// multiple select with selected option
+	let html = r#"
+  <select multiple>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "");
+	// multiple select with selected option in optgroup
+	let html = r#"
+  <select multiple>
+    <optgroup>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </optgroup>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "");
+	// multiple select with selected option in optgroup
+	let html = r#"
+  <select multiple>
+    <optgroup>
+      <option value="1">1</option>
+      <option value="2" selected>2</option>
+      <option value="3" selected>3</option>
+    </optgroup>
+    <optgroup>
+      <option value="4">4</option>
+      <option value="5" selected>5</option>
+      <option value="6">6</option>
+    </optgroup>
+    <option value="7" selected>7</option>
+  </select>
+  "#;
+	let root = Vis::load(html)?;
+	let select = root.children("select");
+	assert_eq!(select.val().to_string(), "2,3,5,7");
+	Ok(())
+}
+
+#[test]
 fn test_set_html() -> Result {
 	let html: &str = r#"<div class="parent"></div>"#;
 	// normal tag

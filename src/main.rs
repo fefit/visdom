@@ -248,22 +248,27 @@ fn main() -> Result<(), BoxDynError> {
 	// 	true
 	// });
 	// println!("{}", root.outer_html());
-	let html = r#"<!DOCTYPE html><html>
-  <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div></html>
+	let html = r#"
+  <!doctype html>
+  <html>
+    <body>
+    
+    <select>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3" selected>3</option>
+    </select>
+
+    </body>
+  </html>
   "#;
 	let root = Vis::load(html)?;
 	println!("root:{}", root.length());
-	let html_ele = root.children("html");
+	let options = root.find("option").filter(":checked");
 	println!(
-		"html_ele: {}, {}",
-		html_ele.length(),
-		html_ele
-			.map(|_, ele| ele.tag_name())
-			.iter()
-			.fold(String::from(""), |mut ret, cur| {
-				ret.push_str(cur);
-				ret
-			})
+		"count: {}, select:{:?}",
+		options.length(),
+		options.val().to_string()
 	);
 	// first.map(|_, ele| {
 	// 	println!("{:?}", ele.tag_name());

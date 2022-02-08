@@ -31,9 +31,10 @@ impl fmt::Debug for Matcher {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str(
 			format!(
-				"Matcher{{ all_handle: {}, one_handle: {} }}",
+				"Matcher{{ all_handle: {}, one_handle: {}, specified_handle: {} }}",
 				self.all_handle.is_some(),
 				self.one_handle.is_some(),
+				self.specified_handle.is_some(),
 			)
 			.as_str(),
 		)
