@@ -17,6 +17,7 @@ fn test_val() -> Result {
   <input type="checkbox" name="checkboxinput" value="checkbox2" checked="checked" />
   <input type="checkbox" name="checkboxinput" value="checkbox3" checked="checked" />
   <p value="abc"></p>
+  <input type="text" name="novalue" />
   "#;
 	let root = Vis::load(html)?;
 	let inputs = root.children("input");
@@ -40,6 +41,8 @@ fn test_val() -> Result {
 	assert_eq!(root.find("p").length(), 1);
 	assert_eq!(root.find("p").val().to_string(), "");
 	assert_eq!(root.find("div").val().to_string(), "");
+	assert_eq!(root.find("input[name='novalue']").length(), 1);
+	assert_eq!(root.find("input[name='novalue']").val().to_string(), "");
 	// ---- textarea ----
 	let textarea_content = r#"<div>This is the content in textarea</div>"#;
 	let html = format!("<textarea>{}</textarea>", textarea_content);

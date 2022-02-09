@@ -188,3 +188,72 @@ fn test_allow_insert() -> Result {
 	// inner.append_to(&mut inner);
 	Ok(())
 }
+
+#[test]
+#[should_panic]
+fn test_append_wrong_document() {
+	let html = r#"
+  <!doctype html>
+  <html>
+    <head></head>
+    <body>
+      <div id="main">
+      </div>
+    </body>
+  </html>"#;
+	let mut root = Vis::load_catch(
+		html,
+		Box::new(|e| {
+			panic!("{}", e.to_string());
+		}),
+	);
+	let mut main = root.find("#main");
+	main.append(&mut root);
+}
+
+#[test]
+#[should_panic]
+fn test_append_wrong_itself() {
+	let html = r#"
+  <!doctype html>
+  <html>
+    <head></head>
+    <body>
+      <div id="main">
+      </div>
+    </body>
+  </html>"#;
+	let root = Vis::load_catch(
+		html,
+		Box::new(|e| {
+			panic!("{}", e.to_string());
+		}),
+	);
+	let mut main = root.find("#main");
+	let mut still_main = root.find("#main");
+	main.append(&mut still_main);
+}
+
+#[test]
+#[should_panic]
+fn test_append_wrong_parent() {
+	let html = r#"
+  <!doctype html>
+  <html>
+    <head></head>
+    <body>
+      <div id="main">
+        <div id="container"></div>
+      </div>
+    </body>
+  </html>"#;
+	let root = Vis::load_catch(
+		html,
+		Box::new(|e| {
+			panic!("{}", e.to_string());
+		}),
+	);
+	let mut child = root.find("#container");
+	let mut parent = root.find("#main");
+	child.append(&mut parent);
+}

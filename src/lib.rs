@@ -71,19 +71,27 @@ impl Dom {
 		}
 		// document
 		if let INodeType::Document = node.node_type() {
-			Dom::halt(dom, method, &format!("Can't {} of a document type", method));
+			Dom::halt(dom, method, &format!("Can't {} a document type", method));
 			return false;
 		}
 		// test if same node
 		if dom.is(node) {
-			Dom::halt(dom, method, &format!("Can't {} of dom.", method));
+			Dom::halt(
+				dom,
+				method,
+				&format!("Can't {} a dom that contains itself.", method),
+			);
 			return false;
 		}
 		// test if the node is dom's parent node
 		let mut cur = dom.cloned();
 		while let Some(parent) = cur.parent() {
 			if parent.is(node) {
-				Dom::halt(dom, method, &format!("Can't {} of self's parent", method));
+				Dom::halt(
+					dom,
+					method,
+					&format!("Can't {} a dom that contains it's parent", method),
+				);
 				return false;
 			}
 			cur = parent;
