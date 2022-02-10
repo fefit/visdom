@@ -73,26 +73,27 @@ impl IntoIterator for IFormValue {
 	}
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum InsertPosition {
-	BeforeBegin,
-	AfterBegin,
-	BeforeEnd,
-	AfterEnd,
-}
+cfg_feat_insertion! {
+	#[derive(Debug, PartialEq, Eq)]
+	pub enum InsertPosition {
+		BeforeBegin,
+		AfterBegin,
+		BeforeEnd,
+		AfterEnd,
+	}
 
-impl InsertPosition {
-	pub fn action(&self) -> &'static str {
-		use InsertPosition::*;
-		match self {
-			BeforeBegin => "insert before",
-			AfterBegin => "prepend",
-			BeforeEnd => "append",
-			AfterEnd => "insert after",
+	impl InsertPosition {
+		pub fn action(&self) -> &'static str {
+			use InsertPosition::*;
+			match self {
+				BeforeBegin => "insert before",
+				AfterBegin => "prepend",
+				BeforeEnd => "append",
+				AfterEnd => "insert after",
+			}
 		}
 	}
 }
-
 pub trait IElementTrait: INodeTrait {
 	fn is(&self, ele: &BoxDynElement) -> bool;
 	fn is_root_element(&self) -> bool;
@@ -301,8 +302,12 @@ pub trait IElementTrait: INodeTrait {
 	fn outer_html(&self) -> String;
 
 	// append child, insert before, remove child
-	fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);
-	fn remove_child(&mut self, ele: BoxDynElement);
+	cfg_feat_insertion! {
+		fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);
+	}
+	cfg_feat_mutation! {
+		fn remove_child(&mut self, ele: BoxDynElement);
+	}
 	// texts
 	cfg_feat_text! {
 		/// texts

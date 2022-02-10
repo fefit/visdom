@@ -24,8 +24,14 @@ criterion = "0.3.3"
 
 [features]
 default = []
-full = ["text"]
+full = [
+  "text",
+  "insertion",
+  "destory"
+]
 text = []
+insertion = []
+destory = []
 
 [package.metadata.docs.rs]
 all-features = true

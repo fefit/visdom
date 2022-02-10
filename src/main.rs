@@ -252,20 +252,23 @@ fn main() -> Result<(), BoxDynError> {
   <!doctype html>
   <html>
     <body>
-    
-    <select multiple>
-      <option value="1">1</option>
-      <option value="2" selected>2</option>
-      <option value="3" selected>3</option>
-    </select>
+	   <dl>
+	     <dt>Title</dt>
+	     <dd><span>item1</span></dd>
+	     <dd class="item2"><span>item2</span></dd>
+	     <dd class="item3">item3</dd>
+	   </dl>
 
     </body>
   </html>
   "#;
 	let root = Vis::load(html)?;
-	println!("root:{}", root.length());
-	let select_value = root.find("select").val();
-	for val in select_value {}
+	let items = root.find("dl > *");
+	println!(
+		"items:{}, items:hasnotspan:{}",
+		items.length(),
+		items.has(":not(span)").length()
+	);
 	// first.map(|_, ele| {
 	// 	println!("{:?}", ele.tag_name());
 	// });

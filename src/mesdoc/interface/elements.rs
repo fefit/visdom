@@ -1,7 +1,11 @@
+#![deny(clippy::print_stdout)]
 cfg_feat_text! {
 	use super::{BoxDynText, Texts};
 }
-use super::{BoxDynElement, IAttrValue, IElementTrait, IFormValue, InsertPosition, MaybeDoc};
+cfg_feat_insertion! {
+	use super::InsertPosition;
+}
+use super::{BoxDynElement, IAttrValue, IElementTrait, IFormValue, MaybeDoc};
 use crate::mesdoc::error::BoxDynError;
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
@@ -2320,9 +2324,9 @@ impl<'a> Elements<'a> {
 	///       </head>
 	///       <body>
 	///         <dl>
-	///           <dt>Title</dt>
+	///           <dt>&lt;<strong>T</strong>itle&gt;</dt>
 	///           <dd><span>item1</span></dd>
-	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item2">item2</dd>
 	///           <dd class="item3">item3</dd>
 	///         </dl>
 	///       </body>
@@ -2331,7 +2335,8 @@ impl<'a> Elements<'a> {
 	///   let doc = Vis::load(html)?;
 	///   let dl = doc.find("dl");
 	///   let items = dl.children("");
-	///   assert_eq!(items.has("span").length(), 2);
+	///   assert_eq!(items.filter("dt").text(), "<Title>");
+	///   assert_eq!(items.filter("dd").text(), "item1item2item3");
 	///   Ok(())
 	/// }
 	/// ```
@@ -2357,7 +2362,36 @@ impl<'a> Elements<'a> {
 		})
 	}
 
-	// has_in
+	/// Reduce Elements to those that have a descendant that matches the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.length(), 4);
+	///   assert_eq!(items.has_in(&items.children("span")).length(), 2);
+	///   assert_eq!(dl.has_in(&items).length(), 1);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn has_in(&self, search: &Elements) -> Elements<'a> {
 		fn loop_handle(ele: &BoxDynElement, search: &Elements) -> bool {
 			let childs = ele.children();
@@ -2383,8 +2417,35 @@ impl<'a> Elements<'a> {
 **  [Methods]
 */
 impl<'a> Elements<'a> {
-	/// pub fn `eq`
-	/// get a element by index
+	/// Get one element from the Elements at the specified index.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.eq(0).is("dt"), true);
+	///   assert_eq!(items.eq(2).has_class("item2"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn eq(&self, index: usize) -> Elements<'a> {
 		if let Some(ele) = self.get(index) {
 			Elements::with_node(ele)
@@ -2393,21 +2454,103 @@ impl<'a> Elements<'a> {
 		}
 	}
 
-	/// pub fn `first`
-	/// get the first element, alias for 'eq(0)'
+	/// Get the first element of the Elements set,equal to eq(0).
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.first().is_all_in(&items.eq(0)), true);
+	///   assert_eq!(items.first().is("dt"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn first(&self) -> Elements<'a> {
 		self.eq(0)
 	}
 
-	/// pub fn `last`
-	/// get the last element, alias for 'eq(len - 1)'
+	/// Get the last element of the set, equal to eq(length - 1).
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.last().is_all_in(&items.eq(items.length()-1)), true);
+	///   assert_eq!(items.last().is(".item3"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn last(&self) -> Elements<'a> {
 		self.eq(self.length() - 1)
 	}
 
-	/// pub fn `slice`
-	/// get elements by a range parameter
-	/// `slice(0..1)` equal to `eq(0)`, `first`
+	/// Get a subset specified by a range of indices.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.slice(..).length(), 4);
+	///   assert_eq!(items.slice(0..3).length(), 3);
+	///   assert_eq!(items.slice(0..=3).length(), 4);
+	///   assert_eq!(items.slice(0..10).length(), 4);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn slice<T: RangeBounds<usize>>(&self, range: T) -> Elements<'a> {
 		let mut start = 0;
 		let mut end = self.length();
@@ -2451,9 +2594,39 @@ impl<'a> Elements<'a> {
 		result
 	}
 
-	/// pub fn `add`
-	/// concat two element set to a new set,
-	/// it will take the owership of the parameter element set, but no sence to `Self`
+	/// Get a concated element set from Elements and the other parameter elements, it will generate a new element set, take the ownership of the parameter elements, but have no sence with the Elements itself.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let dt = items.filter("dt");
+	///   let class_dd = items.filter("[class]");
+	///   assert_eq!(dt.length(), 1);
+	///   assert_eq!(class_dd.length(), 2);
+	///   let add_dt_dd = dt.add(class_dd);
+	///   assert_eq!(add_dt_dd.length(), 3);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn add(&self, eles: Elements<'a>) -> Elements<'a> {
 		if self.is_empty() {
 			return eles;
@@ -2639,8 +2812,44 @@ impl<'a> Elements<'a> {
 */
 impl<'a> Elements<'a> {
 	// -------------Content API----------------
-	/// pub fn `val`
-	/// get the value of the form element
+	/// Get the form value of input, select, option, textarea.
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" value="textvalue" />
+	///         <select name="single">
+	///           <option value="default"></option>
+	///           <option value="opt1">opt1</option>
+	///           <option value="opt2">opt1</option>
+	///         </select>
+	///         <select multiple>
+	///           <option value="default"></option>
+	///           <option value="opt1" selected="selected">opt1</option>
+	///           <option value="opt2" selected="selected">opt1</option>
+	///         </select>
+	///         <textarea><div>hello</div></textarea>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let input = doc.find("input[type='text']");
+	///   assert_eq!(input.val().to_string(), "textvalue");
+	///   let select = doc.find("select[name='single']");
+	///   assert_eq!(select.val().to_string(), "default");
+	///   let multi_select = doc.find("select[multiple]");
+	///   assert_eq!(multi_select.val().to_string(), "opt1,opt2");
+	///   let textarea = doc.find("textarea");
+	///   assert_eq!(textarea.val().to_string(), "<div>hello</div>");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn val(&self) -> IFormValue {
 		if let Some(first) = self.get(0) {
 			return first.value();
@@ -2648,8 +2857,39 @@ impl<'a> Elements<'a> {
 		IFormValue::Single(String::from(""))
 	}
 
-	/// pub fn `text`
-	/// get the text of each element in the set
+	/// Get the text of each element in Elements，the html entity will auto decoded.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let dt = items.filter("dt");
+	///   let class_dd = items.filter("[class]");
+	///   assert_eq!(dt.length(), 1);
+	///   assert_eq!(class_dd.length(), 2);
+	///   let add_dt_dd = dt.add(class_dd);
+	///   assert_eq!(add_dt_dd.length(), 3);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn text(&self) -> &str {
 		let mut result = String::with_capacity(50);
 		for ele in self.get_ref() {
@@ -2658,8 +2898,41 @@ impl<'a> Elements<'a> {
 		to_static_str(result)
 	}
 
-	/// pub fn `set_text`
-	/// set each element's text to content
+	/// Set the Elements's text, the html entity in content will auto encoded.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let mut dt = items.filter("dt");
+	///   dt.set_text("<Title>");
+	///   assert_eq!(dt.text(), "<Title>");
+	///   assert_eq!(dt.html(), "&lt;Title&gt;");
+	///   let mut item2 = items.filter(".item2");
+	///   assert_eq!(item2.html(), "<span>item2</span>");
+	///   item2.set_text("item2");
+	///   assert_eq!(item2.html(), "item2");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn set_text(&mut self, content: &str) -> &mut Self {
 		for ele in self.get_mut_ref() {
 			ele.set_text(content);
@@ -2667,8 +2940,37 @@ impl<'a> Elements<'a> {
 		self
 	}
 
-	/// pub fn `html`
-	/// get the first element's html
+	/// Get the html of the first element in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3"><!--comment-->item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let item2 = items.filter(".item2");
+	///   assert_eq!(item2.html(), "<span>item2</span>");
+	///   let item3 = items.filter(".item3");
+	///   assert_eq!(item3.html(), "<!--comment-->item3");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn html(&self) -> String {
 		if let Some(ele) = self.get(0) {
 			return ele.inner_html();
@@ -2676,8 +2978,37 @@ impl<'a> Elements<'a> {
 		String::from("")
 	}
 
-	/// pub fn `set_html`
-	/// set each element's html to content
+	/// Set the html to content of each element in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3"><!--comment-->item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let mut item2 = items.filter(".item2");
+	///   assert_eq!(item2.html(), "<span>item2</span>");
+	///   item2.set_html("set_html:<em>item2</em>");
+	///   assert_eq!(item2.html(), "set_html:<em>item2</em>");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn set_html(&mut self, content: &str) -> &mut Self {
 		for ele in self.get_mut_ref() {
 			ele.set_html(content);
@@ -2685,8 +3016,35 @@ impl<'a> Elements<'a> {
 		self
 	}
 
-	/// pub fn `outer_html`
-	/// get the first element's outer html
+	/// Get the outer html of the first element in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3"><!--comment-->item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let mut item2 = items.filter(".item2");
+	///   assert_eq!(item2.outer_html(), r#"<dd class="item2"><span>item2</span></dd>"#);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn outer_html(&self) -> String {
 		if let Some(ele) = self.get(0) {
 			return ele.outer_html();
@@ -2731,8 +3089,33 @@ impl<'a> Elements<'a> {
 **  has_class, add_class, remove_class, toggle_class
 */
 impl<'a> Elements<'a> {
-	/// pub fn `attr`
-	/// get the first element's attribute value
+	/// Get an atrribute by name from the first element in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let input = doc.find("input");
+	///   let attr_readonly = input.attr("readonly");
+	///   assert!(attr_readonly.is_some() && attr_readonly.unwrap().is_true());
+	///   let attr_type = input.attr("type");
+	///   assert!(attr_type.is_some() && attr_type.unwrap().to_string() == "text");
+	///   let attr_class = input.attr("class");
+	///   assert!(attr_class.is_some() && attr_class.unwrap().to_list().contains(&"inp"));
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn attr(&self, attr_name: &str) -> Option<IAttrValue> {
 		if let Some(ele) = self.get(0) {
 			return ele.get_attribute(attr_name);
@@ -2740,8 +3123,31 @@ impl<'a> Elements<'a> {
 		None
 	}
 
-	/// pub fn `has_attr`
-	/// check if any element has an attribute
+	/// Check if has an attribute with specified name.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let input = doc.find("input");
+	///   assert!(input.has_attr("readonly"));
+	///   assert!(input.has_attr("class"));
+	///   assert!(input.has_attr("type"));
+	///   assert_eq!(input.has_attr("value"), false);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn has_attr(&self, attr_name: &str) -> bool {
 		for ele in self.get_ref() {
 			if ele.has_attribute(attr_name) {
@@ -2751,8 +3157,34 @@ impl<'a> Elements<'a> {
 		false
 	}
 
-	/// pub fn `set_attr`
-	/// set each element's attribute to `key` = attr_name, `value` = value.  
+	/// Set a specified name attribute with a value who's type is an `Option<&str>`, when the value is `None`，that means the attribute does'n have a string value but a bool value of `true`.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut input = doc.find("input");
+	///   assert_eq!(input.has_attr("value"), false);
+	///   input.set_attr("value", None);
+	///   assert!(input.attr("value").is_some() && input.attr("value").unwrap().is_true());
+	///   input.set_attr("value", Some("myinput"));
+	///   assert!(input.attr("value").is_some() && input.attr("value").unwrap().to_string() == "myinput");
+	///   input.set_attr("value", Some(""));
+	///   assert!(input.attr("value").is_some() && input.attr("value").unwrap().is_true() == false);
+	///   Ok(())
+	/// }
+	/// ```  
 	pub fn set_attr(&mut self, attr_name: &str, value: Option<&str>) -> &mut Self {
 		for ele in self.get_mut_ref() {
 			ele.set_attribute(attr_name, value);
@@ -2760,7 +3192,35 @@ impl<'a> Elements<'a> {
 		self
 	}
 
-	/// pub fn `remove_attr`
+	/// Remove a specified name attribute from the each element in the Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut input = doc.find("input");
+	///   assert_eq!(input.has_attr("value"), false);
+	///   input.set_attr("value", None);
+	///   assert!(input.attr("value").is_some() && input.attr("value").unwrap().is_true());
+	///   input.remove_attr("value");
+	///   assert!(input.attr("value").is_none());
+	///   assert!(input.attr("readonly").is_some());
+	///   input.remove_attr("readonly");
+	///   assert!(input.attr("readonly").is_none());
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn remove_attr(&mut self, attr_name: &str) -> &mut Self {
 		for ele in self.get_mut_ref() {
 			ele.remove_attribute(attr_name);
@@ -2768,7 +3228,31 @@ impl<'a> Elements<'a> {
 		self
 	}
 
-	/// pub fn `has_class`
+	/// Check if Elements's ClassList contains the specified class name, multiple classes can be splitted by whitespaces.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let input = doc.find("input");
+	///   assert_eq!(input.has_class("inp"), true);
+	///   assert_eq!(input.has_class("inp-txt"), true);
+	///   assert_eq!(input.has_class("inp-txt inp"), true);
+	///   assert_eq!(input.has_class("inp-txt inp noinp"), false);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn has_class(&self, class_name: &str) -> bool {
 		let class_name = class_name.trim();
 		if !class_name.is_empty() {
@@ -2777,11 +3261,18 @@ impl<'a> Elements<'a> {
 				let class_value = ele.get_attribute(ATTR_CLASS);
 				if let Some(IAttrValue::Value(cls, _)) = class_value {
 					let orig_class_list = get_class_list(&cls);
+					let mut has_all = true;
 					for class_name in &class_list {
-						// if any of element contains the class
-						if orig_class_list.contains(class_name) {
-							return true;
+						// if any class name is not in the original class list
+						// the flag will set by false
+						if !orig_class_list.contains(class_name) {
+							has_all = false;
+							break;
 						}
+					}
+					// if any of the element contains the all class list
+					if has_all {
+						return true;
 					}
 				}
 			}
@@ -2789,7 +3280,32 @@ impl<'a> Elements<'a> {
 		false
 	}
 
-	/// pub fn `add_class`
+	/// Add class to Elements's ClassList, multiple classes can be splitted by whitespaces.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut input = doc.find("input");
+	///   assert_eq!(input.has_class("noinp"), false);
+	///   assert_eq!(input.has_class("inp-red"), false);
+	///   input.add_class("noinp inp-red");
+	///   assert_eq!(input.has_class("noinp"), true);
+	///   assert_eq!(input.has_class("inp-red"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn add_class(&mut self, class_name: &str) -> &mut Self {
 		let class_list = get_class_list(class_name);
 		if !class_list.is_empty() {
@@ -2813,7 +3329,34 @@ impl<'a> Elements<'a> {
 		}
 		self
 	}
-	/// pub fn `remove_class`
+
+	/// Remove class from Elements's ClassList, multiple classes can be splitted by whitespaces.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut input = doc.find("input");
+	///   assert_eq!(input.has_class("inp"), true);
+	///   assert_eq!(input.has_class("inp-txt"), true);
+	///   input.remove_class("inp inp-txt");
+	///   assert_eq!(input.has_class("inp"), false);
+	///   assert_eq!(input.has_class("inp-txt"), false);
+	///   assert_eq!(input.has_attr("class"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn remove_class(&mut self, class_name: &str) -> &mut Self {
 		let class_name = class_name.trim();
 		if !class_name.is_empty() {
@@ -2840,7 +3383,34 @@ impl<'a> Elements<'a> {
 		}
 		self
 	}
-	/// pub fn `toggle_class`
+
+	/// Toggle the class name from Elements's ClassList, multiple classes can be splitted by whitespaces.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <input type="text" class="inp inp-txt" readonly />
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut input = doc.find("input");
+	///   assert_eq!(input.has_class("inp"), true);
+	///   assert_eq!(input.has_class("inp-txt"), true);
+	///   input.toggle_class("inp inp-red");
+	///   assert_eq!(input.has_class("inp"), false);
+	///   assert_eq!(input.has_class("inp-txt"), true);
+	///   assert_eq!(input.has_class("inp-red"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn toggle_class(&mut self, class_name: &str) -> &mut Self {
 		let class_name = class_name.trim();
 		if !class_name.is_empty() {
@@ -2890,70 +3460,77 @@ impl<'a> Elements<'a> {
 **  append, append_to, prepend, prepend_to,
 **  before, insert_before, after, insert_after
 */
+
 impl<'a> Elements<'a> {
-	/// pub fn `remove`
-	pub fn remove(self) {
-		for ele in self.into_iter() {
-			if let Some(parent) = ele.parent().as_mut() {
-				parent.remove_child(ele);
+	// when feature 'destory' or 'insertion' is open
+	cfg_feat_mutation! {
+		/// Remove the Elements set.
+		pub fn remove(self) {
+			for ele in self.into_iter() {
+				if let Some(parent) = ele.parent().as_mut() {
+					parent.remove_child(ele);
+				}
 			}
 		}
-	}
-	// pub fn `empty`
-	pub fn empty(&mut self) -> &mut Self {
-		self.set_text("");
-		self
-	}
-	// `insert`
-	fn insert(&mut self, dest: &Elements, position: &InsertPosition) -> &mut Self {
-		for ele in self.get_mut_ref() {
-			for inserted in dest.get_ref().iter().rev() {
-				ele.insert_adjacent(position, inserted);
-			}
+		/// Clear all the nodes in the Elements set.
+		pub fn empty(&mut self) -> &mut Self {
+			self.set_text("");
+			self
 		}
-		self
 	}
-	/// pub fn `append`
-	pub fn append(&mut self, elements: &mut Elements) -> &mut Self {
-		self.insert(elements, &InsertPosition::BeforeEnd);
-		self
-	}
-	/// pub fn `append_to`
-	pub fn append_to(&mut self, elements: &mut Elements) -> &mut Self {
-		elements.append(self);
-		self
-	}
-	/// pub fn `prepend`
-	pub fn prepend(&mut self, elements: &mut Elements) -> &mut Self {
-		self.insert(elements, &InsertPosition::AfterBegin);
-		self
-	}
-	/// pub fn `prepend_to`
-	pub fn prepend_to(&mut self, elements: &mut Elements) -> &mut Self {
-		elements.prepend(self);
-		self
-	}
-	/// pub fn `insert_before`
-	pub fn insert_before(&mut self, elements: &mut Elements) -> &mut Self {
-		elements.before(self);
-		self
-	}
-	/// pub fn `before`
-	pub fn before(&mut self, elements: &mut Elements) -> &mut Self {
-		// insert the elements before self
-		self.insert(elements, &InsertPosition::BeforeBegin);
-		self
-	}
-	/// pub fn `insert_after`
-	pub fn insert_after(&mut self, elements: &mut Elements) -> &mut Self {
-		elements.after(self);
-		self
-	}
-	/// pub fn `after`
-	pub fn after(&mut self, elements: &mut Elements) -> &mut Self {
-		// insert the elements after self
-		self.insert(elements, &InsertPosition::AfterEnd);
-		self
+	// when feature 'insertion' is open
+	cfg_feat_insertion! {
+		// `insert`
+		fn insert(&mut self, dest: &Elements, position: &InsertPosition) -> &mut Self {
+			for ele in self.get_mut_ref() {
+				for inserted in dest.get_ref().iter().rev() {
+					ele.insert_adjacent(position, inserted);
+				}
+			}
+			self
+		}
+		/// Append the parameter Elements to the child before the tag end of the current Elements set.
+		pub fn append(&mut self, elements: &mut Elements) -> &mut Self {
+			self.insert(elements, &InsertPosition::BeforeEnd);
+			self
+		}
+		/// Same as `append`, but exchange the caller and the parameter target.
+		pub fn append_to(&mut self, elements: &mut Elements) -> &mut Self {
+			elements.append(self);
+			self
+		}
+		/// Append the parameter Elements to the child after the tag start of the current Elements set.
+		pub fn prepend(&mut self, elements: &mut Elements) -> &mut Self {
+			self.insert(elements, &InsertPosition::AfterBegin);
+			self
+		}
+		/// Same as `prepend`, but exchange the caller and the parameter target.
+		pub fn prepend_to(&mut self, elements: &mut Elements) -> &mut Self {
+			elements.prepend(self);
+			self
+		}
+		/// Insert the each element in the current Elements set into the other Elements's element's before position.
+		pub fn insert_before(&mut self, elements: &mut Elements) -> &mut Self {
+			elements.before(self);
+			self
+		}
+		/// Same as `insert_before`, but exchange the caller and the parameter target.
+		pub fn before(&mut self, elements: &mut Elements) -> &mut Self {
+			// insert the elements before self
+			self.insert(elements, &InsertPosition::BeforeBegin);
+			self
+		}
+		/// Insert the each element in the current Elements set into the other Elements's element's after position.
+		pub fn insert_after(&mut self, elements: &mut Elements) -> &mut Self {
+			elements.after(self);
+			self
+		}
+		/// Same as `insert_after`, but exchange the caller and the parameter target.
+		pub fn after(&mut self, elements: &mut Elements) -> &mut Self {
+			// insert the elements after self
+			self.insert(elements, &InsertPosition::AfterEnd);
+			self
+		}
 	}
 }
 

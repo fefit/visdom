@@ -12,14 +12,17 @@
 #[macro_use]
 mod macros;
 mod mesdoc;
-// text
+// feature="text"
 cfg_feat_text! {
 	use mesdoc::interface::Texts;
 }
+// feature="mutation"
+cfg_feat_insertion! {
+	use mesdoc::interface::InsertPosition;
+}
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
-	IErrorHandle, IFormValue, INodeTrait, ITextTrait, IUncareNodeTrait, InsertPosition, MaybeDoc,
-	MaybeElement,
+	IErrorHandle, IFormValue, INodeTrait, ITextTrait, IUncareNodeTrait, MaybeDoc, MaybeElement,
 };
 
 use mesdoc::utils::is_equal_chars;
@@ -66,46 +69,48 @@ impl Dom {
 			}));
 		}
 	}
-
-	fn validate_dom_change(dom: &Rc<RefCell<Node>>, node: &BoxDynElement, method: &str) -> bool {
-		// test if current node is element node
-		let my_node_type = dom.borrow().node_type;
-		if my_node_type != NodeType::Tag {
-			Dom::halt(
-				dom,
-				method,
-				&format!("Can't {} for a {:?} type", method, my_node_type),
-			);
-			return false;
-		}
-		// document
-		if let INodeType::Document = node.node_type() {
-			Dom::halt(dom, method, &format!("Can't {} a document type", method));
-			return false;
-		}
-		// test if same node
-		if dom.is(node) {
-			Dom::halt(
-				dom,
-				method,
-				&format!("Can't {} a dom that contains itself.", method),
-			);
-			return false;
-		}
-		// test if the node is dom's parent node
-		let mut cur = dom.cloned();
-		while let Some(parent) = cur.parent() {
-			if parent.is(node) {
+	// when mutation feature is open
+	cfg_feat_insertion! {
+		fn validate_dom_change(dom: &Rc<RefCell<Node>>, node: &BoxDynElement, method: &str) -> bool {
+			// test if current node is element node
+			let my_node_type = dom.borrow().node_type;
+			if my_node_type != NodeType::Tag {
 				Dom::halt(
 					dom,
 					method,
-					&format!("Can't {} a dom that contains it's parent", method),
+					&format!("Can't {} for a {:?} type", method, my_node_type),
 				);
 				return false;
 			}
-			cur = parent;
+			// document
+			if let INodeType::Document = node.node_type() {
+				Dom::halt(dom, method, &format!("Can't {} a document type", method));
+				return false;
+			}
+			// test if same node
+			if dom.is(node) {
+				Dom::halt(
+					dom,
+					method,
+					&format!("Can't {} a dom that contains itself.", method),
+				);
+				return false;
+			}
+			// test if the node is dom's parent node
+			let mut cur = dom.cloned();
+			while let Some(parent) = cur.parent() {
+				if parent.is(node) {
+					Dom::halt(
+						dom,
+						method,
+						&format!("Can't {} a dom that contains it's parent", method),
+					);
+					return false;
+				}
+				cur = parent;
+			}
+			true
 		}
-		true
 	}
 }
 
@@ -730,144 +735,150 @@ impl IElementTrait for Rc<RefCell<Node>> {
 			.collect::<String>()
 	}
 
-	/// impl `remov_child`
-	fn remove_child(&mut self, ele: BoxDynElement) {
-		if let Some(parent) = &ele.parent() {
-			if self.is(parent) {
-				// is a child
-				if let Some(childs) = self.borrow_mut().childs.as_mut() {
-					let index = ele.index();
-					// if not the last child
-					if index != childs.len() - 1 {
-						reset_next_siblings_index(index, &childs[index + 1..]);
+	// when the feature `destory` or `insertion` is open
+	cfg_feat_mutation! {
+		/// impl `remov_child`
+		fn remove_child(&mut self, ele: BoxDynElement) {
+			if let Some(parent) = &ele.parent() {
+				if self.is(parent) {
+					// is a child
+					if let Some(childs) = self.borrow_mut().childs.as_mut() {
+						let index = ele.index();
+						// if not the last child
+						if index != childs.len() - 1 {
+							reset_next_siblings_index(index, &childs[index + 1..]);
+						}
+						// remove child
+						childs.remove(index);
 					}
-					// remove child
-					childs.remove(index);
 				}
 			}
 		}
 	}
-	// append child
-	fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
-		// base validate
-		let action = position.action();
-		if !Dom::validate_dom_change(self, node, action) {
-			return;
-		}
-		let node_type = node.node_type();
-		let specified: Box<dyn Any> = node.cloned().to_node();
-		if let Ok(dom) = specified.downcast::<RefNode>() {
-			// get the nodes
-			let mut nodes = match node_type {
-				INodeType::DocumentFragement => {
-					if let Some(childs) = &dom.borrow().childs {
-						childs.iter().map(Rc::clone).collect::<Vec<RefNode>>()
-					} else {
-						vec![]
-					}
-				}
-				_ => {
-					// remove current node from parent's childs
-					if let Some(parent) = &mut node.parent() {
-						parent.remove_child(node.cloned());
-					}
-					vec![*dom]
-				}
-			};
-			// filter the node allowed
-			let tag_name = self.tag_names();
-			// remove not allowed nodes
-			remove_not_allowed_nodes(&tag_name, &mut nodes);
-			// check if is empty
-			if nodes.is_empty() {
+	// when the feature `insertion` is open
+	cfg_feat_insertion! {
+		// append child
+		fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
+			// base validate
+			let action = position.action();
+			if !Dom::validate_dom_change(self, node, action) {
 				return;
 			}
-			// insert
-			use InsertPosition::*;
-			match position {
-				BeforeBegin | AfterEnd => {
-					// get index first, for borrow check
-					let mut index = self.index();
-					let mut nexts: Vec<RefNode> = vec![];
-					let insert_len = nodes.len();
-					// it's insertAfter, increase the insertion index
-					if *position == AfterEnd {
-						index += 1;
-					}
-					// always reset node indexs
-					reset_next_siblings_index(index, &nodes);
-					// split to prev and next
-					if let Some(parent) = &self.borrow_mut().parent {
-						if let Some(parent) = &parent.upgrade() {
-							if let Some(childs) = &mut parent.borrow_mut().childs {
-								// split the nexts for reset index.
-								if index < childs.len() {
-									nexts = childs.split_off(index);
-								}
-								// set node parent
-								for node in &nodes {
-									node.borrow_mut().parent = Some(Rc::downgrade(parent));
-								}
-								// insert nodes at the end
-								childs.extend(nodes);
-							}
-						}
-					}
-					if !nexts.is_empty() {
-						// reset nexts index
-						reset_next_siblings_index(index + insert_len, &nexts);
-						// for borrrow check
-						if let Some(parent) = &self.borrow_mut().parent {
-							if let Some(parent) = parent.upgrade() {
-								if let Some(childs) = &mut parent.borrow_mut().childs {
-									//  insert nodes
-									childs.extend(nexts);
-								}
-							}
-						}
-					}
-				}
-				AfterBegin | BeforeEnd => {
-					// set nodes parent
-					for node in &nodes {
-						node.borrow_mut().parent = Some(Rc::downgrade(self));
-					}
-					// prepend, append
-					if let Some(childs) = &mut self.borrow_mut().childs {
-						if *position == BeforeEnd {
-							// reset nodes index
-							reset_next_siblings_index(childs.len(), &nodes);
-							// append nodes
-							childs.extend(nodes);
+			let node_type = node.node_type();
+			let specified: Box<dyn Any> = node.cloned().to_node();
+			if let Ok(dom) = specified.downcast::<RefNode>() {
+				// get the nodes
+				let mut nodes = match node_type {
+					INodeType::DocumentFragement => {
+						if let Some(childs) = &dom.borrow().childs {
+							childs.iter().map(Rc::clone).collect::<Vec<RefNode>>()
 						} else {
-							// always reset nodes index
-							reset_next_siblings_index(0, &nodes);
-							// reset childs index
-							reset_next_siblings_index(nodes.len(), childs);
-							// append childs to nodes
-							nodes.append(childs);
-							// set childs to nodes
-							*childs = nodes;
+							vec![]
 						}
-						return;
 					}
-					// reset nodes index
-					reset_next_siblings_index(0, &nodes);
-					// set nodes as childs
-					self.borrow_mut().childs = Some(nodes);
+					_ => {
+						// remove current node from parent's childs
+						if let Some(parent) = &mut node.parent() {
+							parent.remove_child(node.cloned());
+						}
+						vec![*dom]
+					}
+				};
+				// filter the node allowed
+				let tag_name = self.tag_names();
+				// remove not allowed nodes
+				remove_not_allowed_nodes(&tag_name, &mut nodes);
+				// check if is empty
+				if nodes.is_empty() {
+					return;
 				}
+				// insert
+				use InsertPosition::*;
+				match position {
+					BeforeBegin | AfterEnd => {
+						// get index first, for borrow check
+						let mut index = self.index();
+						let mut nexts: Vec<RefNode> = vec![];
+						let insert_len = nodes.len();
+						// it's insertAfter, increase the insertion index
+						if *position == AfterEnd {
+							index += 1;
+						}
+						// always reset node indexs
+						reset_next_siblings_index(index, &nodes);
+						// split to prev and next
+						if let Some(parent) = &self.borrow_mut().parent {
+							if let Some(parent) = &parent.upgrade() {
+								if let Some(childs) = &mut parent.borrow_mut().childs {
+									// split the nexts for reset index.
+									if index < childs.len() {
+										nexts = childs.split_off(index);
+									}
+									// set node parent
+									for node in &nodes {
+										node.borrow_mut().parent = Some(Rc::downgrade(parent));
+									}
+									// insert nodes at the end
+									childs.extend(nodes);
+								}
+							}
+						}
+						if !nexts.is_empty() {
+							// reset nexts index
+							reset_next_siblings_index(index + insert_len, &nexts);
+							// for borrrow check
+							if let Some(parent) = &self.borrow_mut().parent {
+								if let Some(parent) = parent.upgrade() {
+									if let Some(childs) = &mut parent.borrow_mut().childs {
+										//  insert nodes
+										childs.extend(nexts);
+									}
+								}
+							}
+						}
+					}
+					AfterBegin | BeforeEnd => {
+						// set nodes parent
+						for node in &nodes {
+							node.borrow_mut().parent = Some(Rc::downgrade(self));
+						}
+						// prepend, append
+						if let Some(childs) = &mut self.borrow_mut().childs {
+							if *position == BeforeEnd {
+								// reset nodes index
+								reset_next_siblings_index(childs.len(), &nodes);
+								// append nodes
+								childs.extend(nodes);
+							} else {
+								// always reset nodes index
+								reset_next_siblings_index(0, &nodes);
+								// reset childs index
+								reset_next_siblings_index(nodes.len(), childs);
+								// append childs to nodes
+								nodes.append(childs);
+								// set childs to nodes
+								*childs = nodes;
+							}
+							return;
+						}
+						// reset nodes index
+						reset_next_siblings_index(0, &nodes);
+						// set nodes as childs
+						self.borrow_mut().childs = Some(nodes);
+					}
+				}
+			} else {
+				// not the Dom
+				Dom::halt(
+					self,
+					action,
+					&format!("Can't {} that not implemented 'Dom'", action),
+				);
 			}
-		} else {
-			// not the Dom
-			Dom::halt(
-				self,
-				action,
-				&format!("Can't {} that not implemented 'Dom'", action),
-			);
 		}
 	}
 
-	// when feature text is open
+	// when the feature `text` is open
 	cfg_feat_text! {
 		/// impl `texts`
 		fn texts_by<'b>(
