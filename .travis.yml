@@ -12,7 +12,7 @@ script:
     - export CARGO_INCREMENTAL=0
     - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
     - export RUSTDOCFLAGS="-Cpanic=abort"
-    - cargo build --verbose $CARGO_OPTIONS
+    - cargo build --features full --verbose $CARGO_OPTIONS
     - cargo test --features full --verbose $CARGO_OPTIONS
     - |
       zip -0 ccov.zip `find . \( -name "visdom*.gc*" \) -print`;
