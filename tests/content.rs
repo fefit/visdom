@@ -1,8 +1,7 @@
 use std::result::Result as StdResult;
-use visdom::{
-	types::{BoxDynError, INodeType},
-	Vis,
-};
+#[cfg(feature = "text")]
+use visdom::types::INodeType;
+use visdom::{types::BoxDynError, Vis};
 type Result = StdResult<(), BoxDynError>;
 
 #[test]
@@ -177,8 +176,14 @@ fn test_set_html() -> Result {
 	assert_eq!(parent.children("strong").length(), 1);
 	parent.set_html("");
 	assert!(parent.html().is_empty());
+	Ok(())
+}
+
+#[test]
+#[cfg(feature = "text")]
+fn test_text_set_html() -> Result {
 	// text node
-	let text = only_text;
+	let text = "This is a test!";
 	let html = format!(r#"<div class="parent">{}</div>"#, text);
 	let root = Vis::load(&html)?;
 	let parent = root.children(".parent");
@@ -268,6 +273,7 @@ fn test_outer_html() -> Result {
 }
 
 #[test]
+#[cfg(feature = "text")]
 fn test_texts() -> Result {
 	let html = r##"
     <div id="content">FIRST-ABC<div>SECOND-ABC<style>.a{{color:red}}</style>SECOND-DEF</div><script>var a = 1;</script>FIRST-DEF</div>

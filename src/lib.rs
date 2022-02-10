@@ -9,12 +9,17 @@
 //! - Useful API methods: e.g. `find`, `filter`, `has`, `is`, `not`, `add`, `closest`, `map` and so on.
 //! - Content mutations: `set_html`, `set_text` can also called by text nodes, external methods such as `append_text`、`prepend_text` are supported.
 //! - Well tested: the unit tests have covered most cases, but if you meet any bugs or questions, welcome to submit issues or PR to us.
-
+#[macro_use]
+mod macros;
 mod mesdoc;
+// text
+cfg_feat_text! {
+	use mesdoc::interface::Texts;
+}
 use mesdoc::interface::{
 	BoxDynElement, BoxDynNode, BoxDynText, BoxDynUncareNode, Elements, IDocumentTrait, IElementTrait,
 	IErrorHandle, IFormValue, INodeTrait, ITextTrait, IUncareNodeTrait, InsertPosition, MaybeDoc,
-	MaybeElement, Texts,
+	MaybeElement,
 };
 
 use mesdoc::utils::is_equal_chars;
@@ -30,10 +35,14 @@ use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
 // re export `IAttrValue` `IEnumTyped` `INodeType`
 pub mod types {
+	// text
+	cfg_feat_text! {
+		pub use crate::mesdoc::interface::Texts;
+	}
 	pub use crate::mesdoc::error::BoxDynError;
 	pub use crate::mesdoc::interface::{
 		BoxDynElement, BoxDynNode, BoxDynText, Elements, IAttrValue, IDocumentTrait, IEnumTyped,
-		IFormValue, INodeType, Texts,
+		IFormValue, INodeType,
 	};
 	pub use crate::mesdoc::selector::Combinator;
 }
@@ -367,39 +376,40 @@ impl INodeTrait for Rc<RefCell<Node>> {
 }
 
 impl ITextTrait for Rc<RefCell<Node>> {
-	/// Remove a text node.
-	///
-	fn remove(self: Box<Self>) {
-		let index = self.index();
-		if let Some(parent) = &self.borrow_mut().parent {
-			if let Some(parent) = parent.upgrade() {
-				if let Some(childs) = &mut parent.borrow_mut().childs {
-					// remove the text node
-					childs.remove(index);
-					// change next siblings index
-					reset_next_siblings_index(index, &childs[index..]);
+	cfg_feat_text! {
+		/// Remove a text node.
+		fn remove(self: Box<Self>) {
+			let index = self.index();
+			if let Some(parent) = &self.borrow_mut().parent {
+				if let Some(parent) = parent.upgrade() {
+					if let Some(childs) = &mut parent.borrow_mut().childs {
+						// remove the text node
+						childs.remove(index);
+						// change next siblings index
+						reset_next_siblings_index(index, &childs[index..]);
+					}
 				}
 			}
 		}
-	}
 
-	// append text
-	fn append_text(&mut self, content: &str) {
-		let chars = content.chars().collect::<Vec<char>>();
-		if let Some(content) = &mut self.borrow_mut().content {
-			content.extend(chars);
-		} else {
-			self.borrow_mut().content = Some(chars);
+		// append text
+		fn append_text(&mut self, content: &str) {
+			let chars = content.chars().collect::<Vec<char>>();
+			if let Some(content) = &mut self.borrow_mut().content {
+				content.extend(chars);
+			} else {
+				self.borrow_mut().content = Some(chars);
+			}
 		}
-	}
 
-	// prepend text
-	fn prepend_text(&mut self, content: &str) {
-		let chars = content.chars().collect::<Vec<char>>();
-		if let Some(content) = &mut self.borrow_mut().content {
-			content.splice(0..0, chars);
-		} else {
-			self.borrow_mut().content = Some(chars);
+		// prepend text
+		fn prepend_text(&mut self, content: &str) {
+			let chars = content.chars().collect::<Vec<char>>();
+			if let Some(content) = &mut self.borrow_mut().content {
+				content.splice(0..0, chars);
+			} else {
+				self.borrow_mut().content = Some(chars);
+			}
 		}
 	}
 }
@@ -857,78 +867,80 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		}
 	}
 
-	/// impl `texts`
-	fn texts_by<'b>(
-		&self,
-		limit_depth: usize,
-		handle: &dyn Fn(usize, &BoxDynText) -> bool,
-	) -> Option<Texts<'b>> {
-		let limit_depth = if limit_depth == 0 {
-			usize::MAX
-		} else {
-			limit_depth
-		};
-		let mut result: Texts = Texts::with_capacity(5);
-		fn loop_handle(
-			ele: BoxDynElement,
-			result: &mut Texts,
-			cur_depth: usize,
+	// when feature text is open
+	cfg_feat_text! {
+		/// impl `texts`
+		fn texts_by<'b>(
+			&self,
 			limit_depth: usize,
 			handle: &dyn Fn(usize, &BoxDynText) -> bool,
-		) {
-			let child_nodes = ele.child_nodes();
-			if !child_nodes.is_empty() {
-				let next_depth = cur_depth + 1;
-				let recursive = next_depth < limit_depth;
-				for node in &child_nodes {
-					match node.node_type() {
-						INodeType::Text => {
-							// append text node to result
-							let node = node.clone_node();
-							let text = node.typed().into_text().expect("TextNode must true");
-							if handle(cur_depth, &text) {
-								result.get_mut_ref().push(text);
-							}
-						}
-						INodeType::Element => {
-							let node = node.clone_node();
-							let cur_ele = node.typed().into_element().expect("ElementNode must true");
-							if check_if_content_tag(&cur_ele.tag_names()) {
-								// check if content tag
-								// content tag, change the element into text type
-								let text = cur_ele
-									.into_text()
-									.expect("Content tag must be able to translate into text node");
+		) -> Option<Texts<'b>> {
+			let limit_depth = if limit_depth == 0 {
+				usize::MAX
+			} else {
+				limit_depth
+			};
+			let mut result: Texts = Texts::with_capacity(5);
+			fn loop_handle(
+				ele: BoxDynElement,
+				result: &mut Texts,
+				cur_depth: usize,
+				limit_depth: usize,
+				handle: &dyn Fn(usize, &BoxDynText) -> bool,
+			) {
+				let child_nodes = ele.child_nodes();
+				if !child_nodes.is_empty() {
+					let next_depth = cur_depth + 1;
+					let recursive = next_depth < limit_depth;
+					for node in &child_nodes {
+						match node.node_type() {
+							INodeType::Text => {
+								// append text node to result
+								let node = node.clone_node();
+								let text = node.typed().into_text().expect("TextNode must true");
 								if handle(cur_depth, &text) {
 									result.get_mut_ref().push(text);
 								}
-							} else if recursive {
-								// not content tags need recursive
-								// if need recursive find the text node
-								loop_handle(cur_ele, result, next_depth, limit_depth, handle);
 							}
+							INodeType::Element => {
+								let node = node.clone_node();
+								let cur_ele = node.typed().into_element().expect("ElementNode must true");
+								if check_if_content_tag(&cur_ele.tag_names()) {
+									// check if content tag
+									// content tag, change the element into text type
+									let text = cur_ele
+										.into_text()
+										.expect("Content tag must be able to translate into text node");
+									if handle(cur_depth, &text) {
+										result.get_mut_ref().push(text);
+									}
+								} else if recursive {
+									// not content tags need recursive
+									// if need recursive find the text node
+									loop_handle(cur_ele, result, next_depth, limit_depth, handle);
+								}
+							}
+							_ => {}
 						}
-						_ => {}
+					}
+				} else if check_if_content_tag(&ele.tag_names()) {
+					// content tag, change the element into text type
+					let text = ele
+						.into_text()
+						.expect("Content tag must be able to translate into text node");
+					if handle(cur_depth, &text) {
+						result.get_mut_ref().push(text);
 					}
 				}
-			} else if check_if_content_tag(&ele.tag_names()) {
-				// content tag, change the element into text type
-				let text = ele
-					.into_text()
-					.expect("Content tag must be able to translate into text node");
-				if handle(cur_depth, &text) {
-					result.get_mut_ref().push(text);
-				}
 			}
+			let ele = Box::new(Rc::clone(self)) as BoxDynElement;
+			loop_handle(ele, &mut result, 0, limit_depth, handle);
+			if !result.is_empty() {
+				return Some(result);
+			}
+			None
 		}
-		let ele = Box::new(Rc::clone(self)) as BoxDynElement;
-		loop_handle(ele, &mut result, 0, limit_depth, handle);
-		if !result.is_empty() {
-			return Some(result);
-		}
-		None
 	}
-
 	/// impl `into_text`
 	fn into_text<'b>(self: Box<Self>) -> Result<BoxDynText<'b>, BoxDynError> {
 		if check_if_content_tag(&self.tag_names()) {

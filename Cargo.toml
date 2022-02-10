@@ -1,9 +1,9 @@
 [package]
 name = "visdom"
-version = "0.4.13"
+version = "0.5.0"
 edition = "2018"
 description = "A html document syntax and operation library, use APIs similar to jquery, easy to use for web scraping and confused html."
-keywords = ["html-parser", "dom", "jquery", "scrape", "crawl"]
+keywords = ["html", "scrape", "jquery", "crawl", "query", "selector"]
 authors = ["jxz_211 <jxz_211@163.com>"]
 homepage = "https://github.com/fefit/visdom"
 repository = "https://github.com/fefit/visdom"
@@ -21,6 +21,14 @@ regex = "1.4.3"
 [dev-dependencies]
 crossbeam = "0.8.0"
 criterion = "0.3.3"
+
+[features]
+default = []
+full = ["text"]
+text = []
+
+[package.metadata.docs.rs]
+all-features = true
 
 [[bench]]
 name = "benchmark"

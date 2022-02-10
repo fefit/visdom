@@ -64,6 +64,7 @@ fn test_document_trait() -> Result {
 	Ok(())
 }
 
+#[cfg(feature = "text")]
 #[test]
 fn test_text_trait() -> Result {
 	let html = r#"
@@ -150,6 +151,24 @@ fn test_node_trait() -> Result {
 	// get root
 	let root_element = root.get(0).unwrap().root_element().unwrap();
 	assert!(root_element.is(&root_element.root_element().unwrap()));
+	Ok(())
+}
+
+#[test]
+#[cfg(feature = "text")]
+fn test_node_text_trait() -> Result {
+	let html = r#"
+    <!doctype html>
+    <html>
+      <head>
+        <title>test text trait</title>
+      </head>
+      <body>
+        <div id="content">Vis<span>dom</span></div>
+      </body>
+    </html>
+  "#;
+	let root = Vis::load(html)?;
 	// content
 	let content = root.find("#content");
 	assert!(content

@@ -1,6 +1,7 @@
-use super::{
-	BoxDynElement, BoxDynText, IAttrValue, IElementTrait, IFormValue, InsertPosition, MaybeDoc, Texts,
-};
+cfg_feat_text! {
+	use super::{BoxDynText, Texts};
+}
+use super::{BoxDynElement, IAttrValue, IElementTrait, IFormValue, InsertPosition, MaybeDoc};
 use crate::mesdoc::error::BoxDynError;
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
@@ -185,7 +186,35 @@ impl<'a> Elements<'a> {
 *** Helper Methods
 */
 impl<'a> Elements<'a> {
-	// pub fn `for_each`
+	/// Iterate over the element in Elements, when the handle return false, stop the iterator.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <ul>
+	///       <li>item1</li>
+	///       <li>item2</li>
+	///       <li>item3</li>
+	///     </ul>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut items = doc.find("ul > li");
+	///   assert_eq!(items.length(), 3);
+	///   let mut items_texts:Vec<String> = vec![];
+	///   items.for_each(|index, ele| {
+	///     if index < 2{
+	///       items_texts.push(ele.text());
+	///       return true;
+	///     }
+	///     false
+	///   });
+	///   assert_eq!(items_texts.len(), 2);
+	///   assert_eq!(items_texts.join(","), "item1,item2");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn for_each<F>(&mut self, mut handle: F) -> &mut Self
 	where
 		F: FnMut(usize, &mut BoxDynElement) -> bool,
@@ -197,16 +226,39 @@ impl<'a> Elements<'a> {
 		}
 		self
 	}
-	/// Alias for `for_each`
-	///
-	///
+
+	/// A short alias for method `for_each`
 	pub fn each<F>(&mut self, handle: F) -> &mut Self
 	where
 		F: FnMut(usize, &mut BoxDynElement) -> bool,
 	{
 		self.for_each(handle)
 	}
-	// pub fn `map`
+
+	/// Get a collection of values by iterate the each element in Elements and call the `handle` function.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <ul>
+	///       <li>item1</li>
+	///       <li>item2</li>
+	///       <li>item3</li>
+	///     </ul>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut items = doc.find("ul > li");
+	///   assert_eq!(items.length(), 3);
+	///   let items_texts: Vec<String> = items.map(|index, ele| {
+	///     ele.text()
+	///   });
+	///   assert_eq!(items_texts.len(), 3);
+	///   assert_eq!(items_texts.join(","), "item1,item2,item3");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn map<F, T: Sized>(&self, mut handle: F) -> Vec<T>
 	where
 		F: FnMut(usize, &BoxDynElement) -> T,
@@ -218,15 +270,80 @@ impl<'a> Elements<'a> {
 		result
 	}
 
-	/// pub fn `length`
+	/// Return the length of the Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <ul>
+	///       <li>item1</li>
+	///       <li>item2</li>
+	///       <li>item3</li>
+	///     </ul>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut items = doc.find("ul > li:contains('item3')");
+	///   assert_eq!(items.length(), 1);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn length(&self) -> usize {
 		self.nodes.len()
 	}
-	/// pub fn `is_empty`
+
+	/// Check if the Elements is empty, it's a short alias for `.length() == 0`
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <ul>
+	///       <li>item1</li>
+	///       <li>item2</li>
+	///       <li>item3</li>
+	///     </ul>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let mut items = doc.find("ul > li:empty");
+	///   assert!(items.is_empty());
+	///   assert_eq!(items.length(), 0);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_empty(&self) -> bool {
 		self.length() == 0
 	}
-	/// pub fn `document`, a quick way to get document
+
+	/// A quick way to get the document object when the loaded html is a document.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <ul>
+	///           <li>item1</li>
+	///           <li>item2</li>
+	///           <li>item3</li>
+	///         </ul>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let root = Vis::load(html)?;
+	///   let mut document = root.document();
+	///   assert!(document.is_some());
+	///   assert_eq!(document.unwrap().title(), Some("document"));
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn document(&self) -> MaybeDoc {
 		for ele in self.get_ref() {
 			if let Some(doc) = ele.owner_document() {
@@ -389,6 +506,7 @@ impl<'a> Elements<'a> {
 			self.find_selector(selector)
 		})
 	}
+
 	// for all combinator until selectors
 	fn select_with_comb_until(
 		&self,
@@ -460,243 +578,6 @@ impl<'a> Elements<'a> {
 		Elements::new()
 	}
 
-	// prev
-	pub fn prev(&self, selector: &str) -> Elements<'a> {
-		self.select_with_comb("prev", selector, Combinator::Prev)
-	}
-	// prev_all
-	pub fn prev_all(&self, selector: &str) -> Elements<'a> {
-		let uniques = self.unique_sibling_last();
-		uniques.select_with_comb("prev_all", selector, Combinator::PrevAll)
-	}
-	// prev_until
-	pub fn prev_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
-		let uniques = self.unique_sibling_last();
-		let mut result =
-			uniques.select_with_comb_until("prev_until", selector, filter, contains, Combinator::Prev);
-		// should reverse the result when length > 1
-		// because the prevs executed from last to first
-		if result.length() > 1 {
-			result.get_mut_ref().reverse();
-		}
-		result
-	}
-	// next
-	pub fn next(&self, selector: &str) -> Elements<'a> {
-		self.select_with_comb("next", selector, Combinator::Next)
-	}
-	// next_all
-	pub fn next_all(&self, selector: &str) -> Elements<'a> {
-		// unique, keep the first sibling node
-		let uniques = self.unique_sibling_first();
-		uniques.select_with_comb("next_all", selector, Combinator::NextAll)
-	}
-	// next_until
-	pub fn next_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
-		// unique, keep the first sibling node
-		let uniques = self.unique_sibling_first();
-		uniques.select_with_comb_until("next_until", selector, filter, contains, Combinator::Next)
-	}
-
-	// siblings
-	pub fn siblings(&self, selector: &str) -> Elements<'a> {
-		let uniques = self.unique_all_siblings();
-		// when selector is empty or only
-		let mut siblings_selector: Selector;
-		let siblings_comb = Combinator::Siblings;
-		let mut child_selector: Selector;
-		let child_comb = Combinator::Children;
-		let selector = selector.trim();
-		if selector.is_empty() {
-			siblings_selector = Selector::from_segment(Selector::make_comb_all(siblings_comb));
-			child_selector = Selector::from_segment(Selector::make_comb_all(child_comb));
-		} else {
-			// self
-			let sib_selector = selector.parse::<Selector>();
-			if let Ok(sib_selector) = sib_selector {
-				// clone the selector to a child selector
-				child_selector = selector
-					.parse::<Selector>()
-					.expect("The selector has detected");
-				child_selector.head_combinator(child_comb);
-				// use siblings selector
-				siblings_selector = sib_selector;
-				siblings_selector.head_combinator(siblings_comb);
-			} else {
-				self.trigger_method_throw_error(
-					"siblings",
-					Box::new(IError::InvalidTraitMethodCall {
-						method: "siblings".to_string(),
-						message: format!(
-							"Invalid selector:{}",
-							sib_selector.err().expect("Selector parse error")
-						),
-					}),
-				);
-				return Elements::new();
-			}
-		}
-		// uniques
-		let mut result = Elements::with_capacity(DEF_NODES_LEN);
-		for (ele, is_parent) in &uniques {
-			let eles = Elements::with_node(ele);
-			let finded = if *is_parent {
-				eles.find_selector(&child_selector)
-			} else {
-				eles.find_selector(&siblings_selector)
-			};
-			result.get_mut_ref().extend(finded);
-		}
-		// sort the result
-		result.sort();
-		result
-	}
-	// children
-	pub fn children(&self, selector: &str) -> Elements<'a> {
-		self.select_with_comb("children", selector, Combinator::Children)
-	}
-
-	// parent
-	pub fn parent(&self, selector: &str) -> Elements<'a> {
-		// unique, keep the first sibling node
-		let uniques = self.unique_sibling_first();
-		uniques.select_with_comb("parent", selector, Combinator::Parent)
-	}
-	// parents
-	pub fn parents(&self, selector: &str) -> Elements<'a> {
-		// unique, keep the first sibling node
-		let uniques = self.unique_sibling_first();
-		let mut result = uniques.select_with_comb("parents", selector, Combinator::ParentAll);
-		result.sort_and_unique();
-		result
-	}
-	// parents_until
-	pub fn parents_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
-		// unique, keep the first sibling node
-		let uniques = self.unique_sibling_first();
-		let mut result = uniques.select_with_comb_until(
-			"parents_until",
-			selector,
-			filter,
-			contains,
-			Combinator::Parent,
-		);
-		// parents may not unique if has ancestor and childs
-		// if parents length > 1, the parents need reversed
-		result.sort_and_unique();
-		result
-	}
-	// closest
-	pub fn closest(&self, selector: &str) -> Elements<'a> {
-		// when selector is not provided
-		if selector.is_empty() {
-			return Elements::new();
-		}
-		// find the nearst node
-		const METHOD: &str = "closest";
-		let selector = selector.parse::<Selector>();
-		if let Ok(selector) = selector {
-			let total = self.length();
-			let mut result = Elements::with_capacity(total);
-			let mut propagations = Elements::with_capacity(total);
-			for ele in self.get_ref() {
-				let mut cur_eles = Elements::with_node(ele);
-				if cur_eles.filter_type_handle(&selector, &FilterType::Is).1 {
-					// check self
-					result.get_mut_ref().push(cur_eles.get_mut_ref().remove(0));
-				} else {
-					propagations
-						.get_mut_ref()
-						.push(cur_eles.get_mut_ref().remove(0));
-				}
-			}
-			if !propagations.is_empty() {
-				let uniques = propagations.unique_sibling_first();
-				for ele in uniques.get_ref() {
-					let mut cur_eles = Elements::with_node(ele);
-					loop {
-						if cur_eles.filter_type_handle(&selector, &FilterType::Is).1 {
-							result.get_mut_ref().push(cur_eles.get_mut_ref().remove(0));
-							break;
-						}
-						if let Some(parent) = &cur_eles
-							.get(0)
-							.expect("Elements must have one node")
-							.parent()
-						{
-							if !parent.is_root_element() {
-								cur_eles = Elements::with_node(parent);
-							} else {
-								break;
-							}
-						} else {
-							break;
-						}
-					}
-				}
-				// need sort and unique
-				result.sort_and_unique();
-			}
-			result
-		} else {
-			self.trigger_method_throw_error(METHOD, Box::new(selector.unwrap_err()));
-			Elements::new()
-		}
-	}
-	// for `find` and `select_with_comb`
-	fn find_selector(&self, selector: &Selector) -> Elements<'a> {
-		let mut result = Elements::with_capacity(DEF_NODES_LEN);
-		if !self.is_empty() {
-			for p in &selector.process {
-				let QueryProcess { should_in, query } = p;
-				let first_query = &query[0];
-				let mut group: Elements = Elements::with_capacity(DEF_NODES_LEN);
-				if let Some(lookup) = should_in {
-					// find the first query elements
-					let finded = Elements::select(self, first_query, Some(&Combinator::ChildrenAll));
-					if !finded.is_empty() {
-						let first_comb = &first_query[0].1;
-						// check the elements if satisfied the lookup
-						for ele in finded.get_ref() {
-							if self.has_ele(ele, first_comb, Some(lookup)) {
-								group.push(ele.cloned());
-							}
-						}
-					}
-				} else {
-					// find the first query elements
-					group = Elements::select(self, first_query, None);
-				}
-				if !group.is_empty() {
-					let mut need_combine = true;
-					if query.len() > 1 {
-						for rules in &query[1..] {
-							group = Elements::select(&group, rules, None);
-							if group.is_empty() {
-								need_combine = false;
-								break;
-							}
-						}
-					}
-					if need_combine {
-						result = result.add(group);
-					}
-				}
-			}
-		}
-		result
-	}
-
-	/// pub fn `find`
-	/// get elements by selector, support standard css selectors
-	pub fn find(&self, selector: &str) -> Elements<'a> {
-		let s = Selector::from_str(selector, true);
-		if let Ok(selector) = &s {
-			return self.find_selector(selector);
-		}
-		self.trigger_method_throw_error("find", Box::new(s.unwrap_err()));
-		Elements::new()
-	}
 	// select one rule
 	// the rule must not in cache
 	fn select_by_rule(
@@ -1023,137 +904,7 @@ impl<'a> Elements<'a> {
 		};
 		result
 	}
-	// select ele by rules
-	fn select(
-		elements: &Elements<'a>,
-		rules: &[SelectorSegment],
-		comb: Option<&Combinator>,
-	) -> Elements<'a> {
-		let first_rule = &rules[0];
-		let comb = comb.unwrap_or(&first_rule.1);
-		let mut elements = if first_rule.0.in_cache && matches!(comb, Combinator::ChildrenAll) {
-			let (matcher, ..) = first_rule;
-			// set use cache true
-			let cached = matcher.apply(elements, Some(true));
-			let count = cached.length();
-			if count > 0 {
-				let mut result = Elements::with_capacity(count);
-				for ele in cached.get_ref() {
-					if elements.has_ele(ele, comb, None) {
-						result.push(ele.cloned());
-					}
-				}
-				result.sort_and_unique();
-				result
-			} else {
-				Elements::new()
-			}
-		} else {
-			Elements::select_by_rule(elements, first_rule, Some(comb))
-		};
-		if !elements.is_empty() && rules.len() > 1 {
-			for rule in &rules[1..] {
-				elements = Elements::select_by_rule(&elements, rule, None);
-				if elements.is_empty() {
-					break;
-				}
-			}
-		}
-		elements
-	}
-	// cloned
-	pub fn cloned(&self) -> Elements<'a> {
-		let mut result = Elements::with_capacity(self.length());
-		for ele in &self.nodes {
-			result.push(ele.cloned());
-		}
-		result
-	}
 
-	/// pub fn contains
-	pub fn contains(&self, ele: &BoxDynElement, comb: &Combinator) -> bool {
-		self.has_ele(ele, comb, None)
-	}
-
-	// `has_ele`
-	pub(crate) fn has_ele(
-		&self,
-		ele: &BoxDynElement,
-		comb: &Combinator,
-		lookup: Option<&[Vec<SelectorSegment>]>,
-	) -> bool {
-		let mut elements = Elements::with_node(ele);
-		let mut lookup_comb = comb.reverse();
-		if let Some(lookup) = lookup {
-			for rules in lookup.iter().rev() {
-				let finded = Elements::select(&elements, rules, Some(&lookup_comb));
-				if finded.is_empty() {
-					return false;
-				}
-				lookup_comb = rules[0].1.reverse();
-				elements = finded;
-			}
-		}
-		use Combinator::*;
-		match lookup_comb {
-			Parent => {
-				for ele in elements.get_ref() {
-					if let Some(parent) = &ele.parent() {
-						if self.includes(parent) {
-							return true;
-						}
-					}
-				}
-			}
-			ParentAll => {
-				for ele in elements.get_ref() {
-					if let Some(parent) = &ele.parent() {
-						if self.includes(parent) {
-							return true;
-						}
-						if let Some(ancestor) = &parent.parent() {
-							if self.includes(ancestor) {
-								return true;
-							}
-							// iterator the search process, becareful with the combinator now is ChildrenAll
-							// the sentences must in if condition, otherwise it will break the for loop
-							if self.has_ele(ancestor, &Combinator::ChildrenAll, None) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-			Prev => {
-				for ele in elements.get_ref() {
-					if let Some(prev) = &ele.previous_element_sibling() {
-						if self.includes(prev) {
-							return true;
-						}
-					}
-				}
-			}
-			PrevAll => {
-				for ele in elements.get_ref() {
-					let prevs = ele.previous_element_siblings();
-					for prev in prevs.get_ref() {
-						if self.includes(prev) {
-							return true;
-						}
-					}
-				}
-			}
-			Chain => {
-				for ele in elements.get_ref() {
-					if self.includes(ele) {
-						return true;
-					}
-				}
-			}
-			_ => panic!("Unsupported lookup combinator:{:?}", comb),
-		};
-		false
-	}
 	// filter_type_handle:
 	// type     | rule processes
 	// ----------------------------------------
@@ -1306,8 +1057,78 @@ impl<'a> Elements<'a> {
 		}
 		(result, all_matched)
 	}
+	/// Get the descendants of each element in the Elements, filtered by the selector
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <ul>
+	///           <li>item1</li>
+	///           <li>item2</li>
+	///           <li>
+	///               <ol>
+	///                 <li>subitem1</li>
+	///                 <li>subitem2</li>
+	///               </ol>
+	///           </li>
+	///         </ul>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   assert_eq!(doc.find("ul").length(), 1);
+	///   assert_eq!(doc.find("ul li").length(), 5);
+	///   assert_eq!(doc.find("ul > li").length(), 3);
+	///   assert_eq!(doc.find("ul li:first-child").text(), "item1subitem1");
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn find(&self, selector: &str) -> Elements<'a> {
+		let s = Selector::from_str(selector, true);
+		if let Ok(selector) = &s {
+			return self.find_selector(selector);
+		}
+		self.trigger_method_throw_error("find", Box::new(s.unwrap_err()));
+		Elements::new()
+	}
 
-	// filter
+	/// Reduce the Elements to those that match the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <ul>
+	///           <li>item1</li>
+	///           <li class="item2">item2</li>
+	///           <li>item3</li>
+	///         </ul>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let items = doc.find("li");
+	///   assert_eq!(items.length(), 3);
+	///   assert_eq!(items.filter("[class]").length(), 1);
+	///   assert_eq!(items.filter("[class]").text(), "item2");
+	///   assert_eq!(items.filter("li:contains('item3')").length(), 1);
+	///   assert_eq!(items.filter("li:contains('item3')").text(), "item3");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn filter(&self, selector: &str) -> Elements<'a> {
 		const METHOD: &str = "filter";
 		self.trigger_method(METHOD, selector, |selector| {
@@ -1315,7 +1136,35 @@ impl<'a> Elements<'a> {
 		})
 	}
 
-	// filter_by
+	/// Reduce the Elements to those that pass the handle function test.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <ul>
+	///           <li>item1</li>
+	///           <li class="item2">item2</li>
+	///           <li>item3</li>
+	///         </ul>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let items = doc.find("li");
+	///   assert_eq!(items.length(), 3);
+	///   let class_items = items.filter_by(|_, ele| ele.get_attribute("class").is_some());
+	///   assert_eq!(class_items.length(), 1);
+	///   assert_eq!(class_items.text(), "item2");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn filter_by<F>(&self, handle: F) -> Elements<'a>
 	where
 		F: Fn(usize, &BoxDynElement) -> bool,
@@ -1330,12 +1179,803 @@ impl<'a> Elements<'a> {
 		result
 	}
 
-	// filter in
+	/// Reduce the Elements to those that also in the searched Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <ul>
+	///           <li></li>
+	///           <li class="item2">item2</li>
+	///           <li class="item3"></li>
+	///         </ul>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let items = doc.find("li");
+	///   assert_eq!(items.length(), 3);
+	///   let empty_items = items.filter(":empty");
+	///   let class_items = items.filter("[class]");
+	///   assert_eq!(empty_items.length(), 2);
+	///   assert_eq!(class_items.length(), 2);
+	///   // has class and also empty
+	///   let class_and_empty_items = class_items.filter_in(&empty_items);
+	///   assert_eq!(class_and_empty_items.length(), 1);
+	///   assert_eq!(class_and_empty_items.attr("class").unwrap().to_string(), "item3");
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn filter_in(&self, search: &Elements) -> Elements<'a> {
 		self.filter_in_handle(search, FilterType::Filter).0
 	}
 
-	// is
+	/// Get the children of each element in Elements, when the selector is not empty, will filtered by the selector
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">
+	///               <dl>
+	///                 <dd>subitem1</dd>
+	///                 <dd>subitem2</dd>
+	///               </dl>
+	///           </dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let top_dl = doc.find("dl").eq(0);
+	///   let all_dd = top_dl.find("dd");
+	///   assert_eq!(all_dd.length(), 5);
+	///   let child_items = top_dl.children("");
+	///   assert_eq!(child_items.length(), 4);
+	///   let child_dd = top_dl.children("dd");
+	///   assert_eq!(child_dd.length(),3);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn children(&self, selector: &str) -> Elements<'a> {
+		self.select_with_comb("children", selector, Combinator::Children)
+	}
+
+	/// Get the previous sibling of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item3 = dl.children(".item3");
+	///   assert_eq!(item3.prev("").text(), "item2");
+	///   assert_eq!(item3.prev(":not[class]").is_empty(),true);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn prev(&self, selector: &str) -> Elements<'a> {
+		self.select_with_comb("prev", selector, Combinator::Prev)
+	}
+
+	/// Get all preceding siblings of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item3 = dl.children(".item3");
+	///   assert_eq!(item3.prev_all("").length(), 3);
+	///   assert_eq!(item3.prev_all("dd").length(),2);
+	///   assert_eq!(item3.prev_all("dt").length(),1);
+	///   assert_eq!(item3.prev_all("dd[class]").length(),1);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn prev_all(&self, selector: &str) -> Elements<'a> {
+		let uniques = self.unique_sibling_last();
+		uniques.select_with_comb("prev_all", selector, Combinator::PrevAll)
+	}
+
+	/// Get all preceding siblings of each element in Elements, until the previous sibling element matched the selector, when contains is true, the matched previous sibling will be included, otherwise it will exclude; when the filter is not empty, will filtered by the selector;
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item3 = dl.children(".item3");
+	///   assert_eq!(item3.prev_until("dt", "", false).length(), 2);
+	///   assert_eq!(item3.prev_until("dt", "", false).eq(0).is("dd"), true);
+	///   assert_eq!(item3.prev_until("dt", "", true).length(), 3);
+	///   assert_eq!(item3.prev_until("dt", "", true).eq(0).is("dt"), true);
+	///   assert_eq!(item3.prev_until("dt", "dd", true).length(), 2);
+	///   assert_eq!(item3.prev_until("dt", "dd", true).eq(0).is("dd"), true);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn prev_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+		let uniques = self.unique_sibling_last();
+		let mut result =
+			uniques.select_with_comb_until("prev_until", selector, filter, contains, Combinator::Prev);
+		// should reverse the result when length > 1
+		// because the prevs executed from last to first
+		if result.length() > 1 {
+			result.get_mut_ref().reverse();
+		}
+		result
+	}
+
+	/// Get the next sibling of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let dt = dl.children("dt");
+	///   assert_eq!(dt.next("").text(), "item1");
+	///   assert_eq!(dt.next("[class]").is_empty(), true);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn next(&self, selector: &str) -> Elements<'a> {
+		self.select_with_comb("next", selector, Combinator::Next)
+	}
+
+	/// Get all following siblings of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let dt = dl.children("dt");
+	///   assert_eq!(dt.next_all("").length(), 3);
+	///   assert_eq!(dt.next_all("[class]").length(), 2);
+	///   assert_eq!(dt.next_all("[class]").text(), "item2item3");
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn next_all(&self, selector: &str) -> Elements<'a> {
+		// unique, keep the first sibling node
+		let uniques = self.unique_sibling_first();
+		uniques.select_with_comb("next_all", selector, Combinator::NextAll)
+	}
+
+	/// Get all following siblings of each element in Elements, until the sibling element matched the selector, when contains is true, the matched sibling will be included, otherwise it will exclude; when the filter is not empty, will filtered by the selector;
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let dt = dl.children("dt");
+	///   assert_eq!(dt.next_until(".item3", "", false).length(), 2);
+	///   assert_eq!(dt.next_until(".item3", "", true).length(), 3);
+	///   assert_eq!(dt.next_until(".item3", "[class]", false).length(), 1);
+	///   assert_eq!(dt.next_until(".item3", "[class]", true).length(), 2);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn next_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+		// unique, keep the first sibling node
+		let uniques = self.unique_sibling_first();
+		uniques.select_with_comb_until("next_until", selector, filter, contains, Combinator::Next)
+	}
+
+	/// Get the siblings of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item2 = dl.children(".item2");
+	///   assert_eq!(item2.siblings("").length(), 3);
+	///   assert_eq!(item2.siblings("").first().is("dt"), true);
+	///   assert_eq!(item2.siblings("dd").first().text(), "item1");
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn siblings(&self, selector: &str) -> Elements<'a> {
+		let uniques = self.unique_all_siblings();
+		// when selector is empty or only
+		let mut siblings_selector: Selector;
+		let siblings_comb = Combinator::Siblings;
+		let mut child_selector: Selector;
+		let child_comb = Combinator::Children;
+		let selector = selector.trim();
+		if selector.is_empty() {
+			siblings_selector = Selector::from_segment(Selector::make_comb_all(siblings_comb));
+			child_selector = Selector::from_segment(Selector::make_comb_all(child_comb));
+		} else {
+			// self
+			let sib_selector = selector.parse::<Selector>();
+			if let Ok(sib_selector) = sib_selector {
+				// clone the selector to a child selector
+				child_selector = selector
+					.parse::<Selector>()
+					.expect("The selector has detected");
+				child_selector.head_combinator(child_comb);
+				// use siblings selector
+				siblings_selector = sib_selector;
+				siblings_selector.head_combinator(siblings_comb);
+			} else {
+				self.trigger_method_throw_error(
+					"siblings",
+					Box::new(IError::InvalidTraitMethodCall {
+						method: "siblings".to_string(),
+						message: format!(
+							"Invalid selector:{}",
+							sib_selector.err().expect("Selector parse error")
+						),
+					}),
+				);
+				return Elements::new();
+			}
+		}
+		// uniques
+		let mut result = Elements::with_capacity(DEF_NODES_LEN);
+		for (ele, is_parent) in &uniques {
+			let eles = Elements::with_node(ele);
+			let finded = if *is_parent {
+				eles.find_selector(&child_selector)
+			} else {
+				eles.find_selector(&siblings_selector)
+			};
+			result.get_mut_ref().extend(finded);
+		}
+		// sort the result
+		result.sort();
+		result
+	}
+
+	/// Get the parent of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item2 = dl.children(".item2");
+	///   assert_eq!(item2.parent("").length(), 1);
+	///   assert_eq!(item2.parent("").get(0).unwrap().tag_name(), "DL");
+	///   assert_eq!(item2.parent("ul").length(), 0);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn parent(&self, selector: &str) -> Elements<'a> {
+		// unique, keep the first sibling node
+		let uniques = self.unique_sibling_first();
+		uniques.select_with_comb("parent", selector, Combinator::Parent)
+	}
+
+	/// Get the ancestors of each element in Elements, when the selector is not empty, will filtered by the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item2 = dl.children(".item2");
+	///   assert_eq!(item2.parents("").length(), 3);
+	///   assert_eq!(item2.parents("").first().is("html"), true);
+	///   assert_eq!(item2.parents("").last().is("dl"), true);
+	///   assert_eq!(item2.parents("dl").length(), 1);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn parents(&self, selector: &str) -> Elements<'a> {
+		// unique, keep the first sibling node
+		let uniques = self.unique_sibling_first();
+		let mut result = uniques.select_with_comb("parents", selector, Combinator::ParentAll);
+		result.sort_and_unique();
+		result
+	}
+
+	/// Get the ancestors of each element in Elements, until the ancestor matched the selector, when contains is true, the matched ancestor will be included, otherwise it will exclude; when the filter is not empty, will filtered by the selector;
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item2 = dl.children(".item2");
+	///   assert_eq!(item2.parents_until("body", "", false).length(), 1);
+	///   assert_eq!(item2.parents_until("body", "", true).length(), 2);
+	///   assert_eq!(item2.parents_until("body", "dl", true).length(), 1);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn parents_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+		// unique, keep the first sibling node
+		let uniques = self.unique_sibling_first();
+		let mut result = uniques.select_with_comb_until(
+			"parents_until",
+			selector,
+			filter,
+			contains,
+			Combinator::Parent,
+		);
+		// parents may not unique if has ancestor and childs
+		// if parents length > 1, the parents need reversed
+		result.sort_and_unique();
+		result
+	}
+
+	/// Get the first matched element of each element in Elements, traversing from self to it's ancestors.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let item2 = dl.children(".item2");
+	///   assert_eq!(item2.closest("dd").length(), 1);
+	///   assert_eq!(item2.closest("dd").is_all_in(&item2), true);
+	///   assert_eq!(item2.closest("dl").is_all_in(&item2.parent("")), true);
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn closest(&self, selector: &str) -> Elements<'a> {
+		// when selector is not provided
+		if selector.is_empty() {
+			return Elements::new();
+		}
+		// find the nearst node
+		const METHOD: &str = "closest";
+		let selector = selector.parse::<Selector>();
+		if let Ok(selector) = selector {
+			let total = self.length();
+			let mut result = Elements::with_capacity(total);
+			let mut propagations = Elements::with_capacity(total);
+			for ele in self.get_ref() {
+				let mut cur_eles = Elements::with_node(ele);
+				if cur_eles.filter_type_handle(&selector, &FilterType::Is).1 {
+					// check self
+					result.get_mut_ref().push(cur_eles.get_mut_ref().remove(0));
+				} else {
+					propagations
+						.get_mut_ref()
+						.push(cur_eles.get_mut_ref().remove(0));
+				}
+			}
+			if !propagations.is_empty() {
+				let uniques = propagations.unique_sibling_first();
+				for ele in uniques.get_ref() {
+					let mut cur_eles = Elements::with_node(ele);
+					loop {
+						if cur_eles.filter_type_handle(&selector, &FilterType::Is).1 {
+							result.get_mut_ref().push(cur_eles.get_mut_ref().remove(0));
+							break;
+						}
+						if let Some(parent) = &cur_eles
+							.get(0)
+							.expect("Elements must have one node")
+							.parent()
+						{
+							if !parent.is_root_element() {
+								cur_eles = Elements::with_node(parent);
+							} else {
+								break;
+							}
+						} else {
+							break;
+						}
+					}
+				}
+				// need sort and unique
+				result.sort_and_unique();
+			}
+			result
+		} else {
+			self.trigger_method_throw_error(METHOD, Box::new(selector.unwrap_err()));
+			Elements::new()
+		}
+	}
+	// for `find` and `select_with_comb`
+	fn find_selector(&self, selector: &Selector) -> Elements<'a> {
+		let mut result = Elements::with_capacity(DEF_NODES_LEN);
+		if !self.is_empty() {
+			for p in &selector.process {
+				let QueryProcess { should_in, query } = p;
+				let first_query = &query[0];
+				let mut group: Elements = Elements::with_capacity(DEF_NODES_LEN);
+				if let Some(lookup) = should_in {
+					// find the first query elements
+					let finded = Elements::select(self, first_query, Some(&Combinator::ChildrenAll));
+					if !finded.is_empty() {
+						let first_comb = &first_query[0].1;
+						// check the elements if satisfied the lookup
+						for ele in finded.get_ref() {
+							if self.has_ele(ele, first_comb, Some(lookup)) {
+								group.push(ele.cloned());
+							}
+						}
+					}
+				} else {
+					// find the first query elements
+					group = Elements::select(self, first_query, None);
+				}
+				if !group.is_empty() {
+					let mut need_combine = true;
+					if query.len() > 1 {
+						for rules in &query[1..] {
+							group = Elements::select(&group, rules, None);
+							if group.is_empty() {
+								need_combine = false;
+								break;
+							}
+						}
+					}
+					if need_combine {
+						result = result.add(group);
+					}
+				}
+			}
+		}
+		result
+	}
+
+	// select ele by rules
+	fn select(
+		elements: &Elements<'a>,
+		rules: &[SelectorSegment],
+		comb: Option<&Combinator>,
+	) -> Elements<'a> {
+		let first_rule = &rules[0];
+		let comb = comb.unwrap_or(&first_rule.1);
+		let mut elements = if first_rule.0.in_cache && matches!(comb, Combinator::ChildrenAll) {
+			let (matcher, ..) = first_rule;
+			// set use cache true
+			let cached = matcher.apply(elements, Some(true));
+			let count = cached.length();
+			if count > 0 {
+				let mut result = Elements::with_capacity(count);
+				for ele in cached.get_ref() {
+					if elements.has_ele(ele, comb, None) {
+						result.push(ele.cloned());
+					}
+				}
+				result.sort_and_unique();
+				result
+			} else {
+				Elements::new()
+			}
+		} else {
+			Elements::select_by_rule(elements, first_rule, Some(comb))
+		};
+		if !elements.is_empty() && rules.len() > 1 {
+			for rule in &rules[1..] {
+				elements = Elements::select_by_rule(&elements, rule, None);
+				if elements.is_empty() {
+					break;
+				}
+			}
+		}
+		elements
+	}
+	// cloned
+	pub fn cloned(&self) -> Elements<'a> {
+		let mut result = Elements::with_capacity(self.length());
+		for ele in &self.nodes {
+			result.push(ele.cloned());
+		}
+		result
+	}
+
+	/// pub fn contains
+	pub fn contains(&self, ele: &BoxDynElement, comb: &Combinator) -> bool {
+		self.has_ele(ele, comb, None)
+	}
+
+	// `has_ele`
+	pub(crate) fn has_ele(
+		&self,
+		ele: &BoxDynElement,
+		comb: &Combinator,
+		lookup: Option<&[Vec<SelectorSegment>]>,
+	) -> bool {
+		let mut elements = Elements::with_node(ele);
+		let mut lookup_comb = comb.reverse();
+		if let Some(lookup) = lookup {
+			for rules in lookup.iter().rev() {
+				let finded = Elements::select(&elements, rules, Some(&lookup_comb));
+				if finded.is_empty() {
+					return false;
+				}
+				lookup_comb = rules[0].1.reverse();
+				elements = finded;
+			}
+		}
+		use Combinator::*;
+		match lookup_comb {
+			Parent => {
+				for ele in elements.get_ref() {
+					if let Some(parent) = &ele.parent() {
+						if self.includes(parent) {
+							return true;
+						}
+					}
+				}
+			}
+			ParentAll => {
+				for ele in elements.get_ref() {
+					if let Some(parent) = &ele.parent() {
+						if self.includes(parent) {
+							return true;
+						}
+						if let Some(ancestor) = &parent.parent() {
+							if self.includes(ancestor) {
+								return true;
+							}
+							// iterator the search process, becareful with the combinator now is ChildrenAll
+							// the sentences must in if condition, otherwise it will break the for loop
+							if self.has_ele(ancestor, &Combinator::ChildrenAll, None) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+			Prev => {
+				for ele in elements.get_ref() {
+					if let Some(prev) = &ele.previous_element_sibling() {
+						if self.includes(prev) {
+							return true;
+						}
+					}
+				}
+			}
+			PrevAll => {
+				for ele in elements.get_ref() {
+					let prevs = ele.previous_element_siblings();
+					for prev in prevs.get_ref() {
+						if self.includes(prev) {
+							return true;
+						}
+					}
+				}
+			}
+			Chain => {
+				for ele in elements.get_ref() {
+					if self.includes(ele) {
+						return true;
+					}
+				}
+			}
+			_ => panic!("Unsupported lookup combinator:{:?}", comb),
+		};
+		false
+	}
+
+	/// Check at least one element in Elements is match the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.is("dd"), true);
+	///   assert_eq!(items.is("dt"), true);
+	///   assert_eq!(items.is(".item2"), true);
+	///   assert_eq!(items.is(".item3"), true);
+	///   assert_eq!(items.is(":contains('item2')"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is(&self, selector: &str) -> bool {
 		const METHOD: &str = "is";
 		self.trigger_method(METHOD, selector, |selector| {
@@ -1343,7 +1983,42 @@ impl<'a> Elements<'a> {
 		})
 	}
 
-	// is by
+	/// Check at least one element in Elements call the handle function return true.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.is_by(|_, ele|{
+	///     ele.tag_name() == "DT"
+	///   }), true);
+	///   assert_eq!(items.is_by(|_, ele|{
+	///     ele.tag_name() == "DD"
+	///   }), true);
+	///   assert_eq!(items.is_by(|_, ele|{
+	///     Vis::dom(ele).has_class("item2")
+	///   }), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_by<F>(&self, handle: F) -> bool
 	where
 		F: Fn(usize, &BoxDynElement) -> bool,
@@ -1358,12 +2033,71 @@ impl<'a> Elements<'a> {
 		flag
 	}
 
-	// is in
+	/// Check at least one element in Elements is also in the other Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let dd = items.filter("dd");
+	///   let dt = items.filter("dt");
+	///   assert_eq!(items.is_in(&dd), true);
+	///   assert_eq!(items.is_in(&dt), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_in(&self, search: &Elements) -> bool {
 		self.filter_in_handle(search, FilterType::Is).1
 	}
 
-	// is_all
+	/// Check if each element in Elements are all matched the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.is_all("dd"), false);
+	///   assert_eq!(items.is_all("dt"), false);
+	///   assert_eq!(items.is_all("dt,dd"), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_all(&self, selector: &str) -> bool {
 		const METHOD: &str = "is_all";
 		self.trigger_method(METHOD, selector, |selector| {
@@ -1371,7 +2105,43 @@ impl<'a> Elements<'a> {
 		})
 	}
 
-	// is_all_by
+	/// Check if each element in Elements call the handle function are all returned true.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.is_all_by(|_, ele|{
+	///     ele.tag_name() == "DT"
+	///   }), false);
+	///   assert_eq!(items.is_all_by(|_, ele|{
+	///     ele.tag_name() == "DD"
+	///   }), false);
+	///   assert_eq!(items.is_all_by(|_, ele|{
+	///     let tag_name = ele.tag_name();
+	///     tag_name == "DT" || tag_name == "DD"
+	///   }), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_all_by<F>(&self, handle: F) -> bool
 	where
 		F: Fn(usize, &BoxDynElement) -> bool,
@@ -1386,12 +2156,73 @@ impl<'a> Elements<'a> {
 		flag
 	}
 
-	// is_all_in
+	/// Check if each element in Elements is also in the other Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   let dd = items.filter("dd");
+	///   let dt = items.filter("dt");
+	///   assert_eq!(items.is_all_in(&dd), false);
+	///   assert_eq!(items.is_all_in(&dt), false);
+	///   assert_eq!(dd.is_all_in(&items), true);
+	///   assert_eq!(dt.is_all_in(&items), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn is_all_in(&self, search: &Elements) -> bool {
 		self.filter_in_handle(search, FilterType::IsAll).1
 	}
 
-	// not
+	/// Remove elements those that match the selector from the Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.not("dd").is_all("dt"), true);
+	///   assert_eq!(items.not("dt").is_all("dd"), true);
+	///   assert_eq!(items.not("dt,dd").is_empty(), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn not(&self, selector: &str) -> Elements<'a> {
 		const METHOD: &str = "not";
 		self.trigger_method(METHOD, selector, |selector| {
@@ -1399,7 +2230,36 @@ impl<'a> Elements<'a> {
 		})
 	}
 
-	// not by
+	/// Remove elements those that pass the handle function test from the Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.not_by(|_, ele|ele.tag_name() == "DD").is_all("dt"), true);
+	///   assert_eq!(items.not_by(|_, ele|ele.tag_name() == "DT").is_all("dd"), true);
+	///   assert_eq!(items.not_by(|_, ele|ele.tag_name() == "DT" || ele.tag_name() == "DD").is_empty(), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn not_by<F>(&self, handle: F) -> Elements<'a>
 	where
 		F: Fn(usize, &BoxDynElement) -> bool,
@@ -1413,13 +2273,68 @@ impl<'a> Elements<'a> {
 		result
 	}
 
-	/// pub fn `not_in`
-	/// remove element from `Self` which is also in `search`
+	/// Remove elements those that also in the elements from the Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd>item1</dd>
+	///           <dd class="item2">item2</dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.not_in(&items.filter("dd")).is_all("dt"), true);
+	///   assert_eq!(items.not_in(&items.filter("dt")).is_all("dd"), true);
+	///   assert_eq!(items.not_in(&items).is_empty(), true);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn not_in(&self, search: &Elements) -> Elements<'a> {
 		self.filter_in_handle(search, FilterType::Not).0
 	}
 
-	// has
+	/// Reduce Elements to those that have a descendant that matches the selector.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3">item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.has("span").length(), 2);
+	///   Ok(())
+	/// }
+	/// ```
 	pub fn has(&self, selector: &str) -> Elements<'a> {
 		const METHOD: &str = "has";
 		fn loop_handle(ele: &BoxDynElement, selector: &Selector) -> bool {
@@ -1778,33 +2693,34 @@ impl<'a> Elements<'a> {
 		}
 		String::from("")
 	}
-
-	/// pub fn `texts`
-	/// get the text node of each element
-	pub fn texts(&self, limit_depth: usize) -> Texts<'a> {
-		let mut result = Texts::with_capacity(DEF_NODES_LEN);
-		for ele in self.get_ref() {
-			if let Some(text_nodes) = ele.texts(limit_depth) {
-				result.get_mut_ref().extend(text_nodes);
+	cfg_feat_text! {
+		/// pub fn `texts`
+		/// get the text node of each element
+		pub fn texts(&self, limit_depth: usize) -> Texts<'a> {
+			let mut result = Texts::with_capacity(DEF_NODES_LEN);
+			for ele in self.get_ref() {
+				if let Some(text_nodes) = ele.texts(limit_depth) {
+					result.get_mut_ref().extend(text_nodes);
+				}
 			}
+			result
 		}
-		result
-	}
 
-	/// pub fn `texts_by`
-	/// get the text node of each element, filter by the handle
-	pub fn texts_by(
-		&self,
-		limit_depth: usize,
-		handle: Box<dyn Fn(usize, &BoxDynText) -> bool>,
-	) -> Texts<'a> {
-		let mut result = Texts::with_capacity(DEF_NODES_LEN);
-		for ele in self.get_ref() {
-			if let Some(text_nodes) = ele.texts_by(limit_depth, &handle) {
-				result.get_mut_ref().extend(text_nodes);
+		/// pub fn `texts_by`
+		/// get the text node of each element, filter by the handle
+		pub fn texts_by(
+			&self,
+			limit_depth: usize,
+			handle: Box<dyn Fn(usize, &BoxDynText) -> bool>,
+		) -> Texts<'a> {
+			let mut result = Texts::with_capacity(DEF_NODES_LEN);
+			for ele in self.get_ref() {
+				if let Some(text_nodes) = ele.texts_by(limit_depth, &handle) {
+					result.get_mut_ref().extend(text_nodes);
+				}
 			}
+			result
 		}
-		result
 	}
 }
 

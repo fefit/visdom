@@ -1,4 +1,6 @@
+
 use super::BoxDynText;
+
 pub struct Texts<'a> {
 	nodes: Vec<BoxDynText<'a>>,
 }

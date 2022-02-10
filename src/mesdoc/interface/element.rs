@@ -1,4 +1,7 @@
-use super::{BoxDynNode, BoxDynText, Elements, INodeTrait, INodeType, Texts};
+cfg_feat_text! {
+	use super::Texts;
+}
+use super::{BoxDynNode, BoxDynText, Elements, INodeTrait, INodeType};
 use crate::mesdoc::error::{BoxDynError, Error as IError};
 use std::ops::Range;
 
@@ -301,16 +304,20 @@ pub trait IElementTrait: INodeTrait {
 	fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);
 	fn remove_child(&mut self, ele: BoxDynElement);
 	// texts
-	fn texts<'b>(&self, limit_depth: usize) -> Option<Texts<'b>> {
-		let handle = Box::new(|_: usize, _: &BoxDynText| true);
-		self.texts_by(limit_depth, &handle)
-	}
-	fn texts_by<'b>(
-		&self,
-		_limit_depth: usize,
-		_handle: &dyn Fn(usize, &BoxDynText) -> bool,
-	) -> Option<Texts<'b>> {
-		None
+	cfg_feat_text! {
+		/// texts
+		fn texts<'b>(&self, limit_depth: usize) -> Option<Texts<'b>> {
+			let handle = Box::new(|_: usize, _: &BoxDynText| true);
+			self.texts_by(limit_depth, &handle)
+		}
+		/// texts_by
+		fn texts_by<'b>(
+			&self,
+			_limit_depth: usize,
+			_handle: &dyn Fn(usize, &BoxDynText) -> bool,
+		) -> Option<Texts<'b>> {
+			None
+		}
 	}
 	// special for content tag, 'style','script','title','textarea'
 	#[allow(clippy::boxed_local)]

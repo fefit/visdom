@@ -16,8 +16,10 @@ pub use document::{IDocumentTrait, IErrorHandle, MaybeDoc};
 mod uncare;
 pub use uncare::{BoxDynUncareNode, IUncareNodeTrait};
 // texts
-mod texts;
-pub use texts::Texts;
+cfg_feat_text! {
+	mod texts;
+	pub use texts::Texts;
+}
 // elements
 mod elements;
 pub use elements::Elements;
