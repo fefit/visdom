@@ -66,12 +66,12 @@ fn main() -> Result<(), BoxDynError>{
 
 After version v0.5.0, visdom add some feature flags to support conditional compilation for different usage.
 
-| Feature     | Descrition                                                                          | API                                                                                                                                                                                | Config                                       |
+| Feature     | Description                                                                          | API                                                                                                                                                                                | Config                                       |
 | :---------- | :---------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------- |
-| `destory`   | When you don't need remove or clear the elements, you can ignore this feature flag. | `.remove()` `.empty()` (IElementTrait) `remove_child()`                                                                                                                                                             | `{ version = xxx, features = ["destory"]}`   |
-| `insertion` | When you don't need mutation the DOM, you may ignore this feature flag.             | `.remove()` `.empty()` `append(&mut x)` `append_to(&mut x)` `prepend(&mut x)` `prepend_to(&mut x)` `insert_after(&mut x)` `after(&mut x)` `insert_before(&mut x)` `before(&mut x)` | `{ version = xxx, features = ["insertion"]}` |
-| `text` | When you don't need mutation the TextNode, you may ignore this feature flag.             | `.texts()` `.texts_by()` | `{ version = xxx, features = ["text"]}` |
-| `full` | When you need all the function above, you may open this feature flag.            | - | `{ version = xxx, features = ["full"]}` |
+| `destory`   | When you don't need remove or clear the elements, you can ignore this feature flag. | `.remove()` `.empty()` (IElementTrait) `remove_child()`                                                                                                                                                             | `visdom = { version = xxx, features = ["destory"]}`   |
+| `insertion` | When you don't need mutation the DOM, you can ignore this feature flag.             | `append(&mut x)` `append_to(&mut x)` `prepend(&mut x)` `prepend_to(&mut x)` `insert_after(&mut x)` `after(&mut x)` `insert_before(&mut x)` `before(&mut x)` | `visdom = { version = xxx, features = ["insertion"]}` |
+| `text` | When you don't need mutation the TextNode, you can ignore this feature flag.             | `.texts()` `.texts_by()` | `{ version = xxx, features = ["text"]}` |
+| `full` | When you need all the API above, you can open this feature flag.            | - | `visdom = { version = xxx, features = ["full"]}` |
 
 ## Depedencies
 

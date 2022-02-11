@@ -3465,6 +3465,37 @@ impl<'a> Elements<'a> {
 	// when feature 'destory' or 'insertion' is open
 	cfg_feat_mutation! {
 		/// Remove the Elements set.
+		///
+		/// ```
+		/// use visdom::Vis;
+		/// use visdom::types::BoxDynError;
+		/// fn main()-> Result<(), BoxDynError>{
+		///   let html = r##"
+		///     <html>
+		///       <head>
+		///         <title>document</title>
+		///       </head>
+		///       <body>
+		///         <dl>
+		///           <dt>Title</dt>
+		///           <dd><span>item1</span></dd>
+		///           <dd class="item2"><span>item2</span></dd>
+		///           <dd class="item3"><!--comment-->item3</dd>
+		///         </dl>
+		///       </body>
+		///     </html>
+		///   "##;
+		///   let doc = Vis::load(html)?;
+		///   let dl = doc.find("dl");
+		///   let items = dl.children("");
+		///   assert_eq!(items.length(), 4);
+		///   // remove the dt element
+		///   items.filter("dt").remove();
+		///   let now_items = dl.children("");
+		///   assert_eq!(now_items.length(), 3);
+		///   Ok(())
+		/// }
+		/// ```
 		pub fn remove(self) {
 			for ele in self.into_iter() {
 				if let Some(parent) = ele.parent().as_mut() {
@@ -3472,7 +3503,39 @@ impl<'a> Elements<'a> {
 				}
 			}
 		}
+
 		/// Clear all the nodes in the Elements set.
+		///
+		/// ```
+		/// use visdom::Vis;
+		/// use visdom::types::BoxDynError;
+		/// fn main()-> Result<(), BoxDynError>{
+		///   let html = r##"
+		///     <html>
+		///       <head>
+		///         <title>document</title>
+		///       </head>
+		///       <body>
+		///         <dl>
+		///           <dt>Title</dt>
+		///           <dd><span>item1</span></dd>
+		///           <dd class="item2"><span>item2</span></dd>
+		///           <dd class="item3"><!--comment-->item3</dd>
+		///         </dl>
+		///       </body>
+		///     </html>
+		///   "##;
+		///   let doc = Vis::load(html)?;
+		///   let mut dl = doc.find("dl");
+		///   let items = dl.children("");
+		///   assert_eq!(items.length(), 4);
+		///   // clear the dl
+		///   dl.empty();
+		///   let now_items = dl.children("");
+		///   assert_eq!(now_items.length(), 0);
+		///   Ok(())
+		/// }
+		/// ```
 		pub fn empty(&mut self) -> &mut Self {
 			self.set_text("");
 			self
@@ -3490,6 +3553,44 @@ impl<'a> Elements<'a> {
 			self
 		}
 		/// Append the parameter Elements to the child before the tag end of the current Elements set.
+		///
+		/// ```
+		/// use visdom::Vis;
+		/// use visdom::types::BoxDynError;
+		/// fn main()-> Result<(), BoxDynError>{
+		///   let html = r##"
+		///     <html>
+		///       <head>
+		///         <title>document</title>
+		///       </head>
+		///       <body>
+		///         <dl>
+		///           <dt>Title</dt>
+		///           <dd><span>item1</span></dd>
+		///           <dd class="item2"><span>item2</span></dd>
+		///           <dd class="item3"><!--comment-->item3</dd>
+		///         </dl>
+		///       </body>
+		///     </html>
+		///   "##;
+		///   let doc = Vis::load(html)?;
+		///   let mut dl = doc.find("dl");
+		///   let items = dl.children("");
+		///   assert_eq!(items.length(), 4);
+		///   assert_eq!(items.last().is(".item3"), true);
+		///   // now append item2 to the last child
+		///   let mut item2 = items.filter(".item2");
+		///   dl.append(&mut item2);
+		///   let now_items = dl.children("");
+		///   assert_eq!(now_items.last().is(".item2"), true);
+		///   // append a new document fragement
+		///   let mut append_dd = Vis::load(r#"<dd class="item4">item4</dd>"#)?;
+		///   dl.append(&mut append_dd);
+		///   let now_items = dl.children("");
+		///   assert_eq!(now_items.last().is(".item4"), true);
+		///   Ok(())
+		/// }
+		/// ```
 		pub fn append(&mut self, elements: &mut Elements) -> &mut Self {
 			self.insert(elements, &InsertPosition::BeforeEnd);
 			self
@@ -3510,6 +3611,46 @@ impl<'a> Elements<'a> {
 			self
 		}
 		/// Insert the each element in the current Elements set into the other Elements's element's before position.
+		///
+		/// ```
+		/// use visdom::Vis;
+		/// use visdom::types::BoxDynError;
+		/// fn main()-> Result<(), BoxDynError>{
+		///   let html = r##"
+		///     <html>
+		///       <head>
+		///         <title>document</title>
+		///       </head>
+		///       <body>
+		///         <dl>
+		///           <dt>Title</dt>
+		///           <dd><span>item1</span></dd>
+		///           <dd class="item2"><span>item2</span></dd>
+		///           <dd class="item3"><!--comment-->item3</dd>
+		///         </dl>
+		///       </body>
+		///     </html>
+		///   "##;
+		///   let doc = Vis::load(html)?;
+		///   let mut dl = doc.find("dl");
+		///   let items = dl.children("");
+		///   assert_eq!(items.length(), 4);
+		///   assert_eq!(items.last().is(".item3"), true);
+		///   // now insert item3 before item2
+		///   let mut item2 = items.filter(".item2");
+		///   let mut item3 = items.filter(".item3");
+		///   item3.insert_before(&mut item2);
+		///   let now_items = dl.children("");
+		///   assert_eq!(now_items.last().is(".item2"), true);
+		///   // insert a new item0
+		///   let mut insert_dd = Vis::load(r#"<dd class="item0">item0</dd>"#)?;
+		///   let mut first_dd = dl.children("dd").first();
+		///   insert_dd.insert_before(&mut first_dd);
+		///   let now_dds = dl.children("dd");
+		///   assert_eq!(now_dds.first().is(".item0"), true);
+		///   Ok(())
+		/// }
+		/// ```
 		pub fn insert_before(&mut self, elements: &mut Elements) -> &mut Self {
 			elements.before(self);
 			self
