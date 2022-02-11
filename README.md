@@ -7,6 +7,7 @@
 [![tag](https://img.shields.io/github/v/tag/fefit/visdom.svg?sort=semver)](https://github.com/fefit/visdom/tags)
 [![codecov](https://codecov.io/gh/fefit/visdom/branch/main/graph/badge.svg)](https://codecov.io/gh/fefit/visdom)
 [![Crates download](https://img.shields.io/crates/d/visdom.svg)](https://crates.io/crates/visdom)
+[![docs.rs](https://img.shields.io/badge/docs.rs-visdom-green)](https://docs.rs/visdom/latest)
 [![GitHub license](https://img.shields.io/github/license/fefit/visdom)](https://github.com/fefit/visdom/blob/main/LICENSE)
 
 </h1>
@@ -70,7 +71,7 @@ After version v0.5.0, visdom add some feature flags to support conditional compi
 | :---------- | :---------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------- |
 | `destory`   | When you don't need remove or clear the elements, you can ignore this feature flag. | `.remove()` `.empty()` (IElementTrait) `remove_child()`                                                                                                                                                             | `visdom = { version = xxx, features = ["destory"]}`   |
 | `insertion` | When you don't need mutation the DOM, you can ignore this feature flag.             | `append(&mut x)` `append_to(&mut x)` `prepend(&mut x)` `prepend_to(&mut x)` `insert_after(&mut x)` `after(&mut x)` `insert_before(&mut x)` `before(&mut x)` | `visdom = { version = xxx, features = ["insertion"]}` |
-| `text` | When you don't need mutation the TextNode, you can ignore this feature flag.             | `.texts()` `.texts_by()` | `{ version = xxx, features = ["text"]}` |
+| `text` | When you don't need mutation the TextNode, you can ignore this feature flag.             | `.texts()` `.texts_by()` | `visdom = { version = xxx, features = ["text"]}` |
 | `full` | When you need all the API above, you can open this feature flag.            | - | `visdom = { version = xxx, features = ["full"]}` |
 
 ## Depedencies
