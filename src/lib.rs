@@ -1129,7 +1129,7 @@ impl Vis {
 		}
 	}
 	/// load the html into elements
-	pub fn load(html: &str) -> Result<Elements, BoxDynError> {
+	pub fn load<'html>(html: impl Into<Cow<'html, str>>) -> Result<Elements<'html>, BoxDynError> {
 		Vis::load_options(html, Vis::options())
 	}
 	/// load the html, and catch the errors
