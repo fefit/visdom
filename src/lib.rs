@@ -34,6 +34,7 @@ use rphtml::{
 		allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, NameCase, Node, NodeType, RefNode,
 	},
 };
+use std::borrow::Cow;
 use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
 // re export `IAttrValue` `IEnumTyped` `INodeType`
@@ -1104,21 +1105,28 @@ impl Vis {
 		}
 	}
 	// parse a document with options
-	pub(crate) fn parse_doc_options(
-		html: &str,
+	pub(crate) fn parse_doc_options<'html>(
+		html: impl Into<Cow<'html, str>>,
 		options: ParseOptions,
 	) -> Result<Document, BoxDynError> {
 		mesdoc::init();
-		let doc = Doc::parse(html, options)?;
+		let doc = Doc::parse(&html.into(), options)?;
 		Ok(Document { doc })
 	}
 	/// load the html with options, get an elements collection
-	pub fn load_options(html: &str, options: ParseOptions) -> Result<Elements, BoxDynError> {
+	pub fn load_options<'html>(
+		html: impl Into<Cow<'html, str>>,
+		options: ParseOptions,
+	) -> Result<Elements<'html>, BoxDynError> {
 		let doc = Vis::parse_doc_options(html, options)?;
 		Ok(doc.elements())
 	}
 	/// load the html with options, and catch the errors
-	pub fn load_options_catch(html: &str, options: ParseOptions, handle: IErrorHandle) -> Elements {
+	pub fn load_options_catch<'html>(
+		html: impl Into<Cow<'html, str>>,
+		options: ParseOptions,
+		handle: IErrorHandle,
+	) -> Elements<'html> {
 		let doc = Vis::parse_doc_options(html, options);
 		if let Ok(mut doc) = doc {
 			doc.bind_error(handle);
@@ -1133,7 +1141,10 @@ impl Vis {
 		Vis::load_options(html, Vis::options())
 	}
 	/// load the html, and catch the errors
-	pub fn load_catch(html: &str, handle: IErrorHandle) -> Elements {
+	pub fn load_catch<'html>(
+		html: impl Into<Cow<'html, str>>,
+		handle: IErrorHandle,
+	) -> Elements<'html> {
 		Vis::load_options_catch(html, Vis::options(), handle)
 	}
 	/// return an elements collection from an BoxDynElement
