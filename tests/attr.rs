@@ -47,7 +47,7 @@ fn test_normal_attr() -> Result {
 	input.set_attr("title", Some(title));
 	assert_eq!(
 		input.attr("title").unwrap().to_string(),
-		title.replace("'", "&apos;")
+		title.replace('\'', "&apos;")
 	);
 	Ok(())
 }

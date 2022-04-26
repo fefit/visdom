@@ -469,7 +469,7 @@ fn get_allowed_name_ele(
 
 // collect available elements from siblings
 fn collect_avail_name_eles(
-	node_indexs: &mut Vec<usize>,
+	node_indexs: &mut [usize],
 	siblings: &[BoxDynElement],
 	finded: &mut Vec<BoxDynElement>,
 ) {
@@ -894,6 +894,25 @@ fn pseudo_contains(rules: &mut Vec<RuleItem>) {
 
 // -----------jquery selectors----------
 
+/// pseudo selector: `:has`
+fn pseudo_has(rules: &mut Vec<RuleItem>) {
+	let name = ":has";
+	let selector = ":has({spaces}{selector}{spaces})";
+	let rule = RuleDefItem(
+		name,
+		selector,
+		PRIORITY,
+		Box::new(|data: MatchedQueue| {
+			let selector = data[2].chars.iter().collect::<String>();
+			Matcher {
+				all_handle: Some(Box::new(move |eles: &Elements, _| eles.has(&selector))),
+				..Default::default()
+			}
+		}),
+	);
+	rules.push(rule.into());
+}
+
 /// pseudo selector: `:checked`
 fn pseudo_checked(rules: &mut Vec<RuleItem>) {
 	let selector = ":checked";
@@ -1055,6 +1074,8 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 	// :contains
 	pseudo_contains(rules);
 	// ---- jquery selectors -----
+	// :has
+	pseudo_has(rules);
 	// :checked
 	pseudo_checked(rules);
 	// :header alias

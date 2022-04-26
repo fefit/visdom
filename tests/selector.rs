@@ -826,6 +826,41 @@ fn test_selector_pseudo_not() -> Result {
 }
 
 #[test]
+fn test_selector_pseudo_has() -> Result {
+	let html = r#"
+  <!doctype html>
+  <html>
+    <body>
+      <div id="container">
+        <div class="outer"><p>1</p></div>
+        <div class="outer">2</div>
+        <div class="outer">3</div>
+        <div class="outer"><div><p>4</p></div></div>
+      </div>
+    </body>
+  </html>
+  "#;
+	let root = Vis::load(html)?;
+	let container = root.find("#container");
+	assert_eq!(container.length(), 1);
+	// div not has a
+	let div_no_has_p = container.children("div:not(:has(p))");
+	assert_eq!(div_no_has_p.length(), 2);
+	assert_eq!(div_no_has_p.text(), "23");
+	// divs
+	let divs = container.children("div");
+	// has p
+	let div_has_p = divs.has("p");
+	assert_eq!(div_has_p.length(), 2);
+	assert_eq!(div_has_p.text(), "14");
+	// has no p
+	let div_no_has_p = divs.not(":has(p)");
+	assert_eq!(div_no_has_p.length(), 2);
+	assert_eq!(div_no_has_p.text(), "23");
+	Ok(())
+}
+
+#[test]
 fn test_wrong_selector_splitter() -> Result {
 	let root = Vis::load("<b>anything</b>")?;
 	assert!(root.find(">,").is_empty());

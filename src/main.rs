@@ -12,30 +12,30 @@ fn main() -> Result<(), BoxDynError> {
 	// let ul = root.find("ul");
 	// let nth_2n_child = ul.find(":nth-child(2n),:nth-child(1),:nth-child(n+8)");
 	// println!("2n:{}", nth_2n_child.length());
-	let html = r##"
-  <!doctype html>
-  <html lang="utf-8">
-    <head></head>
-    <body>
-      <div id="id" name="#id">
-        <div class="class" name="#id .class">class-div</div>
-        <p>
-          p-tag
-        </p>
-      </div>
-      <div id="nested" name="#nested">
-        <div class="outer-div-1" name="#nested .outer-div-1">
-          <div class="inner-div-1-1" name="#nested .outer-div-1 .inner-div-1-1">inner-div-1-1</div>
-          <div class="inner-div-1-2" name="#nested .outer-div-1 .inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
-        </div>
-        <div class="outer-div-2" name="#nested .outer-div-2">
-          <div class="inner-div-2-1" name="#nested .outer-div-2 .inner-div-2-1"></div>
-          <div class="inner-div-2-2" name="#nested .outer-div-2 .inner-div-2-1"></div>
-        </div>
-      </div>
-    </body>
-  </html>
-"##;
+	// 	let html = r##"
+	//   <!doctype html>
+	//   <html lang="utf-8">
+	//     <head></head>
+	//     <body>
+	//       <div id="id" name="#id">
+	//         <div class="class" name="#id .class">class-div</div>
+	//         <p>
+	//           p-tag
+	//         </p>
+	//       </div>
+	//       <div id="nested" name="#nested">
+	//         <div class="outer-div-1" name="#nested .outer-div-1">
+	//           <div class="inner-div-1-1" name="#nested .outer-div-1 .inner-div-1-1">inner-div-1-1</div>
+	//           <div class="inner-div-1-2" name="#nested .outer-div-1 .inner-div-1-2">inner-div-<span>1</span>-<span>2</span></div>
+	//         </div>
+	//         <div class="outer-div-2" name="#nested .outer-div-2">
+	//           <div class="inner-div-2-1" name="#nested .outer-div-2 .inner-div-2-1"></div>
+	//           <div class="inner-div-2-2" name="#nested .outer-div-2 .inner-div-2-1"></div>
+	//         </div>
+	//       </div>
+	//     </body>
+	//   </html>
+	// "##;
 	// let div = root.find("div");
 	// println!("div:{}", div.length());
 	// let child_divs = div.find("div:nth-child(1)");
@@ -248,32 +248,50 @@ fn main() -> Result<(), BoxDynError> {
 	// 	true
 	// });
 	// println!("{}", root.outer_html());
-	let html = r#"
-  <!doctype html>
-  <html>
-    <body>
-	   <dl>
-	     <dt>Title</dt>
-	     <dd><span>item1</span></dd>
-	     <dd class="item2"><span>item2</span></dd>
-	     <dd class="item3">item3</dd>
-	   </dl>
+	// let html = r#"
+	// <!doctype html>
+	// <html>
+	//   <body>
+	//    <dl>
+	//      <dt>Title</dt>
+	//      <dd><span>item1</span></dd>
+	//      <dd class="item2"><span>item2</span></dd>
+	//      <dd class="item3">item3</dd>
+	//    </dl>
 
-    </body>
-  </html>
-  "#;
-	let root = Vis::load(html)?;
-	let items = root.find("dl > *");
-	println!(
-		"items:{}, items:hasnotspan:{}",
-		items.length(),
-		items.has(":not(span)").length()
-	);
+	//   </body>
+	// </html>
+	// "#;
+	// let root = Vis::load(html)?;
+	// let items = root.find("dl > *");
+	// println!(
+	// 	"items:{}, items:hasnotspan:{}",
+	// 	items.length(),
+	// 	items.has(":not(span)").length()
+	// );
 	// first.map(|_, ele| {
 	// 	println!("{:?}", ele.tag_name());
 	// });
 	// println!("{}", first.get(0).unwrap().tag_name());
 	// println!("root:{}", root.find("div").length());
 	// println!("root:{:?}", root.find("#content").length());
+	let html = r#"
+  <!doctype html>
+  <html>
+    <body>
+	   <div>22<p></p></div>
+     <div>1</div>
+     <div>1</div>
+    </body>
+  </html>
+  "#;
+	let root = Vis::load(html)?;
+	let div_no_has_p = root.find("div:not(:has(p))");
+	println!("div_no_has_p: {}", div_no_has_p.text());
+	let divs = root.find("div");
+	let div_has_p = divs.has("p");
+	println!("div_has_p: {}", div_has_p.text());
+	let div_no_has_p = divs.not(":has(p)");
+	println!("div_no_has_p: {}", div_no_has_p.text());
 	Ok(())
 }

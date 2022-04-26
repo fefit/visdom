@@ -246,7 +246,7 @@ impl Pattern for Nth {
 impl Nth {
 	fn get_number(data: &MatchedData, keys: (&str, &str), def: Option<&str>) -> Option<&'static str> {
 		const MINUS: &str = "-";
-		if let Some(&idx) = data.get(keys.0).or_else(|| def.as_ref()) {
+		if let Some(&idx) = data.get(keys.0).or(def.as_ref()) {
 			let mut index = idx.to_owned();
 			if let Some(&op) = data.get(keys.1) {
 				if op == MINUS {

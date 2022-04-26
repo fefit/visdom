@@ -354,7 +354,7 @@ impl Selector {
 			if !finded {
 				if level == 0 {
 					matched.push(Matched {
-						chars: chars[0..index].iter().copied().collect(),
+						chars: chars[0..index].to_vec(),
 						name: "selector",
 						..Default::default()
 					});
