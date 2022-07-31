@@ -1542,7 +1542,7 @@ impl<'a> Elements<'a> {
 						method: "siblings".to_string(),
 						message: format!(
 							"Invalid selector:{}",
-							sib_selector.err().expect("Selector parse error")
+							sib_selector.expect_err("Selector parse error")
 						),
 					}),
 				);

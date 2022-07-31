@@ -347,7 +347,7 @@ impl<'a> Pattern for RegExp<'a> {
 		let content = chars.iter().collect::<String>();
 		let rule = RegExp::get_rule(context);
 		if let Some(caps) = rule.captures(to_static_str(content)) {
-			let total_len = caps[0].len();
+			let total_len = caps[0].chars().count();
 			let mut data = HashMap::with_capacity(caps.len() - 1);
 			for (index, m) in caps.iter().skip(1).enumerate() {
 				if let Some(m) = m {

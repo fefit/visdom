@@ -304,6 +304,15 @@ fn test_selector_pseudo_contains() -> Result {
 		content.find("p:contains()").length(),
 		content.find("p").length()
 	);
+	// contains chinese characters
+	let html = r#"
+    <div>
+      <p>Visdom is awesome</p>
+      <p>Visdom 很好用</p>
+    </div>
+  "#;
+	let root = Vis::load(html)?;
+	assert_eq!(root.find("p:contains('好用')").length(), 1);
 	Ok(())
 }
 
