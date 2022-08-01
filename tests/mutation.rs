@@ -1,4 +1,5 @@
 #![cfg(any(feature = "destory", feature = "insertion"))]
+use std::assert_eq;
 use std::result::Result as StdResult;
 use visdom::types::BoxDynError;
 use visdom::Vis;
@@ -62,5 +63,34 @@ fn test_remove() -> Result {
 	content.find("strong").remove();
 	assert_eq!(content.find("strong").length(), 0);
 	assert_eq!(content.text(), "This is a !");
+	Ok(())
+}
+
+#[test]
+fn test_insert() -> Result {
+	let html = r#"
+  <div>
+      <img src="a.png" />
+      <img src="b.jpg" />
+      <img src="c.webp" />
+  </div>
+  "#;
+	let fragement = Vis::load(html)?;
+	let mut root_div = fragement.children("div");
+	let mut img_list = root_div.find("img[src]");
+	img_list.for_each(|_, ele| {
+		let attr_src = ele.get_attribute("src").unwrap().to_string();
+		if attr_src.ends_with(".png") {
+			let mut img = Vis::dom(ele);
+			let mut svg = Vis::load("<svg></svg>").unwrap();
+			svg.insert_before(&mut img);
+			img.remove();
+		}
+		true
+	});
+	let now_img_list = root_div.find("img[src]");
+	assert_eq!(now_img_list.length(), 2);
+	let now_svg = root_div.find("svg");
+	assert_eq!(now_svg.length(), 1);
 	Ok(())
 }

@@ -787,14 +787,16 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				};
 				// filter the node allowed
 				let tag_name = self.tag_names();
-				// remove not allowed nodes
-				remove_not_allowed_nodes(&tag_name, &mut nodes);
+				// insert
+				use InsertPosition::*;
+				// remove not allowed nodes, only insert childs
+				if matches!(position, AfterBegin | BeforeEnd){
+					remove_not_allowed_nodes(&tag_name, &mut nodes);
+				}
 				// check if is empty
 				if nodes.is_empty() {
 					return;
 				}
-				// insert
-				use InsertPosition::*;
 				match position {
 					BeforeBegin | AfterEnd => {
 						// get index first, for borrow check
