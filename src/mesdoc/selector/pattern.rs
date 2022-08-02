@@ -485,16 +485,16 @@ mod tests {
 			vec![2, 4, 6, 8]
 		);
 		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
-		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 2), vec![]);
+		assert!(Nth::get_allowed_indexs(&None, &Some("3"), 2).is_empty());
 		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("3"), 9), vec![2]);
-		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("-3"), 9), vec![]);
-		assert_eq!(Nth::get_allowed_indexs(&Some("1"), &Some("6"), 5), vec![]);
+		assert!(Nth::get_allowed_indexs(&Some("0"), &Some("-3"), 9).is_empty());
+		assert!(Nth::get_allowed_indexs(&Some("1"), &Some("6"), 5).is_empty());
 		assert_eq!(
 			Nth::get_allowed_indexs(&Some("2"), &None, 9),
 			vec![1, 3, 5, 7]
 		);
-		assert_eq!(Nth::get_allowed_indexs(&Some("-2"), &None, 9), vec![]);
-		assert_eq!(Nth::get_allowed_indexs(&Some("-4"), &Some("3"), 2), vec![]);
+		assert!(Nth::get_allowed_indexs(&Some("-2"), &None, 9).is_empty());
+		assert!(Nth::get_allowed_indexs(&Some("-4"), &Some("3"), 2).is_empty());
 	}
 
 	#[test]

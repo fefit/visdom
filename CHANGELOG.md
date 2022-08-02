@@ -2,17 +2,28 @@
 
 0.2.1 版本后各个接口方法已经基本趋于稳定，后面将不会做大的调整。
 
+## [0.5.4] - 2022-08-02
+
+### 修复
+
+- 修复 `insert_before` `before` `insert_after` `after` 等操作错误过滤了空标签等不能插入子节点的标签、导致无法正确插入节点的问题。
+
+### 增加
+
+- 增加 `replace_with` 操作，方便快速替换节点。
+
 ## [0.5.3] - 2022-07-31
 
 ### 修复
 
-- 修复 `:contains` 选择器包含中文字符、因为在正则匹配中没有使用chars长度引起 panic 的问题。
+- 修复 `:contains` 选择器包含中文字符、因为在正则匹配中没有使用 chars 长度引起 panic 的问题。
 
 ## [0.5.2] - 2022-04-26
 
 ### 增加
 
 - 增加 `:has` 伪类选择器，以配合 `:not` 伪类能组成 `:not(:has(p))` 等实现 `has` 反选逻辑。
+
 ## [0.5.1] - 2022-02-22
 
 ### 修改
@@ -23,15 +34,15 @@
 
 ### 变更
 
-- (break change) 新增了 `features` 的条件编译，将可能不会用到的DOM节点操作API分离出来，具体可以参见[README里的Feature flags](./README.md#feature-flags)，如果仍想使用全部API，可以在 `features` 中使用 `full`。
+- (break change) 新增了 `features` 的条件编译，将可能不会用到的 DOM 节点操作 API 分离出来，具体可以参见[README 里的 Feature flags](./README.md#feature-flags)，如果仍想使用全部 API，可以在 `features` 中使用 `full`。
 
 ### 修复
 
-- 修复 `has_class` 当查找的class为空格分隔的列表时，找到一个就返回`true`，实际逻辑应该是全部包含才能返回 `true`。
+- 修复 `has_class` 当查找的 class 为空格分隔的列表时，找到一个就返回`true`，实际逻辑应该是全部包含才能返回 `true`。
 
 ### 增加
 
-- 增加了主要API的doc文档。
+- 增加了主要 API 的 doc 文档。
 
 ## [0.4.13] - 2022-02-08
 
@@ -42,9 +53,8 @@
 
 ### 修复
 
-- 修复 `:root` 伪类在非子类查找时候丢失查询handle的问题
-- 删除冗余的 `println!` debug信息
-
+- 修复 `:root` 伪类在非子类查找时候丢失查询 handle 的问题
+- 删除冗余的 `println!` debug 信息
 
 ## [0.4.12] - 2022-02-07
 

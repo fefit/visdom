@@ -3544,13 +3544,20 @@ impl<'a> Elements<'a> {
 	// when feature 'insertion' is open
 	cfg_feat_insertion! {
 		// `insert`
-		fn insert(&mut self, dest: &Elements, position: &InsertPosition) -> &mut Self {
+		fn insert(&mut self, dest: &Elements, position: &InsertPosition) {
 			for ele in self.get_mut_ref() {
 				for inserted in dest.get_ref().iter().rev() {
 					ele.insert_adjacent(position, inserted);
 				}
 			}
-			self
+		}
+		// `replace`
+		fn replace(&mut self, dest: &Elements){
+			for ele in self.get_mut_ref() {
+				for inserted in dest.get_ref().iter().rev() {
+					ele.replace_with(inserted);
+				}
+			}
 		}
 		/// Append the parameter Elements to the child before the tag end of the current Elements set.
 		///
@@ -3670,6 +3677,52 @@ impl<'a> Elements<'a> {
 		pub fn after(&mut self, elements: &mut Elements) -> &mut Self {
 			// insert the elements after self
 			self.insert(elements, &InsertPosition::AfterEnd);
+			self
+		}
+		///  Replace each element in the set of matched elements with the provided new set of elements.
+		///
+		/// ```
+		/// use visdom::Vis;
+		/// use visdom::types::BoxDynError;
+		/// fn main()-> Result<(), BoxDynError>{
+		///   let html = r##"
+		///     <html>
+		///       <head>
+		///         <title>document</title>
+		///       </head>
+		///       <body>
+		///         <dl>
+		///           <dt>Title</dt>
+		///           <dd><span>item1</span></dd>
+		///           <dd class="item2"><span>item2</span></dd>
+		///           <dd class="item3"><!--comment-->item3</dd>
+		///         </dl>
+		///       </body>
+		///     </html>
+		///   "##;
+		///   let doc = Vis::load(html)?;
+		///   let mut dl = doc.find("dl");
+		///   let mut dt = dl.children("dt");
+		///   assert_eq!(dt.length(), 1);
+		///   assert_eq!(dl.children("dd").length(), 3);
+		///   // now replace dt with dd
+		///   let mut new_dd = Vis::load("<dd>replace</dd>")?;
+		///   dt.replace_with(&mut new_dd);
+		///   assert_eq!(dl.children("dd").length(), 4);
+		///   assert_eq!(dl.children("dt").length(), 0);
+		///   assert_eq!(dl.children("dd").eq(0).text(), "replace");
+		///   // replace with exist dd
+		///   let dds = dl.children("");
+		///   let mut first_dd = dds.first();
+		///   let mut last_dd = dds.last();
+		///   last_dd.replace_with(&mut first_dd);
+		///   assert_eq!(dl.children("").length(), 3);
+		///   assert_eq!(dl.children("").last().text(), "replace");
+		///   Ok(())
+		/// }
+		/// ```
+		pub fn replace_with(&mut self, elements: &mut Elements) -> &mut Self{
+			self.replace(elements);
 			self
 		}
 	}

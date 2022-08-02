@@ -301,11 +301,13 @@ pub trait IElementTrait: INodeTrait {
 	fn inner_html(&self) -> String;
 	fn outer_html(&self) -> String;
 
-	// append child, insert before, remove child
+	// append child, insert before
 	cfg_feat_insertion! {
-		fn insert_adjacent(&mut self, position: &InsertPosition, ele: &BoxDynElement);
+		fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement);
+		fn replace_with(&mut self, node: &BoxDynElement);
 	}
 	cfg_feat_mutation! {
+		// remove child
 		fn remove_child(&mut self, ele: BoxDynElement);
 	}
 	// texts

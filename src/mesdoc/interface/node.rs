@@ -44,7 +44,7 @@ pub trait INodeTrait {
 	fn to_node(self: Box<Self>) -> Box<dyn Any>;
 	// clone a ele
 	fn clone_node<'b>(&self) -> BoxDynNode<'b>;
-	// typed,whether element or text
+	// typed, whether element or text
 	fn typed<'b>(self: Box<Self>) -> IEnumTyped<'b>;
 	// get ele type
 	fn node_type(&self) -> INodeType;

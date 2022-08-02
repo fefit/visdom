@@ -758,7 +758,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	}
 	// when the feature `insertion` is open
 	cfg_feat_insertion! {
-		// append child
+		// append child, insert siblings
 		fn insert_adjacent(&mut self, position: &InsertPosition, node: &BoxDynElement) {
 			// base validate
 			let action = position.action();
@@ -872,6 +872,65 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				}
 			} else {
 				// not the Dom
+				Dom::halt(
+					self,
+					action,
+					&format!("Can't {} that not implemented 'Dom'", action),
+				);
+			}
+		}
+		// replace with
+		fn replace_with(&mut self, node: &BoxDynElement){
+			let node_type = node.node_type();
+			let specified: Box<dyn Any> = node.cloned().to_node();
+			if let Ok(dom) = specified.downcast::<RefNode>() {
+				// get the nodes
+				let nodes = match node_type {
+					INodeType::DocumentFragement => {
+						if let Some(childs) = &dom.borrow().childs {
+							childs.iter().map(Rc::clone).collect::<Vec<RefNode>>()
+						} else {
+							vec![]
+						}
+					}
+					_ => {
+						// remove current node from parent's childs
+						if let Some(parent) = &mut node.parent() {
+							parent.remove_child(node.cloned());
+						}
+						vec![*dom]
+					}
+				};
+				// check if has nodes
+				if nodes.is_empty(){
+					return;
+				}
+				// get index first, for borrow check
+				let index = self.index();
+				let insert_len = nodes.len();
+				// replace with nodes
+				if let Some(parent) = &self.borrow_mut().parent {
+					if let Some(parent) = &parent.upgrade() {
+						if let Some(childs) = &mut parent.borrow_mut().childs {
+							let next_index = index + 1;
+							// reset node indexs
+							reset_next_siblings_index(index, &nodes);
+							// reset next childs indexs
+							if index < childs.len(){
+								reset_next_siblings_index(index + insert_len, &childs[next_index..]);
+							}
+							// set node parent
+							for node in &nodes {
+								node.borrow_mut().parent = Some(Rc::downgrade(parent));
+							}
+							// delete current index node
+							// insert replace nodes
+							childs.splice(index..next_index, nodes);
+						}
+					}
+				}
+			} else {
+				let action = "replace with";
 				Dom::halt(
 					self,
 					action,
