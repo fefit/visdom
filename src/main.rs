@@ -276,22 +276,45 @@ fn main() -> Result<(), BoxDynError> {
 	// println!("root:{}", root.find("div").length());
 	// println!("root:{:?}", root.find("#content").length());
 	let html = r#"
+  <!--注释-->
   <!doctype html>
   <html>
     <body>
-	   <div>22<p></p></div>
-     <div>1</div>
-     <div>1</div>
+	   <div id="content">
+      <!--content注释-->
+      这是一些测试数据
+      <script>/*js*/var a = 1;var b = 2;</script>
+      内容
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <text x="0" y="15" fill="red" transform="rotate(30 20,40)">I love SVG</text>
+      </svg>
+     </div>
     </body>
   </html>
   "#;
 	let root = Vis::load(html)?;
-	let div_no_has_p = root.find("div:not(:has(p))");
-	println!("div_no_has_p: {}", div_no_has_p.text());
-	let divs = root.find("div");
-	let div_has_p = divs.has("p");
-	println!("div_has_p: {}", div_has_p.text());
-	let div_no_has_p = divs.not(":has(p)");
-	println!("div_no_has_p: {}", div_no_has_p.text());
+	// let div_no_has_p = root.find("div:not(:has(p))");
+	// println!("div_no_has_p: {}", div_no_has_p.text());
+	// let divs = root.find("div");
+	// let div_has_p = divs.has("p");
+	// println!("div_has_p: {}", div_has_p.text());
+	// let div_no_has_p = divs.not(":has(p)");
+	// println!("div_no_has_p: {}", div_no_has_p.text());
+	let content = root.find("#content");
+	content.texts_by_rec(
+		0,
+		Box::new(|_, text_node| {
+			println!("{}", text_node.text());
+			true
+		}),
+		Box::new(|ele| {
+			let tag_name = ele.tag_name();
+			true
+		}),
+	);
+	let pseduo_root = root.find(":root");
+	let child_nodes = root.get(0).unwrap().child_nodes();
+	println!("{}", child_nodes[1].text_content());
+	println!("{}", content.text());
 	Ok(())
 }

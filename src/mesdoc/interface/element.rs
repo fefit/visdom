@@ -320,9 +320,18 @@ pub trait IElementTrait: INodeTrait {
 		/// texts_by
 		fn texts_by<'b>(
 			&self,
+			limit_depth: usize,
+			handle: &dyn Fn(usize, &BoxDynText) -> bool,
+		) -> Option<Texts<'b>> {
+			self.texts_by_rec(limit_depth, handle, &Box::new(|_: &BoxDynElement|true))
+		}
+		/// texts_by_rec
+		fn texts_by_rec<'b>(
+			&self,
 			_limit_depth: usize,
 			_handle: &dyn Fn(usize, &BoxDynText) -> bool,
-		) -> Option<Texts<'b>> {
+			_rec_handle: &dyn Fn(&BoxDynElement) -> bool
+		) -> Option<Texts<'b>>{
 			None
 		}
 	}

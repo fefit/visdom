@@ -225,7 +225,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 				decode_entity: true,
 				..Default::default()
 			},
-			matches!(self.node_type(), INodeType::Element),
+			matches!(self.node_type(), INodeType::Element | INodeType::Comment),
 		)
 	}
 
@@ -943,10 +943,11 @@ impl IElementTrait for Rc<RefCell<Node>> {
 	// when the feature `text` is open
 	cfg_feat_text! {
 		/// impl `texts`
-		fn texts_by<'b>(
+		fn texts_by_rec<'b>(
 			&self,
 			limit_depth: usize,
 			handle: &dyn Fn(usize, &BoxDynText) -> bool,
+			rec_handle: &dyn Fn(&BoxDynElement) -> bool
 		) -> Option<Texts<'b>> {
 			let limit_depth = if limit_depth == 0 {
 				usize::MAX
@@ -960,6 +961,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				cur_depth: usize,
 				limit_depth: usize,
 				handle: &dyn Fn(usize, &BoxDynText) -> bool,
+				rec_handle: &dyn Fn(&BoxDynElement) -> bool
 			) {
 				let child_nodes = ele.child_nodes();
 				if !child_nodes.is_empty() {
@@ -987,10 +989,10 @@ impl IElementTrait for Rc<RefCell<Node>> {
 									if handle(cur_depth, &text) {
 										result.get_mut_ref().push(text);
 									}
-								} else if recursive {
+								} else if recursive && rec_handle(&cur_ele){
 									// not content tags need recursive
 									// if need recursive find the text node
-									loop_handle(cur_ele, result, next_depth, limit_depth, handle);
+									loop_handle(cur_ele, result, next_depth, limit_depth, handle, rec_handle);
 								}
 							}
 							_ => {}
@@ -1007,7 +1009,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 				}
 			}
 			let ele = Box::new(Rc::clone(self)) as BoxDynElement;
-			loop_handle(ele, &mut result, 0, limit_depth, handle);
+			loop_handle(ele, &mut result, 0, limit_depth, handle, rec_handle);
 			if !result.is_empty() {
 				return Some(result);
 			}

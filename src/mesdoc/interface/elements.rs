@@ -3071,9 +3071,20 @@ impl<'a> Elements<'a> {
 			limit_depth: usize,
 			handle: Box<dyn Fn(usize, &BoxDynText) -> bool>,
 		) -> Texts<'a> {
+			self.texts_by_rec(limit_depth, handle, Box::new(|_: &BoxDynElement|true))
+		}
+
+		/// pub fn `texts_by_rec`
+		/// get the text node of each element, filter by the handle, and check if need recursive by the result of rec_handle with child element
+		pub fn texts_by_rec(
+			&self,
+			limit_depth: usize,
+			handle: Box<dyn Fn(usize, &BoxDynText) -> bool>,
+			rec_handle: Box<dyn Fn(&BoxDynElement) -> bool>
+		) -> Texts<'a> {
 			let mut result = Texts::with_capacity(DEF_NODES_LEN);
 			for ele in self.get_ref() {
-				if let Some(text_nodes) = ele.texts_by(limit_depth, &handle) {
+				if let Some(text_nodes) = ele.texts_by_rec(limit_depth, &handle, &rec_handle) {
 					result.get_mut_ref().extend(text_nodes);
 				}
 			}

@@ -330,7 +330,7 @@ impl Nth {
 		if index <= 0 || index > (total as isize) {
 			return vec![];
 		}
-		return vec![(index - 1) as usize];
+		vec![(index - 1) as usize]
 	}
 }
 

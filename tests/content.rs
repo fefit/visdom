@@ -313,5 +313,32 @@ fn test_texts() -> Result {
 		Box::new(|_, node| !matches!(node.node_type(), INodeType::Element)),
 	);
 	assert_eq!(texts.length(), 0);
+	// filter content tags and other tags
+	let html = r##"<div id="text">abc<script>var a = 1;</script><svg xmlns="http://www.w3.org/2000/svg" version="1.1"><text x="0" y="15" fill="red" transform="rotate(30 20,40)">I love SVG</text></svg></div>"##;
+	let root = Vis::load(html)?;
+	let text_div = root.find("#text");
+	assert_eq!(text_div.texts(0).length(), 3);
+	assert_eq!(
+		text_div
+			.texts_by(
+				0,
+				Box::new(|_, text_node| { !matches!(text_node.node_type(), INodeType::Element) })
+			)
+			.length(),
+		2
+	);
+	assert_eq!(
+		text_div
+			.texts_by_rec(
+				0,
+				Box::new(|_, text_node| { !matches!(text_node.node_type(), INodeType::Element) }),
+				Box::new(|ele| {
+					let tag_name = ele.tag_name();
+					tag_name != "SVG"
+				})
+			)
+			.length(),
+		1
+	);
 	Ok(())
 }
