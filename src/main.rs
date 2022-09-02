@@ -2,8 +2,8 @@
 use std::thread;
 use std::time::SystemTime;
 use std::{collections::VecDeque, error::Error};
-use visdom::types::INodeType;
 use visdom::types::{BoxDynError, IDocumentTrait};
+use visdom::types::{BoxDynNode, INodeType};
 use visdom::Vis;
 
 fn main() -> Result<(), BoxDynError> {
@@ -312,9 +312,15 @@ fn main() -> Result<(), BoxDynError> {
 			true
 		}),
 	);
+	let mut childs = content.get(0).unwrap().child_nodes();
+	for child in childs.iter_mut() {
+		if matches!(child.node_type(), INodeType::Comment) {
+			child.set_text("abc");
+		}
+	}
 	let pseduo_root = root.find(":root");
 	let child_nodes = root.get(0).unwrap().child_nodes();
 	println!("{}", child_nodes[1].text_content());
-	println!("{}", content.text());
+	println!("{}", content.html());
 	Ok(())
 }

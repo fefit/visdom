@@ -269,7 +269,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 					}
 				}
 			}
-			INodeType::Text => {
+			INodeType::Text | INodeType::Comment => {
 				if content.is_empty() {
 					Dom::halt(self,"set_text",
             "the text parameter can't be empty, if you want to remove a text node, you can use 'remove' method instead."
