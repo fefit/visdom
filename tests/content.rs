@@ -262,6 +262,20 @@ fn test_inner_html() -> Result {
 }
 
 #[test]
+fn test_inner_htmls() -> Result {
+	let inner_html = "abc<span>def</span>ghj";
+	let code = format!("<div>{}</div><div>{}</div>", inner_html, inner_html);
+	let root = Vis::load(&code)?;
+	assert_eq!(root.find("div").eq(0).htmls(), inner_html);
+	assert_eq!(
+		root.find("div").htmls(),
+		format!("{}{}", inner_html, inner_html)
+	);
+	assert_eq!(root.find("p").htmls(), "");
+	Ok(())
+}
+
+#[test]
 fn test_outer_html() -> Result {
 	let inner_html = "abc<span>def</span>ghj";
 	let code = format!("<div>{}</div>", inner_html);
@@ -269,6 +283,20 @@ fn test_outer_html() -> Result {
 	assert_eq!(root.find("div").get(0).unwrap().outer_html(), code);
 	assert_eq!(root.find("div").outer_html(), code);
 	assert_eq!(root.find("p").outer_html(), "");
+	Ok(())
+}
+
+#[test]
+fn test_outer_htmls() -> Result {
+	let inner_html = "abc<span>def</span>ghj";
+	let code = format!("<div>{}</div><div>{}</div>", inner_html, inner_html);
+	let root = Vis::load(&code)?;
+	assert_eq!(
+		root.find("div").eq(0).outer_htmls(),
+		format!("<div>{}</div>", inner_html)
+	);
+	assert_eq!(root.find("div").outer_htmls(), code);
+	assert_eq!(root.find("p").outer_htmls(), "");
 	Ok(())
 }
 

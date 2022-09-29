@@ -2907,7 +2907,7 @@ impl<'a> Elements<'a> {
 	///   let html = r##"
 	///     <html>
 	///       <head>
-	///         <title>document</title>
+	///         <title>set_text()</title>
 	///       </head>
 	///       <body>
 	///         <dl>
@@ -2949,7 +2949,7 @@ impl<'a> Elements<'a> {
 	///   let html = r##"
 	///     <html>
 	///       <head>
-	///         <title>document</title>
+	///         <title>html()</title>
 	///       </head>
 	///       <body>
 	///         <dl>
@@ -2976,6 +2976,34 @@ impl<'a> Elements<'a> {
 			return ele.inner_html();
 		}
 		String::from("")
+	}
+
+	/// Get the combined html of all the elements in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>htmls()</title>
+	///       </head>
+	///       <body>
+	///         <div><span class="div1span">span1</span></div>
+	///         <div><span class="div2span">span2</span></div>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let divs = doc.find("div");
+	///   assert_eq!(divs.htmls(), r#"<span class="div1span">span1</span><span class="div2span">span2</span>"#);
+	///   assert_eq!(doc.find("p").htmls(), "");
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn htmls(&self) -> String {
+		self.map(|_, ele| ele.html()).join("")
 	}
 
 	/// Set the html to content of each element in Elements.
@@ -3051,6 +3079,35 @@ impl<'a> Elements<'a> {
 		}
 		String::from("")
 	}
+
+	/// Get the combined outer html of all the elements in Elements.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>outer_htmls()</title>
+	///       </head>
+	///       <body>
+	///         <div><span class="div1span">span1</span></div>
+	///         <div><span class="div2span">span2</span></div>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let divs = doc.find("div");
+	///   assert_eq!(divs.outer_htmls(), r#"<div><span class="div1span">span1</span></div><div><span class="div2span">span2</span></div>"#);
+	///   assert_eq!(doc.find("p").outer_htmls(), "");
+	///   Ok(())
+	/// }
+	/// ```
+	pub fn outer_htmls(&self) -> String {
+		self.map(|_, ele| ele.outer_html()).join("")
+	}
+
 	cfg_feat_text! {
 		/// pub fn `texts`
 		/// get the text node of each element
