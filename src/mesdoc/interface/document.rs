@@ -1,13 +1,12 @@
 use super::{BoxDynElement, BoxDynNode, Elements};
 use crate::mesdoc::error::BoxDynError;
-use crate::mesdoc::utils::to_static_str;
 use std::rc::Rc;
 
 pub type MaybeDoc<'a> = Option<Box<dyn IDocumentTrait + 'a>>;
 pub type IErrorHandle = Box<dyn Fn(BoxDynError)>;
 pub trait IDocumentTrait {
 	fn get_element_by_id<'b>(&self, id: &str) -> Option<BoxDynElement<'b>>;
-	fn source_code(&self) -> &'static str;
+	fn source_code(&self) -> String;
 	// get root node
 	fn get_root_node<'b>(&self) -> BoxDynNode<'b>;
 	// document element, html tag
@@ -19,12 +18,12 @@ pub trait IDocumentTrait {
 		None
 	}
 	// title
-	fn title(&self) -> Option<&'static str> {
+	fn title(&self) -> Option<String> {
 		if let Some(root) = &self.get_root_node().root_element() {
 			let root = Elements::with_node(root);
 			let title = root.find("head").eq(0).find("title");
 			if !title.is_empty() {
-				return Some(to_static_str(String::from(title.text())));
+				return Some(title.text());
 			}
 		}
 		None

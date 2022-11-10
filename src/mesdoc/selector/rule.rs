@@ -107,7 +107,7 @@ impl MatchedStore {
 		let name = vec_char_to_clean_str(&mut self.names);
 		let s = vec_char_to_clean_str(&mut self.suf_params);
 		let r = vec_char_to_clean_str(&mut self.raw_params);
-		to_pattern(name, s, r)
+		to_pattern(&name, &s, &r)
 	}
 }
 

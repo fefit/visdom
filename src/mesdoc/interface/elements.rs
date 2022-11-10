@@ -17,7 +17,7 @@ use crate::mesdoc::{
 };
 use crate::mesdoc::{
 	selector::rule::MatchSpecifiedHandle,
-	utils::{get_class_list, retain_by_index, to_static_str},
+	utils::{get_class_list, retain_by_index},
 };
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -344,7 +344,7 @@ impl<'a> Elements<'a> {
 	///   let root = Vis::load(html)?;
 	///   let mut document = root.document();
 	///   assert!(document.is_some());
-	///   assert_eq!(document.unwrap().title(), Some("document"));
+	///   assert_eq!(document.unwrap().title(), Some(String::from("document")));
 	///   Ok(())
 	/// }
 	/// ```
@@ -2890,12 +2890,12 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn text(&self) -> &str {
+	pub fn text(&self) -> String {
 		let mut result = String::with_capacity(50);
 		for ele in self.get_ref() {
 			result.push_str(&ele.text_content());
 		}
-		to_static_str(result)
+		result
 	}
 
 	/// Set the Elements's text, the html entity in content will auto encoded.

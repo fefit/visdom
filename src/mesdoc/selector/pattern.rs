@@ -1,12 +1,13 @@
-use crate::mesdoc::utils::{divide_isize, is_char_available_in_key, to_static_str, RoundType};
+use crate::mesdoc::utils::{divide_isize, is_char_available_in_key, RoundType};
 use lazy_static::lazy_static;
 use regex::Regex;
+use std::borrow::Cow;
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, fmt::Debug, usize};
 
 pub type FromParamsFn = Box<dyn Fn(&str, &str) -> Result<BoxDynPattern, String> + Send + 'static>;
 lazy_static! {
-	static ref REGEXS: Mutex<HashMap<&'static str, Arc<Regex>>> = Mutex::new(HashMap::new());
+	static ref REGEXS: Mutex<HashMap<String, Arc<Regex>>> = Mutex::new(HashMap::new());
 	static ref PATTERNS: Mutex<HashMap<&'static str, FromParamsFn>> = Mutex::new(HashMap::new());
 }
 
@@ -16,7 +17,7 @@ fn no_implemented(name: &str) -> ! {
 	panic!("No supported pattern '{}' was found", name);
 }
 
-pub type MatchedData = HashMap<&'static str, &'static str>;
+pub type MatchedData = HashMap<String, String>;
 pub type MatchedQueue = Vec<Matched>;
 #[derive(Debug, Default, Clone)]
 pub struct Matched {
@@ -193,7 +194,9 @@ pub struct Nth;
 impl Pattern for Nth {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
 		let rule: RegExp = RegExp {
-			context: r#"^(?:([-+])?([1-9]\d+|[0-9])?n(?:\s*([+-])\s*([1-9]\d+|[0-9]))?|([-+])?([1-9]\d+|[0-9]))"#,
+			context: Cow::from(
+				r#"^(?:([-+])?([1-9]\d+|[0-9])?n(?:\s*([+-])\s*([1-9]\d+|[0-9]))?|([-+])?([1-9]\d+|[0-9]))"#,
+			),
 		};
 		let mut data = HashMap::with_capacity(2);
 		let mut matched_chars: Vec<char> = Vec::new();
@@ -204,12 +207,12 @@ impl Pattern for Nth {
 			let index_keys = if only_index { ("6", "5") } else { ("4", "3") };
 			// set index
 			if let Some(index) = Nth::get_number(&rule_data, index_keys, None) {
-				data.insert("index", index);
+				data.insert("index".to_string(), index);
 			}
 			// also has `n`
 			if !only_index {
-				if let Some(n) = Nth::get_number(&rule_data, ("2", "1"), Some("1")) {
-					data.insert("n", n);
+				if let Some(n) = Nth::get_number(&rule_data, ("2", "1"), Some("1".to_string())) {
+					data.insert("n".to_string(), n);
 				}
 			}
 			matched_chars = v.chars;
@@ -218,12 +221,12 @@ impl Pattern for Nth {
 			let even = vec!['e', 'v', 'e', 'n'];
 			let odd = vec!['o', 'd', 'd'];
 			if Pattern::matched(&even, chars).is_some() {
-				data.insert("n", "2");
-				data.insert("index", "0");
+				data.insert("n".to_string(), "2".to_string());
+				data.insert("index".to_string(), "0".to_string());
 				matched_chars = even;
 			} else if Pattern::matched(&odd, chars).is_some() {
-				data.insert("n", "2");
-				data.insert("index", "1");
+				data.insert("n".to_string(), "2".to_string());
+				data.insert("index".to_string(), "1".to_string());
 				matched_chars = odd;
 			}
 		}
@@ -244,25 +247,30 @@ impl Pattern for Nth {
 }
 
 impl Nth {
-	fn get_number(data: &MatchedData, keys: (&str, &str), def: Option<&str>) -> Option<&'static str> {
+	fn get_number(data: &MatchedData, keys: (&str, &str), def: Option<String>) -> Option<String> {
 		const MINUS: &str = "-";
-		if let Some(&idx) = data.get(keys.0).or(def.as_ref()) {
+		if let Some(idx) = data.get(keys.0).or(def.as_ref()) {
 			let mut index = idx.to_owned();
-			if let Some(&op) = data.get(keys.1) {
+			if let Some(op) = data.get(keys.1) {
 				if op == MINUS {
 					index = String::from(op) + &index;
 				}
 			}
-			return Some(to_static_str(index));
+			return Some(index);
 		}
 		None
 	}
 	// get indexs allowed
-	pub fn get_allowed_indexs(n: &Option<&str>, index: &Option<&str>, total: usize) -> Vec<usize> {
+	pub fn get_allowed_indexs(
+		n: &Option<String>,
+		index: &Option<String>,
+		total: usize,
+	) -> Vec<usize> {
 		// has n
 		if let Some(n) = n {
 			let n = n.parse::<isize>().unwrap();
 			let index = index
+				.as_ref()
 				.map(|index| index.parse::<isize>().unwrap())
 				.unwrap_or(0);
 			// n == 0
@@ -324,6 +332,7 @@ impl Nth {
 		}
 		// only index
 		let index = index
+			.as_ref()
 			.expect("Nth must have 'index' value when 'n' is not setted.")
 			.parse::<isize>()
 			.expect("Nth's index is not a correct number");
@@ -337,21 +346,21 @@ impl Nth {
 /// RegExp
 #[derive(Debug)]
 pub struct RegExp<'a> {
-	pub context: &'a str,
+	pub context: Cow<'a, str>,
 }
 
 impl<'a> Pattern for RegExp<'a> {
 	/// impl `matched`
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
-		let Self { context } = *self;
+		let Self { context } = self;
 		let content = chars.iter().collect::<String>();
-		let rule = RegExp::get_rule(context);
-		if let Some(caps) = rule.captures(to_static_str(content)) {
+		let rule = RegExp::get_rule(&context);
+		if let Some(caps) = rule.captures(&content) {
 			let total_len = caps[0].chars().count();
 			let mut data = HashMap::with_capacity(caps.len() - 1);
 			for (index, m) in caps.iter().skip(1).enumerate() {
 				if let Some(m) = m {
-					data.insert(to_static_str((index + 1).to_string()), m.as_str());
+					data.insert((index + 1).to_string(), m.as_str().to_string());
 				}
 			}
 			let result = chars[..total_len].to_vec();
@@ -368,7 +377,7 @@ impl<'a> Pattern for RegExp<'a> {
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
 		check_params_return(&[s], || {
 			Box::new(RegExp {
-				context: to_static_str(p.to_string()),
+				context: Cow::Owned(p.to_string()),
 			})
 		})
 	}
@@ -382,8 +391,8 @@ impl<'a> RegExp<'a> {
 		if let Some(rule) = regexs.get(&last_context[..]) {
 			Arc::clone(rule)
 		} else {
-			let key = &to_static_str(last_context);
-			let rule = Regex::new(key).expect(&wrong_regex);
+			let key = last_context;
+			let rule = Regex::new(&key).expect(&wrong_regex);
 			let value = Arc::new(rule);
 			let result = Arc::clone(&value);
 			regexs.insert(key, value);
@@ -477,24 +486,30 @@ mod tests {
 	#[test]
 	fn test_allow_indexs() {
 		assert_eq!(
-			Nth::get_allowed_indexs(&Some("-2"), &Some("3"), 9),
+			Nth::get_allowed_indexs(&Some("-2".to_string()), &Some("3".to_string()), 9),
 			vec![0, 2]
 		);
 		assert_eq!(
-			Nth::get_allowed_indexs(&Some("2"), &Some("3"), 9),
+			Nth::get_allowed_indexs(&Some("2".to_string()), &Some("3".to_string()), 9),
 			vec![2, 4, 6, 8]
 		);
-		assert_eq!(Nth::get_allowed_indexs(&None, &Some("3"), 9), vec![2]);
-		assert!(Nth::get_allowed_indexs(&None, &Some("3"), 2).is_empty());
-		assert_eq!(Nth::get_allowed_indexs(&Some("0"), &Some("3"), 9), vec![2]);
-		assert!(Nth::get_allowed_indexs(&Some("0"), &Some("-3"), 9).is_empty());
-		assert!(Nth::get_allowed_indexs(&Some("1"), &Some("6"), 5).is_empty());
 		assert_eq!(
-			Nth::get_allowed_indexs(&Some("2"), &None, 9),
+			Nth::get_allowed_indexs(&None, &Some("3".to_string()), 9),
+			vec![2]
+		);
+		assert!(Nth::get_allowed_indexs(&None, &Some("3".to_string()), 2).is_empty());
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("0".to_string()), &Some("3".to_string()), 9),
+			vec![2]
+		);
+		assert!(Nth::get_allowed_indexs(&Some("0".to_string()), &Some("-3".to_string()), 9).is_empty());
+		assert!(Nth::get_allowed_indexs(&Some("1".to_string()), &Some("6".to_string()), 5).is_empty());
+		assert_eq!(
+			Nth::get_allowed_indexs(&Some("2".to_string()), &None, 9),
 			vec![1, 3, 5, 7]
 		);
-		assert!(Nth::get_allowed_indexs(&Some("-2"), &None, 9).is_empty());
-		assert!(Nth::get_allowed_indexs(&Some("-4"), &Some("3"), 2).is_empty());
+		assert!(Nth::get_allowed_indexs(&Some("-2".to_string()), &None, 9).is_empty());
+		assert!(Nth::get_allowed_indexs(&Some("-4".to_string()), &Some("3".to_string()), 2).is_empty());
 	}
 
 	#[test]
@@ -548,7 +563,9 @@ mod tests {
 		assert!(attr_key.matched(&[' ']).is_none());
 		assert!(attr_key.matched(&['\u{0000}']).is_none());
 		// regexp
-		let reg_exp: BoxDynPattern = Box::new(RegExp { context: "abc" });
+		let reg_exp: BoxDynPattern = Box::new(RegExp {
+			context: std::borrow::Cow::from("abc"),
+		});
 		assert!(format!("{:?}", reg_exp).contains("abc"));
 	}
 }

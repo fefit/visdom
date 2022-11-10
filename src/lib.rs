@@ -115,10 +115,6 @@ impl Dom {
 	}
 }
 
-fn to_static_str(orig: String) -> &'static str {
-	Box::leak(orig.into_boxed_str())
-}
-
 fn reset_next_siblings_index(start_index: usize, childs: &[RefNode]) {
 	for (step, node) in childs.iter().enumerate() {
 		node.borrow_mut().index = start_index + step;
@@ -1069,8 +1065,8 @@ impl IDocumentTrait for Document {
 		None
 	}
 	// source code
-	fn source_code(&self) -> &'static str {
-		to_static_str(self.doc.render(&Default::default()))
+	fn source_code(&self) -> String {
+		self.doc.render(&Default::default())
 	}
 	// get root node, in rphtml is abstract root node
 	fn get_root_node<'b>(&self) -> BoxDynNode<'b> {
