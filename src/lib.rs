@@ -879,11 +879,15 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		fn replace_with(&mut self, node: &BoxDynElement){
 			let node_type = node.node_type();
 			let specified: Box<dyn Any> = node.cloned().to_node();
+			let mut replace_ele: Option<RefNode> = None;
 			if let Ok(dom) = specified.downcast::<RefNode>() {
 				// get the nodes
 				let nodes = match node_type {
 					INodeType::DocumentFragement => {
 						if let Some(childs) = &dom.borrow().childs {
+							if childs.len() == 1 {
+								replace_ele = Some(Rc::clone(&childs[0]));
+							}
 							childs.iter().map(Rc::clone).collect::<Vec<RefNode>>()
 						} else {
 							vec![]
@@ -894,6 +898,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 						if let Some(parent) = &mut node.parent() {
 							parent.remove_child(node.cloned());
 						}
+						replace_ele = Some(Rc::clone(&dom));
 						vec![*dom]
 					}
 				};
@@ -924,6 +929,9 @@ impl IElementTrait for Rc<RefCell<Node>> {
 							childs.splice(index..next_index, nodes);
 						}
 					}
+				}
+				if let Some(replace_ele) = replace_ele {
+					*self = replace_ele;
 				}
 			} else {
 				let action = "replace with";
