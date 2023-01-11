@@ -1,0 +1,51 @@
+name: test
+on:
+  - push
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      # Install toolchain
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+      # build coverage
+      - name: Cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          - command: test
+          - args: --features full
+  coverage:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Checkout repo
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      # Install toolchain
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      # Install grcov
+      - name: Install grcov
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.2/grcov-linux-x86_64.tar.bz2 | tar jxf -
+      # Run coverage
+      - name: Build coverage
+        run: |
+          export CARGO_INCREMENTAL=0
+          export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          export RUSTDOCFLAGS="-Cpanic=abort"
+          cargo build --features full --verbose $CARGO_OPTIONS
+          cargo test --features full --verbose $CARGO_OPTIONS
+          zip -0 ccov.zip `find . \( -name "visdom*.gc*" \) -print`;
+          ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
+          bash <(curl -s https://codecov.io/bash) -f lcov.info;
