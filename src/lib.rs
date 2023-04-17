@@ -29,7 +29,7 @@ use mesdoc::utils::is_equal_chars;
 use mesdoc::{error::Error as IError, utils::retain_by_index};
 use rphtml::{
 	config::RenderOptions,
-	entity::{encode, encode_chars, EncodeType, EntitySet},
+	entity::{encode, encode_char, CharacterSet, EncodeType, ICodedDataTrait},
 	parser::{
 		allow_insert, is_content_tag, Attr, AttrData, Doc, DocHolder, NameCase, Node, NodeType, RefNode,
 	},
@@ -247,8 +247,12 @@ impl INodeTrait for Rc<RefCell<Node>> {
 				if !content.is_empty() {
 					if no_content_tag {
 						// encode content
-						let content = encode(content, EntitySet::Html, EncodeType::NamedOrDecimal);
-						let mut text_node = Node::create_text_node(content, None);
+						let content = encode(
+							content.as_bytes(),
+							&EncodeType::NamedOrDecimal,
+							&CharacterSet::Html,
+						);
+						let mut text_node = Node::create_text_node(content.to_chars().unwrap(), None);
 						// set text node parent
 						text_node.parent = Some(Rc::downgrade(self));
 						// set childs
@@ -633,9 +637,11 @@ impl IElementTrait for Rc<RefCell<Node>> {
 						if find_quote {
 							if quote == ch {
 								// find more quotes
-								let mut encoded_quote =
-									encode_chars(&[ch], EntitySet::SpecialChars, EncodeType::Named);
-								content.append(&mut encoded_quote);
+								if let Some(entity) = encode_char(&ch, &EncodeType::Named) {
+									entity.write_chars(&mut content);
+								} else {
+									content.push(ch);
+								}
 							} else {
 								content.push(ch);
 							}

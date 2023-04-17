@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "0.5.9"
+version = "0.5.10"
 edition = "2018"
 description = "A html document syntax and operation library, use APIs similar to jquery, easy to use for web scraping and confused html."
 keywords = ["html", "scrape", "jquery", "query", "selector"]
@@ -10,10 +10,10 @@ repository = "https://github.com/fefit/visdom"
 documentation = "https://docs.rs/visdom/"
 categories = ["web-programming"]
 license = "MIT"
-exclude = [".vscode/*.*", ".editorconfig", ".travis.yml", "src/main.rs", "performance/*.*"]
+exclude = [".vscode/*.*", ".github/*.*", ".editorconfig", "src/main.rs", "performance/*.*"]
 
 [dependencies]
-rphtml = "0.5.8"
+rphtml = "0.5.9"
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.7.0"
