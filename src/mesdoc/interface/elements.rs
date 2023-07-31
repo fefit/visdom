@@ -7,6 +7,7 @@ cfg_feat_insertion! {
 }
 use super::{BoxDynElement, IAttrValue, IElementTrait, IFormValue, MaybeDoc};
 use crate::mesdoc::error::BoxDynError;
+use crate::mesdoc::selector::TryIntoSelector;
 use crate::mesdoc::{constants::ATTR_CLASS, error::Error as IError, utils::class_list_to_string};
 use crate::mesdoc::{
 	constants::DEF_NODES_LEN,
@@ -107,14 +108,18 @@ pub struct Elements<'a> {
 */
 impl<'a> Elements<'a> {
 	/*-----------trigger method proxy---------------*/
-	pub(crate) fn trigger_method<F, T: Default>(&self, method: &str, selector: &str, handle: F) -> T
+	pub(crate) fn trigger_method<'s, F, S: TryIntoSelector<'s>, T: Default>(
+		&self,
+		method: &str,
+		selector: S,
+		handle: F,
+	) -> T
 	where
 		F: Fn(&mut Selector) -> T,
 	{
 		if !self.is_empty() {
-			// filter handles don't use lookup
-			const USE_LOOKUP: bool = false;
-			let s = Selector::from_str(selector, USE_LOOKUP);
+			// Becareful, filter handles don't use a lookup optimize
+			let s = selector.try_into(false);
 			if let Ok(mut s) = s {
 				return handle(&mut s);
 			}
@@ -499,10 +504,15 @@ impl<'a> Elements<'a> {
 */
 impl<'a> Elements<'a> {
 	// for all combinator selectors
-	fn select_with_comb(&self, method: &str, selector: &str, comb: Combinator) -> Elements<'a> {
-		if selector.is_empty() {
+	fn select_with_comb<'s, S: TryIntoSelector<'s>>(
+		&self,
+		method: &str,
+		selector: S,
+		comb: Combinator,
+	) -> Elements<'a> {
+		if selector.as_ref().is_empty() {
 			let segment = Selector::make_comb_all(comb);
-			let selector = Selector::from_segment(segment);
+			let selector = Selector::from_segment(segment, "*");
 			return self.find_selector(&selector);
 		}
 		self.trigger_method(method, selector, |selector| {
@@ -512,21 +522,21 @@ impl<'a> Elements<'a> {
 	}
 
 	// for all combinator until selectors
-	fn select_with_comb_until(
+	fn select_with_comb_until<'s, S: TryIntoSelector<'s>>(
 		&self,
 		method: &str,
-		selector: &str,
-		filter: &str,
+		selector: S,
+		filter: S,
 		contains: bool,
 		comb: Combinator,
 	) -> Elements<'a> {
-		let selector = selector.parse::<Selector>();
+		let selector = selector.try_into(true);
 		if let Ok(selector) = &selector {
 			let segment = Selector::make_comb_all(comb);
-			let next_selector = Selector::from_segment(segment);
+			let next_selector = Selector::from_segment(segment, "*");
 			let mut result = Elements::with_capacity(DEF_NODES_LEN);
-			let (next_ok, filter) = if !filter.is_empty() {
-				let filter = filter.parse::<Selector>();
+			let (next_ok, filter) = if !filter.as_ref().is_empty() {
+				let filter = filter.try_into(true);
 				if let Ok(filter) = filter {
 					(true, Some(filter))
 				} else {
@@ -1094,8 +1104,8 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn find(&self, selector: &str) -> Elements<'a> {
-		let s = Selector::from_str(selector, true);
+	pub fn find<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
+		let s = selector.try_into(true);
 		if let Ok(selector) = &s {
 			return self.find_selector(selector);
 		}
@@ -1133,7 +1143,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn filter(&self, selector: &str) -> Elements<'a> {
+	pub fn filter<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		const METHOD: &str = "filter";
 		self.trigger_method(METHOD, selector, |selector| {
 			self.filter_type_handle(selector, &FilterType::Filter).0
@@ -1258,7 +1268,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn children(&self, selector: &str) -> Elements<'a> {
+	pub fn children<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		self.select_with_comb("children", selector, Combinator::Children)
 	}
 
@@ -1291,7 +1301,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn prev(&self, selector: &str) -> Elements<'a> {
+	pub fn prev<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		self.select_with_comb("prev", selector, Combinator::Prev)
 	}
 
@@ -1326,7 +1336,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn prev_all(&self, selector: &str) -> Elements<'a> {
+	pub fn prev_all<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		let uniques = self.unique_sibling_last();
 		uniques.select_with_comb("prev_all", selector, Combinator::PrevAll)
 	}
@@ -1364,7 +1374,12 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn prev_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+	pub fn prev_until<'s, S: TryIntoSelector<'s>>(
+		&self,
+		selector: S,
+		filter: S,
+		contains: bool,
+	) -> Elements<'a> {
 		let uniques = self.unique_sibling_last();
 		let mut result =
 			uniques.select_with_comb_until("prev_until", selector, filter, contains, Combinator::Prev);
@@ -1405,7 +1420,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn next(&self, selector: &str) -> Elements<'a> {
+	pub fn next<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		self.select_with_comb("next", selector, Combinator::Next)
 	}
 
@@ -1439,7 +1454,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn next_all(&self, selector: &str) -> Elements<'a> {
+	pub fn next_all<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		// unique, keep the first sibling node
 		let uniques = self.unique_sibling_first();
 		uniques.select_with_comb("next_all", selector, Combinator::NextAll)
@@ -1476,7 +1491,12 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn next_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+	pub fn next_until<'s, S: TryIntoSelector<'s>>(
+		&self,
+		selector: S,
+		filter: S,
+		contains: bool,
+	) -> Elements<'a> {
 		// unique, keep the first sibling node
 		let uniques = self.unique_sibling_first();
 		uniques.select_with_comb_until("next_until", selector, filter, contains, Combinator::Next)
@@ -1512,25 +1532,23 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn siblings(&self, selector: &str) -> Elements<'a> {
+	pub fn siblings<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		let uniques = self.unique_all_siblings();
 		// when selector is empty or only
 		let mut siblings_selector: Selector;
 		let siblings_comb = Combinator::Siblings;
 		let mut child_selector: Selector;
 		let child_comb = Combinator::Children;
-		let selector = selector.trim();
+		let selector = selector.as_ref().trim();
 		if selector.is_empty() {
-			siblings_selector = Selector::from_segment(Selector::make_comb_all(siblings_comb));
-			child_selector = Selector::from_segment(Selector::make_comb_all(child_comb));
+			siblings_selector = Selector::from_segment(Selector::make_comb_all(siblings_comb), "~*");
+			child_selector = Selector::from_segment(Selector::make_comb_all(child_comb), ">*");
 		} else {
 			// self
-			let sib_selector = selector.parse::<Selector>();
+			let sib_selector = selector.try_into(true);
 			if let Ok(sib_selector) = sib_selector {
 				// clone the selector to a child selector
-				child_selector = selector
-					.parse::<Selector>()
-					.expect("The selector has detected");
+				child_selector = selector.try_into(true).expect("The selector has detected");
 				child_selector.head_combinator(child_comb);
 				// use siblings selector
 				siblings_selector = sib_selector;
@@ -1595,7 +1613,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn parent(&self, selector: &str) -> Elements<'a> {
+	pub fn parent<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		// unique, keep the first sibling node
 		let uniques = self.unique_sibling_first();
 		uniques.select_with_comb("parent", selector, Combinator::Parent)
@@ -1632,7 +1650,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn parents(&self, selector: &str) -> Elements<'a> {
+	pub fn parents<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		// unique, keep the first sibling node
 		let uniques = self.unique_sibling_first();
 		let mut result = uniques.select_with_comb("parents", selector, Combinator::ParentAll);
@@ -1670,7 +1688,12 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn parents_until(&self, selector: &str, filter: &str, contains: bool) -> Elements<'a> {
+	pub fn parents_until<'s, S: TryIntoSelector<'s>>(
+		&self,
+		selector: S,
+		filter: S,
+		contains: bool,
+	) -> Elements<'a> {
 		// unique, keep the first sibling node
 		let uniques = self.unique_sibling_first();
 		let mut result = uniques.select_with_comb_until(
@@ -1716,14 +1739,14 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn closest(&self, selector: &str) -> Elements<'a> {
+	pub fn closest<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		// when selector is not provided
-		if selector.is_empty() {
+		if selector.as_ref().is_empty() {
 			return Elements::new();
 		}
 		// find the nearst node
 		const METHOD: &str = "closest";
-		let selector = selector.parse::<Selector>();
+		let selector = selector.try_into(true);
 		if let Ok(selector) = selector {
 			let total = self.length();
 			let mut result = Elements::with_capacity(total);
@@ -1980,7 +2003,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn is(&self, selector: &str) -> bool {
+	pub fn is<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> bool {
 		const METHOD: &str = "is";
 		self.trigger_method(METHOD, selector, |selector| {
 			self.filter_type_handle(selector, &FilterType::Is).1
@@ -2102,7 +2125,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn is_all(&self, selector: &str) -> bool {
+	pub fn is_all<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> bool {
 		const METHOD: &str = "is_all";
 		self.trigger_method(METHOD, selector, |selector| {
 			self.filter_type_handle(selector, &FilterType::IsAll).1
@@ -2227,7 +2250,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn not(&self, selector: &str) -> Elements<'a> {
+	pub fn not<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		const METHOD: &str = "not";
 		self.trigger_method(METHOD, selector, |selector| {
 			self.filter_type_handle(selector, &FilterType::Not).0
@@ -2340,7 +2363,7 @@ impl<'a> Elements<'a> {
 	///   Ok(())
 	/// }
 	/// ```
-	pub fn has(&self, selector: &str) -> Elements<'a> {
+	pub fn has<'s, S: TryIntoSelector<'s>>(&self, selector: S) -> Elements<'a> {
 		const METHOD: &str = "has";
 		fn loop_handle(ele: &BoxDynElement, selector: &Selector) -> bool {
 			let childs = ele.children();

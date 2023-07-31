@@ -129,7 +129,7 @@ impl Pattern for Identity {
 	}
 	// from_str
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(Identity::default()))
+		check_params_return(&[s, p], || Box::<Identity>::default())
 	}
 }
 /// AttrKey
@@ -157,7 +157,7 @@ impl Pattern for AttrKey {
 	}
 	// from_params
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(AttrKey::default()))
+		check_params_return(&[s, p], || Box::<AttrKey>::default())
 	}
 }
 /// Spaces
@@ -182,7 +182,7 @@ impl Pattern for Spaces {
 	}
 	// from params
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(Spaces::default()))
+		check_params_return(&[s, p], || Box::<Spaces>::default())
 	}
 }
 
@@ -242,7 +242,7 @@ impl Pattern for Nth {
 	}
 	// from params to pattern
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(Nth::default()))
+		check_params_return(&[s, p], || Box::<Nth>::default())
 	}
 }
 
@@ -316,7 +316,7 @@ impl Nth {
 			}
 			let start = start_loop as usize;
 			let end = end_loop as usize;
-			let mut allow_indexs = Vec::with_capacity((end - start + 1) as usize);
+			let mut allow_indexs = Vec::with_capacity(end - start + 1);
 			for i in start..=end {
 				let cur_index = (i as isize * n + index) as usize;
 				if cur_index < 1 {
@@ -354,7 +354,7 @@ impl<'a> Pattern for RegExp<'a> {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
 		let Self { context } = self;
 		let content = chars.iter().collect::<String>();
-		let rule = RegExp::get_rule(&context);
+		let rule = RegExp::get_rule(context);
 		if let Some(caps) = rule.captures(&content) {
 			let total_len = caps[0].chars().count();
 			let mut data = HashMap::with_capacity(caps.len() - 1);
@@ -411,7 +411,7 @@ impl Pattern for NestedSelector {
 	}
 	// from params to pattern
 	fn from_params(s: &str, p: &str) -> Result<BoxDynPattern, String> {
-		check_params_return(&[s, p], || Box::new(NestedSelector::default()))
+		check_params_return(&[s, p], || Box::<NestedSelector>::default())
 	}
 	// set to be nested
 	fn is_nested(&self) -> bool {

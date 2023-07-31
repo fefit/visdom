@@ -7,7 +7,7 @@ pub use pattern::MatchedQueue;
 use pattern::{exec, Matched};
 use rule::{Rule, RULES};
 use std::{
-	str::FromStr,
+	borrow::Cow,
 	sync::{Arc, Mutex},
 };
 
@@ -16,6 +16,7 @@ lazy_static! {
 		Mutex::new(Rule::get_queues(r##"{regexp#(\s*[>,~+]\s*|\s+)#}"##));
 	static ref ALL_RULE: Mutex<Option<Arc<Rule>>> = Mutex::new(None);
 }
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum Combinator {
 	// descendants
@@ -54,6 +55,18 @@ impl From<&str> for Combinator {
 	}
 }
 
+impl<'a> From<&'a Combinator> for &'static str {
+	fn from(comb: &'a Combinator) -> Self {
+		use Combinator::*;
+		match comb {
+			Children => ">",
+			NextAll => "~",
+			Next => "+",
+			_ => "",
+		}
+	}
+}
+
 impl Combinator {
 	pub fn reverse(&self) -> Self {
 		use Combinator::*;
@@ -76,22 +89,26 @@ pub struct QueryProcess {
 }
 
 #[derive(Default, Debug)]
-pub struct Selector {
+pub struct Selector<'c> {
+	pub(crate) use_lookup: bool,
 	pub process: Vec<QueryProcess>,
+	pub context: Cow<'c, str>,
 }
 
 type SelectorGroupsItem = Vec<Vec<SelectorSegment>>;
 type SelectorGroups = Vec<SelectorGroupsItem>;
-impl Selector {
-	pub fn new() -> Self {
+impl<'c> Selector<'c> {
+	pub fn new<'s: 'c>(context: &'s str, use_lookup: bool) -> Self {
 		Selector {
 			process: Vec::with_capacity(1),
+			use_lookup,
+			context: Cow::Borrowed(context),
 		}
 	}
-	pub fn from_str(context: &str, use_lookup: bool) -> Result<Self, Error> {
+	pub fn from_str<'s: 'c>(context: &'s str, use_lookup: bool) -> Result<Self, Error> {
 		let chars: Vec<char> = context.chars().collect();
 		let total_len = chars.len();
-		let mut selector = Selector::new();
+		let mut selector = Selector::new(context, use_lookup);
 		if total_len > 0 {
 			let mut index: usize = 0;
 			let mut comb = Combinator::ChildrenAll;
@@ -198,7 +215,7 @@ impl Selector {
 				});
 			}
 			// optimize groups to query process
-			selector.optimize(groups, use_lookup);
+			selector.optimize(groups);
 		}
 		Ok(selector)
 	}
@@ -217,8 +234,9 @@ impl Selector {
 		}
 	}
 	// optimize the parse process
-	fn optimize(&mut self, groups: SelectorGroups, use_lookup: bool) {
+	fn optimize(&mut self, groups: SelectorGroups) {
 		let mut process: Vec<QueryProcess> = Vec::with_capacity(groups.len());
+		let use_lookup = self.use_lookup;
 		for mut group in groups {
 			// first optimize the chain selectors, the rule who's priority is bigger will apply first
 			let mut max_index: usize = 0;
@@ -228,7 +246,7 @@ impl Selector {
 				if r.len() > 1 {
 					let chain_comb = r[0].1;
 					r.sort_by(|a, b| b.0.priority.partial_cmp(&a.0.priority).unwrap());
-					let mut now_first = &mut r[0];
+					let now_first = &mut r[0];
 					if now_first.1 != chain_comb {
 						now_first.1 = chain_comb;
 						total_priority += now_first.0.priority;
@@ -303,13 +321,15 @@ impl Selector {
 		(matcher, comb)
 	}
 	// build a selector from a segment
-	pub fn from_segment(segment: SelectorSegment) -> Self {
+	pub fn from_segment<'s: 'c>(segment: SelectorSegment, context: &'s str) -> Self {
 		let process = QueryProcess {
 			query: vec![vec![segment]],
 			should_in: None,
 		};
 		Selector {
 			process: vec![process],
+			use_lookup: false,
+			context: Cow::Borrowed(context),
 		}
 	}
 	// parse until
@@ -388,10 +408,33 @@ enum PrevInSelector {
 	Selector,
 }
 
-impl FromStr for Selector {
-	type Err = Error;
-	fn from_str(selector: &str) -> Result<Self, Self::Err> {
-		Selector::from_str(selector, true)
+pub trait TryIntoSelector<'a>: AsRef<str> {
+	fn try_into<'s>(self, use_lookup: bool) -> Result<Selector<'s>, Error>
+	where
+		'a: 's;
+}
+
+impl<'a> TryIntoSelector<'a> for &'a str {
+	fn try_into<'s>(self, use_lookup: bool) -> Result<Selector<'s>, Error>
+	where
+		'a: 's,
+	{
+		Selector::from_str(self, use_lookup)
+	}
+}
+
+impl<'s> AsRef<str> for Selector<'s> {
+	fn as_ref(&self) -> &str {
+		&self.context
+	}
+}
+
+impl<'a> TryIntoSelector<'a> for Selector<'a> {
+	fn try_into<'s>(self, _: bool) -> Result<Selector<'s>, Error>
+	where
+		'a: 's,
+	{
+		Ok(self)
 	}
 }
 

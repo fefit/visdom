@@ -18,7 +18,7 @@ pub fn init(rules: &mut Vec<RuleItem>) {
 				.get("2")
 				.or_else(|| value_data.get("3"))
 				.or_else(|| value_data.get("4"))
-				.map(|s| s.clone());
+				.cloned();
 			let match_mode = value_data.get("1").unwrap_or(&def_mode);
 			let handle: Box<dyn Fn(&Option<IAttrValue>) -> bool> = if let Some(attr_value) = attr_value {
 				let match_mode = match_mode.as_str();

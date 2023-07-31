@@ -10,7 +10,13 @@ repository = "https://github.com/fefit/visdom"
 documentation = "https://docs.rs/visdom/"
 categories = ["web-programming"]
 license = "MIT"
-exclude = [".vscode/*.*", ".github/*.*", ".editorconfig", "src/main.rs", "performance/*.*"]
+exclude = [
+  ".vscode/*.*",
+  ".github/*.*",
+  ".editorconfig",
+  "src/main.rs",
+  "performance/*.*",
+]
 
 [dependencies]
 rphtml = "0.5.9"
@@ -23,12 +29,8 @@ crossbeam = "0.8.0"
 criterion = "0.4.0"
 
 [features]
-default = []
-full = [
-  "text",
-  "insertion",
-  "destory"
-]
+default = ['full']
+full = ["text", "insertion", "destory"]
 text = []
 insertion = []
 destory = []

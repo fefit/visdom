@@ -351,7 +351,7 @@ impl INodeTrait for Rc<RefCell<Node>> {
 							reset_next_siblings_index(0, &nodes);
 						}
 						// set childs as new nodes
-						(*target.borrow_mut()).childs = if has_nodes { Some(nodes) } else { None };
+						target.borrow_mut().childs = if has_nodes { Some(nodes) } else { None };
 					} else if let Some(childs) = &mut target.borrow_mut().childs {
 						let index = self.index();
 						// not last node, whenever nodes is empty or not, reset next childs indexs

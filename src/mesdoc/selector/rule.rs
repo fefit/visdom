@@ -43,7 +43,7 @@ impl fmt::Debug for Matcher {
 
 impl Matcher {
 	// apply all elements
-	pub fn apply<'a, 'r>(&self, eles: &'a Elements<'r>, use_cache: Option<bool>) -> Elements<'r> {
+	pub fn apply<'r>(&self, eles: &Elements<'r>, use_cache: Option<bool>) -> Elements<'r> {
 		if let Some(handle) = &self.all_handle {
 			return handle(eles, use_cache);
 		}
