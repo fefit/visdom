@@ -19,7 +19,7 @@ macro_rules! cfg_feat_insertion {
 macro_rules! cfg_feat_mutation {
 	($($item:item)*) => {
     $(
-      #[cfg(any(feature = "destory", feature = "insertion"))]
+      #[cfg(any(feature = "destroy", feature = "insertion"))]
       $item
     )*
   };
