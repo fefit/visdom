@@ -738,7 +738,7 @@ impl IElementTrait for Rc<RefCell<Node>> {
 			.collect::<String>()
 	}
 
-	// when the feature `destory` or `insertion` is open
+	// when the feature `destroy` or `insertion` is open
 	cfg_feat_mutation! {
 		/// impl `remov_child`
 		fn remove_child(&mut self, ele: BoxDynElement) {
@@ -1066,8 +1066,8 @@ impl Document {
 		let root = Rc::clone(&self.doc.borrow().root);
 		Elements::with_all(vec![Box::new(root)], Some(Box::new(self)))
 	}
-	/// Destory the document
-	pub fn destory(self) {}
+	/// Destroy the document
+	pub fn destroy(self) {}
 }
 
 impl IDocumentTrait for Document {
@@ -1154,7 +1154,7 @@ impl IDocumentTrait for Document {
 ///   texts.for_each(|_index, text_node|{
 ///       let orig_text = text_node.text();
 ///       let replace_html = format!("<span>{}</span><b>!</b>", orig_text);
-///       // Be careful that now the text_node is destoryed by `set_html`
+///       // Be careful that now the text_node is destroyed by `set_html`
 ///       text_node.set_html(&replace_html);
 ///       true
 ///   });

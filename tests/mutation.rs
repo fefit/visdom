@@ -1,4 +1,4 @@
-#![cfg(any(feature = "destory", feature = "insertion"))]
+#![cfg(any(feature = "destroy", feature = "insertion"))]
 use std::assert_eq;
 use std::result::Result as StdResult;
 use visdom::types::BoxDynError;
