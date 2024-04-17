@@ -151,12 +151,15 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		self.borrow().index
 	}
 
-	/// impl `clone_node`
+	/// The current version of this method only implements the clone of `Rc` pointers.
+	/// This is different from the standard `clone_node` method.
+	/// If you want to use `clone_node` method with the standard semantics, now you can use `copy_node` instead.
+	/// This method may be changed in future versions to be consist with the standard `clone_node` semantics.
 	fn clone_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(self.clone())
 	}
 
-	/// impl `copy_node`
+	/// impl standard semantics `clone_node` method
 	fn copy_node<'b>(&self) -> BoxDynNode<'b> {
 		Box::new(self.borrow().clone_node())
 	}

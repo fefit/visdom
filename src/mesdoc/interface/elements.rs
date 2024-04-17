@@ -1855,7 +1855,10 @@ impl<'a> Elements<'a> {
 		elements
 	}
 
-	// cloned
+	/// This method will be removed in future versions.
+	/// If you want to clone an elements set, please use the `clone()` method instead.
+	/// This method only clone the element's `Rc` pointer in the elements set.
+	/// Any modifications to the cloned elements set will be reflected on the original elements set.
 	pub fn cloned(&self) -> Elements<'a> {
 		let mut result = Elements::with_capacity(self.length());
 		for ele in &self.nodes {
@@ -3545,7 +3548,7 @@ cfg_feat_mutation! {
 	///       <body>
 	///         <dl>
 	///           <dt>Title</dt>
-	///           <dd><span>item1</span></dd>
+	///           <dd><span class="span">item1</span></dd>
 	///           <dd class="item2"><span>item2</span></dd>
 	///           <dd class="item3"><!--comment-->item3</dd>
 	///         </dl>
@@ -3554,12 +3557,14 @@ cfg_feat_mutation! {
 	///   "##;
 	///   let doc = Vis::load(html)?;
 	///   let dl = doc.find("dl");
-	///   let items = dl.children("");
-	///   assert_eq!(items.length(), 4);
-	///   // remove the dt element
-	///   items.filter("dt").remove();
-	///   let now_items = dl.children("");
-	///   assert_eq!(now_items.length(), 3);
+	///   let span = dl.find("span.span");
+	///   assert_eq!(span.text(), "item1");
+	///   // clone the "dl" Elements
+	///   let clone_dl = dl.clone();
+	///   let mut clone_span = clone_dl.find("span.span");
+	///   clone_span.set_text("span");
+	///   assert_eq!(span.text(), "item1");
+	///   assert_eq!(clone_dl.find("span.span").text(), "span");
 	///   Ok(())
 	/// }
 	/// ```
