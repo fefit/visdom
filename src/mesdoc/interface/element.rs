@@ -97,9 +97,14 @@ cfg_feat_insertion! {
 pub trait IElementTrait: INodeTrait {
 	fn is(&self, ele: &BoxDynElement) -> bool;
 	fn is_root_element(&self) -> bool;
-	// cloned
+	// cloned, will decrept
 	fn cloned<'b>(&self) -> BoxDynElement<'b> {
 		let ele = self.clone_node();
+		ele.typed().into_element().unwrap()
+	}
+	// copy a node
+	fn copied<'b>(&self) -> BoxDynElement<'b> {
+		let ele = self.copy_node();
 		ele.typed().into_element().unwrap()
 	}
 	// next sibling

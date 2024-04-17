@@ -1854,6 +1854,7 @@ impl<'a> Elements<'a> {
 		}
 		elements
 	}
+
 	// cloned
 	pub fn cloned(&self) -> Elements<'a> {
 		let mut result = Elements::with_capacity(self.length());
@@ -3529,6 +3530,47 @@ impl<'a> Elements<'a> {
 **  before, insert_before, after, insert_after
 */
 
+cfg_feat_mutation! {
+	/// Clone the Elements set.
+	///
+	/// ```
+	/// use visdom::Vis;
+	/// use visdom::types::BoxDynError;
+	/// fn main()-> Result<(), BoxDynError>{
+	///   let html = r##"
+	///     <html>
+	///       <head>
+	///         <title>document</title>
+	///       </head>
+	///       <body>
+	///         <dl>
+	///           <dt>Title</dt>
+	///           <dd><span>item1</span></dd>
+	///           <dd class="item2"><span>item2</span></dd>
+	///           <dd class="item3"><!--comment-->item3</dd>
+	///         </dl>
+	///       </body>
+	///     </html>
+	///   "##;
+	///   let doc = Vis::load(html)?;
+	///   let dl = doc.find("dl");
+	///   let items = dl.children("");
+	///   assert_eq!(items.length(), 4);
+	///   // remove the dt element
+	///   items.filter("dt").remove();
+	///   let now_items = dl.children("");
+	///   assert_eq!(now_items.length(), 3);
+	///   Ok(())
+	/// }
+	/// ```
+	impl<'a> std::clone::Clone for Elements<'a>{
+		fn clone(&self) -> Self {
+			let nodes: Vec<BoxDynElement> = self.get_ref().iter().map(|ele|ele.copied()).collect();
+			Elements::with_nodes(nodes)
+		}
+	}
+}
+
 impl<'a> Elements<'a> {
 	// when feature 'destory' or 'insertion' is open
 	cfg_feat_mutation! {
@@ -3608,6 +3650,7 @@ impl<'a> Elements<'a> {
 			self.set_text("");
 			self
 		}
+
 	}
 	// when feature 'insertion' is open
 	cfg_feat_insertion! {

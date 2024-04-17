@@ -156,6 +156,11 @@ impl INodeTrait for Rc<RefCell<Node>> {
 		Box::new(self.clone())
 	}
 
+	/// impl `copy_node`
+	fn copy_node<'b>(&self) -> BoxDynNode<'b> {
+		Box::new(self.borrow().clone_node())
+	}
+
 	/// impl `typed`
 	fn typed<'b>(self: Box<Self>) -> IEnumTyped<'b> {
 		match self.node_type() {
