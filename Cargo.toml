@@ -30,7 +30,7 @@ criterion = "0.4.0"
 
 [features]
 default = []
-full = ["text", "insertion", "destory"]
+full = ["text", "insertion", "destroy"]
 text = []
 insertion = []
 destroy = []
