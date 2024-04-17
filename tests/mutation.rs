@@ -122,3 +122,39 @@ fn test_replace_with() -> Result {
 	assert_eq!(now_svg.length(), 1);
 	Ok(())
 }
+
+#[test]
+fn test_clone() -> Result {
+	let menu_html = r#"<menu class="menu">
+  <h3>Title</h3>
+  <ul class="list">
+    <li class="item-1">item1</li>
+    <li class="item-2">item2</li>
+  </ul>
+  </menu>"#;
+	let html = format!(
+		r#"
+  <h2>logo</h2>
+  {}
+  "#,
+		menu_html
+	);
+	let fragement = Vis::load(html)?;
+	let menu = fragement.find(">.menu");
+	let clone_menu = menu.clone();
+	let mut clone_h3 = clone_menu.find(">h3");
+	clone_h3.set_text("h3");
+	assert_eq!(menu.outer_html(), menu_html);
+	assert_eq!(clone_h3.text(), "h3");
+	let mut clone_item_1 = clone_menu.find(".item-1");
+	clone_item_1.add_class("item");
+	assert_eq!(menu.outer_html(), menu_html);
+	assert!(clone_item_1.has_class("item"));
+	clone_item_1.remove_class("item-1").add_class("item-3");
+	clone_item_1.append_to(&mut menu.find("ul.list"));
+	assert_eq!(menu.find(".list > li").length(), 3);
+	assert!(menu.find(".list > li").eq(2).has_class("item-3"));
+	assert_eq!(clone_menu.find(".list > li").length(), 1);
+	assert_eq!(clone_menu.find(".list > li").first().text(), "item2");
+	Ok(())
+}

@@ -10,10 +10,16 @@ repository = "https://github.com/fefit/visdom"
 documentation = "https://docs.rs/visdom/"
 categories = ["web-programming"]
 license = "MIT"
-exclude = [".vscode/*.*", ".github/*.*", ".editorconfig", "src/main.rs", "performance/*.*"]
+exclude = [
+  ".vscode/*.*",
+  ".github/*.*",
+  ".editorconfig",
+  "src/main.rs",
+  "performance/*.*",
+]
 
 [dependencies]
-rphtml = "0.5.9"
+rphtml = { version = "0.5.10" }
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.7.0"
@@ -24,11 +30,7 @@ criterion = "0.4.0"
 
 [features]
 default = []
-full = [
-  "text",
-  "insertion",
-  "destroy"
-]
+full = ["text", "insertion", "destory"]
 text = []
 insertion = []
 destroy = []

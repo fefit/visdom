@@ -97,9 +97,16 @@ cfg_feat_insertion! {
 pub trait IElementTrait: INodeTrait {
 	fn is(&self, ele: &BoxDynElement) -> bool;
 	fn is_root_element(&self) -> bool;
-	// cloned
+	/// The current version is an implementation of `Rc` pointers with non-copy semantics.
+	/// If you want to achieve complete copying of nodes in the current version, please use the `copied` method instead.
+	/// The semantics of this method may be changed in future versions to be consist with the `copied` method.
 	fn cloned<'b>(&self) -> BoxDynElement<'b> {
 		let ele = self.clone_node();
+		ele.typed().into_element().unwrap()
+	}
+	/// Copy a element
+	fn copied<'b>(&self) -> BoxDynElement<'b> {
+		let ele = self.copy_node();
 		ele.typed().into_element().unwrap()
 	}
 	// next sibling

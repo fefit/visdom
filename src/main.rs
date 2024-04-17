@@ -288,6 +288,11 @@ fn main() -> Result<(), BoxDynError> {
       <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
         <text x="0" y="15" fill="red" transform="rotate(30 20,40)">I love SVG</text>
       </svg>
+      <div id="test_clone">
+        <div class="abc">hello</div>
+        great!
+        <p class="def">world!</div>
+      </div>
      </div>
     </body>
   </html>
@@ -322,5 +327,14 @@ fn main() -> Result<(), BoxDynError> {
 	let child_nodes = root.get(0).unwrap().child_nodes();
 	println!("{}", child_nodes[1].text_content());
 	println!("{}", content.html());
+	let mut test_clone = root.find("#test_clone");
+	println!("test_clone:{:?}", test_clone.html());
+	let test_clone_new = test_clone.clone();
+	test_clone_new.find(".abc").set_text("哈哈哈");
+	println!("test_clone:{:?}", test_clone.html());
+	println!("test_clone_new:{:?}", test_clone_new.html());
+	test_clone_new.find(".abc").append_to(&mut test_clone);
+	println!("test_clone:{:?}", test_clone.html());
+	println!("test_clone_new:{:?}", test_clone_new.html());
 	Ok(())
 }

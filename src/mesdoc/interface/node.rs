@@ -42,8 +42,10 @@ impl<'a> IEnumTyped<'a> {
 
 pub trait INodeTrait {
 	fn to_node(self: Box<Self>) -> Box<dyn Any>;
-	// clone a ele
+	// clone a node
 	fn clone_node<'b>(&self) -> BoxDynNode<'b>;
+	// copy a node
+	fn copy_node<'b>(&self) -> BoxDynNode<'b>;
 	// typed, whether element or text
 	fn typed<'b>(self: Box<Self>) -> IEnumTyped<'b>;
 	// get ele type
