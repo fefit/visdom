@@ -3577,7 +3577,7 @@ cfg_feat_mutation! {
 }
 
 impl<'a> Elements<'a> {
-	// when feature 'destory' or 'insertion' is open
+	// when feature 'destroy' or 'insertion' is open
 	cfg_feat_mutation! {
 		/// Remove the Elements set.
 		///
