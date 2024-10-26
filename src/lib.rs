@@ -628,6 +628,34 @@ impl IElementTrait for Rc<RefCell<Node>> {
 		None
 	}
 
+	fn get_attributes(&self) -> Vec<(String, IAttrValue)> {
+		let node = &self.borrow();
+		let meta = node
+			.meta
+			.as_ref()
+			.expect("Element node must have a meta field.");
+
+		let attrs = &meta.borrow().attrs;
+
+		let attr_map = &meta.borrow().lc_name_map;
+
+		attr_map
+			.iter()
+			.map(|(name, index)| {
+				let attr = &attrs[*index];
+				if let Some(value) = &attr.value {
+					let attr_value = value.content.clone();
+					(
+						name.clone(),
+						IAttrValue::Value(attr_value.iter().collect(), attr.quote),
+					)
+				} else {
+					(name.clone(), IAttrValue::True)
+				}
+			})
+			.collect()
+	}
+
 	/// impl `set_attribute`
 	fn set_attribute(&mut self, name: &str, value: Option<&str>) {
 		let mut need_quote = false;

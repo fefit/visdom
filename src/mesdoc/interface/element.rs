@@ -296,6 +296,7 @@ pub trait IElementTrait: INodeTrait {
 	fn children_by<'a>(&'a self, matcher: Box<dyn FnMut(&dyn IElementTrait) + 'a>);
 	// attribute
 	fn get_attribute(&self, name: &str) -> Option<IAttrValue>;
+	fn get_attributes(&self) -> Vec<(String, IAttrValue)>;
 	fn set_attribute(&mut self, name: &str, value: Option<&str>);
 	fn remove_attribute(&mut self, name: &str);
 	fn has_attribute(&self, name: &str) -> bool {
