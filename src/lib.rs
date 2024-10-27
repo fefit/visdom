@@ -35,6 +35,7 @@ use rphtml::{
 	},
 };
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::{any::Any, cell::RefCell};
 // re export `IAttrValue` `IEnumTyped` `INodeType`
@@ -626,6 +627,36 @@ impl IElementTrait for Rc<RefCell<Node>> {
 			}
 		}
 		None
+	}
+
+	fn get_attributes(&self) -> Vec<(String, IAttrValue)> {
+		let node = &self.borrow();
+		let meta = node
+			.meta
+			.as_ref()
+			.expect("Element node must have a meta field.");
+		let attrs = &meta.borrow().attrs;
+		let attr_map = meta
+			.borrow()
+			.lc_name_map
+			.iter()
+			.map(|(name, index)| (*index, name.clone()))
+			.collect::<BTreeMap<usize, String>>();
+		attr_map
+			.into_iter()
+			.map(|(index, name)| {
+				let attr = &attrs[index];
+				if let Some(value) = &attr.value {
+					let attr_value = value.content.clone();
+					(
+						name,
+						IAttrValue::Value(attr_value.iter().collect(), attr.quote),
+					)
+				} else {
+					(name, IAttrValue::True)
+				}
+			})
+			.collect()
 	}
 
 	/// impl `set_attribute`

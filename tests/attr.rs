@@ -6,9 +6,9 @@ type Result = StdResult<(), BoxDynError>;
 #[test]
 fn test_normal_attr() -> Result {
 	const ATTR_NAME: &str = "contenteditable";
-	const HTML: &str = r#"<div contenteditable><input type="text" type="file" /></div>"#;
+	const HTML: &str = r#"<div class='first' contenteditable><input type="text" type="file" /></div><div class='test-attrs' draggable data-type='link' name='cool' data-type='override'></div>"#;
 	let root = Vis::load(HTML)?;
-	let mut div = root.children("div");
+	let mut div = root.children("div.first");
 	// has attribute
 	assert!(div.has_attr(ATTR_NAME));
 	assert!(!div.has_attr("content"));
@@ -29,12 +29,31 @@ fn test_normal_attr() -> Result {
 	assert!(value.as_ref().unwrap().to_string() == "");
 	assert!(value.as_ref().unwrap().to_list().is_empty());
 	// always get the first appeared attribute
-	let input = div.children("input");
+	let mut input = div.children("input");
 	let value = input.attr("type");
 	assert!(value.is_some());
 	assert!(value.as_ref().unwrap().is_str("text"));
 	assert!(value.as_ref().unwrap().to_string() == "text");
 	assert_eq!(value.as_ref().unwrap().to_list(), vec!["text"]);
+	input.set_attr("type", Some("file"));
+	assert!(input.attr("type").unwrap().is_str("file"));
+	// attributes
+	let attrs_div = root.children("div.test-attrs");
+	let div = attrs_div.get(0).unwrap();
+	let attrs = div.get_attributes();
+	assert_eq!(attrs.len(), 4);
+	let attr_1 = &attrs[0];
+	assert_eq!(attr_1.0, String::from("class"));
+	assert!(attr_1.1.is_str("test-attrs"));
+	let attr_2 = &attrs[1];
+	assert_eq!(attr_2.0, String::from("draggable"));
+	assert!(attr_2.1.is_true());
+	let attr_3 = &attrs[2];
+	assert_eq!(attr_3.0, String::from("data-type"));
+	assert!(attr_3.1.is_str("link"));
+	let attr_4 = &attrs[3];
+	assert_eq!(attr_4.0, String::from("name"));
+	assert!(attr_4.1.is_str("cool"));
 	// ignore attribute cases: issue #2
 	let html: &str = r#"<input type="text" READONly /></div>"#;
 	let root = Vis::load(html)?;
