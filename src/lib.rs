@@ -52,9 +52,10 @@ pub mod types {
 	pub use crate::mesdoc::selector::Combinator;
 }
 
-// re export `ParseOptions`
+// re export `ParseOptions` and `error`
 pub mod html {
 	pub use rphtml::config::ParseOptions;
+	pub use rphtml::error;
 }
 
 use crate::html::ParseOptions;
@@ -331,6 +332,8 @@ impl INodeTrait for Rc<RefCell<Node>> {
 					ParseOptions {
 						auto_fix_unexpected_endtag: true,
 						auto_fix_unescaped_lt: true,
+						allow_self_closing: true,
+						allow_attr_key_starts_with_equal_sign: true,
 						..Default::default()
 					},
 				)
@@ -1213,11 +1216,12 @@ impl Vis {
 			auto_fix_unexpected_endtag: true,
 			auto_fix_unescaped_lt: true,
 			allow_self_closing: true,
+			allow_attr_key_starts_with_equal_sign: true,
 			..Default::default()
 		}
 	}
 	// parse a document with options
-	pub(crate) fn parse_doc_options<'html>(
+	pub(crate) fn parse_doc_with_options<'html>(
 		html: impl Into<Cow<'html, str>>,
 		options: ParseOptions,
 	) -> Result<Document, BoxDynError> {
@@ -1230,7 +1234,7 @@ impl Vis {
 		html: impl Into<Cow<'html, str>>,
 		options: ParseOptions,
 	) -> Result<Elements<'html>, BoxDynError> {
-		let doc = Vis::parse_doc_options(html, options)?;
+		let doc = Vis::parse_doc_with_options(html, options)?;
 		Ok(doc.elements())
 	}
 	/// load the html with options, and catch the errors
@@ -1239,7 +1243,7 @@ impl Vis {
 		options: ParseOptions,
 		handle: IErrorHandle,
 	) -> Elements<'html> {
-		let doc = Vis::parse_doc_options(html, options);
+		let doc = Vis::parse_doc_with_options(html, options);
 		if let Ok(mut doc) = doc {
 			doc.bind_error(handle);
 			doc.elements()

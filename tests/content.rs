@@ -197,6 +197,15 @@ fn test_text_set_html() -> Result {
 	assert_eq!(parent.text(), text);
 	assert_eq!(parent.children("strong").length(), 1);
 	assert_eq!(parent.children("strong").text(), "test");
+	// set self closing tag
+	let root = Vis::load("<div></div>")?;
+	let mut div = root.find("div");
+	assert_eq!(div.length(), 1);
+	assert_eq!(div.text(), "");
+	let inner_html = "<b =123/>";
+	div.set_html(inner_html);
+	assert_eq!(div.children("b").length(), 1);
+	assert!(div.children("b").attr("=123").is_some());
 	Ok(())
 }
 

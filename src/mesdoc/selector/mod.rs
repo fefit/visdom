@@ -228,7 +228,7 @@ impl Selector {
 				if r.len() > 1 {
 					let chain_comb = r[0].1;
 					r.sort_by(|a, b| b.0.priority.partial_cmp(&a.0.priority).unwrap());
-					let mut now_first = &mut r[0];
+					let now_first = &mut r[0];
 					if now_first.1 != chain_comb {
 						now_first.1 = chain_comb;
 						total_priority += now_first.0.priority;

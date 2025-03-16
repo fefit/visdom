@@ -19,7 +19,7 @@ exclude = [
 ]
 
 [dependencies]
-rphtml = { version = "0.5.11" }
+rphtml = { version = "0.5.12" }
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.7.0"
