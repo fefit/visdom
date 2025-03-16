@@ -1,6 +1,6 @@
 [package]
 name = "visdom"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2018"
 description = "A html document syntax and operation library, use APIs similar to jquery, easy to use for web scraping and confused html."
 keywords = ["html", "scrape", "jquery", "query", "selector"]
@@ -19,7 +19,7 @@ exclude = [
 ]
 
 [dependencies]
-rphtml = { version = "0.5.10" }
+rphtml = { version = "0.5.11" }
 lazy_static = "1.4.0"
 thiserror = "1.0.24"
 regex = "1.7.0"
