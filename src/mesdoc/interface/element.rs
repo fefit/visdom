@@ -69,7 +69,7 @@ impl IntoIterator for IFormValue {
 	fn into_iter(self) -> Self::IntoIter {
 		match self {
 			IFormValue::Multiple(v) => v.into_iter(),
-			IFormValue::Single(_) => vec![].into_iter(),
+			IFormValue::Single(v) => vec![v].into_iter(),
 		}
 	}
 }

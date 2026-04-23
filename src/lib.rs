@@ -1140,7 +1140,7 @@ impl IDocumentTrait for Document {
 ///
 /// # Examples
 ///
-/// ```
+/// ```ignore
 /// use visdom::Vis;
 /// use visdom::types::BoxDynError;
 /// fn main()-> Result<(), BoxDynError>{

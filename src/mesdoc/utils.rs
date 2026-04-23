@@ -111,17 +111,12 @@ pub fn divide_isize(a: isize, b: isize, round: RoundType) -> isize {
 }
 
 pub fn retain_by_index<T>(v: &mut Vec<T>, indexs: &[usize]) {
-	for (i, index) in indexs.iter().enumerate() {
-		v.remove(index - i);
-	}
-	/*
 	let mut loop_index: usize = 0;
 	v.retain(|_| {
 		let removed = indexs.contains(&loop_index);
 		loop_index += 1;
 		!removed
 	});
-	*/
 }
 
 // get a class list from class attribute
@@ -174,8 +169,7 @@ pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
 	if target.len() != cmp.len() {
 		return false;
 	}
-	for (index, ch) in target.iter().enumerate() {
-		let cmp_ch = &cmp[index];
+	for (ch, cmp_ch) in target.iter().zip(cmp.iter()) {
 		if cmp_ch == ch {
 			continue;
 		}
@@ -191,7 +185,6 @@ pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
 				}
 			}
 			_ => {
-				// not equal
 				return false;
 			}
 		}
@@ -200,17 +193,7 @@ pub fn is_equal_chars_ignore_case(target: &[char], cmp: &[char]) -> bool {
 }
 
 pub fn is_equal_chars(target: &[char], cmp: &[char]) -> bool {
-	let t_len = target.len();
-	let s_len = cmp.len();
-	if t_len == s_len {
-		for (index, ch) in target.iter().enumerate() {
-			if ch != &cmp[index] {
-				return false;
-			}
-		}
-		return true;
-	}
-	false
+	target == cmp
 }
 
 fn contains_chars_nocheck(target: &[char], search: &[char], t_len: usize, s_len: usize) -> bool {
@@ -224,6 +207,7 @@ fn contains_chars_nocheck(target: &[char], search: &[char], t_len: usize, s_len:
 				continue;
 			}
 			move_one = true;
+			break;
 		}
 		if !move_one {
 			return true;

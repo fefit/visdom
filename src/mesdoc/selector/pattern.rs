@@ -45,6 +45,9 @@ pub trait Pattern: Send + Sync + Debug {
 
 impl Pattern for char {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
+		if chars.is_empty() {
+			return None;
+		}
 		let ch = chars[0];
 		if *self == ch {
 			return Some(Matched {
@@ -92,6 +95,9 @@ pub struct Identity;
 
 impl Pattern for Identity {
 	fn matched(&self, chars: &[char]) -> Option<Matched> {
+		if chars.is_empty() {
+			return None;
+		}
 		let mut result: Vec<char> = Vec::with_capacity(5);
 		let first = chars[0];
 		let name: &str = "identity";
@@ -269,10 +275,16 @@ impl Nth {
 	) -> Vec<usize> {
 		// has n
 		if let Some(n) = n {
-			let n = n.parse::<isize>().unwrap();
+			let n = n
+				.parse::<isize>()
+				.expect("nth 'n' value must be a valid integer");
 			let index = index
 				.as_ref()
-				.map(|index| index.parse::<isize>().unwrap())
+				.map(|index| {
+					index
+						.parse::<isize>()
+						.expect("nth 'index' value must be a valid integer")
+				})
 				.unwrap_or(0);
 			// n == 0
 			if n == 0 {

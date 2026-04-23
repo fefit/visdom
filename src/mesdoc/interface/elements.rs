@@ -59,7 +59,7 @@ enum ElementRelation {
 	Ancestor,
 	Equal,
 	Descendant,
-	Feauture,
+	Feature,
 }
 // check if ancestor and descendants
 fn relation_of(a: &VecDeque<usize>, b: &VecDeque<usize>) -> ElementRelation {
@@ -81,7 +81,7 @@ fn relation_of(a: &VecDeque<usize>, b: &VecDeque<usize>) -> ElementRelation {
 	let a_left = a_total - equal_num;
 	let b_left = b_total - equal_num;
 	match (a_left == 0, b_left == 0) {
-		(false, false) => ElementRelation::Feauture,
+		(false, false) => ElementRelation::Feature,
 		(false, true) => ElementRelation::Descendant,
 		(true, true) => ElementRelation::Equal,
 		(true, false) => ElementRelation::Ancestor,
@@ -458,7 +458,7 @@ impl<'a> Elements<'a> {
 				// just check the last ancestor
 				let (top_ele_indexs, _) = &ancestors[cur_len - 1];
 				match relation_of(&ele_indexs, top_ele_indexs) {
-					ElementRelation::Feauture => {
+					ElementRelation::Feature => {
 						ancestors.push((ele_indexs, ele));
 					}
 					ElementRelation::Descendant => {}
@@ -3866,9 +3866,9 @@ mod tests {
 		assert!(matches!(relation_of(&a, &b), ElementRelation::Ancestor));
 		assert!(matches!(relation_of(&b, &a), ElementRelation::Descendant));
 		let c: VecDeque<usize> = vec![1, 2, 3].into();
-		assert!(matches!(relation_of(&b, &c), ElementRelation::Feauture));
-		assert!(matches!(relation_of(&c, &b), ElementRelation::Feauture));
-		assert!(matches!(relation_of(&c, &a), ElementRelation::Feauture));
+		assert!(matches!(relation_of(&b, &c), ElementRelation::Feature));
+		assert!(matches!(relation_of(&c, &b), ElementRelation::Feature));
+		assert!(matches!(relation_of(&c, &a), ElementRelation::Feature));
 		let d: VecDeque<usize> = vec![0, 1].into();
 		assert!(matches!(relation_of(&b, &d), ElementRelation::Equal));
 	}
